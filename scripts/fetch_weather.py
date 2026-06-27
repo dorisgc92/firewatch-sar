@@ -29,8 +29,8 @@ OUTPUT_FWI = "data/fwi_grid.geojson"
 # We sample weather at a coarse global grid (every 5 degrees)
 # For a specific region of interest, reduce the step for higher resolution
 GRID_STEP_DEG = 10.0   # degrees between grid points
-LAT_RANGE = (-60, 75)  # exclude polar regions (low fire risk)
-LON_RANGE = (-180, 180)
+LAT_RANGE = (14, 33)
+LON_RANGE = (-118, -86)
 
 # ── FWI Classification ─────────────────────────────────────────────────────────
 FWI_CLASSES = [
