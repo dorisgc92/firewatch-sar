@@ -260,38 +260,40 @@ export default function FireMap({  activeModule, layers, mapRef }) {
           <WindArrows weatherData={layers.weather?.data} />
         )}
 
-        {/* ── MODULE 2: Fire Hotspots (FIRMS) ── */}
-        {activeModule === 2 && visibleLayers.hotspots && layers.hotspots?.data?.features?.map((feat, i) => {
-          const { frp, intensity, source, acq_datetime, confidence, daynight } = feat.properties
-          const [lon, lat] = feat.geometry.coordinates
-          const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
-          return (
-            <CircleMarker
-              key={i}
-              center={[lat, lon]}
-              radius={hotspotRadius(frp)}
-              pathOptions={{
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.8,
-                weight: 1,
-              }}
-            >
-              <Popup>
-                <div style={{ minWidth: '160px' }}>
-                  <strong>🔥 Active Fire Hotspot</strong><br />
-                  <hr style={{ margin: '4px 0' }} />
-                  FRP: {frp ? `${frp} MW` : 'N/A'}<br />
-                  Intensity: {intensity}<br />
-                  Sensor: {source}<br />
-                  Detected: {acq_datetime}<br />
-                  {daynight && <>Time: {daynight}<br /></>}
-                  Confidence: {confidence}
-                </div>
-              </Popup>
-            </CircleMarker>
-          )
-        })}
+       {/* ── MODULE 2: Fire Hotspots (FIRMS) ── */}
+        {activeModule === 2 && visibleLayers.hotspots && 
+          layers.hotspots?.data?.features
+            ?.filter(f => f.properties.intensity === 'extreme' || f.properties.intensity === 'high')
+            .map((feat, i) => {
+              const { frp, intensity, source, acq_datetime, confidence, daynight } = feat.properties
+              const [lon, lat] = feat.geometry.coordinates
+              const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
+              return (
+                <CircleMarker
+                  key={i}
+                  center={[lat, lon]}
+                  radius={hotspotRadius(frp)}
+                  pathOptions={{
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.8,
+                    weight: 1,
+                  }}
+                >
+                  <Popup>
+                    <div style={{ minWidth: '160px' }}>
+                      <strong>Active Fire Hotspot</strong><br />
+                      <hr style={{ margin: '4px 0' }} />
+                      FRP: {frp ? `${frp} MW` : 'N/A'}<br />
+                      Intensity: {intensity}<br />
+                      Sensor: {source}<br />
+                      Detected: {acq_datetime}<br />
+                      Confidence: {confidence}
+                    </div>
+                  </Popup>
+                </CircleMarker>
+              )
+            })}
 
         {/* ── MODULE 2: Fire Perimeters ── */}
         {activeModule === 2 && visibleLayers.perimeters && layers.perimeters?.data && (
