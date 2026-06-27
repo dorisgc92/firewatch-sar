@@ -1,0 +1,37 @@
+﻿name: Fetch Fire Hotspots (FIRMS)
+
+on:
+  schedule:
+    - cron: '5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch-firms:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Fetch NASA FIRMS hotspots
+        env:
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+        run: python scripts/fetch_firms.py
+
+      - name: Commit updated hotspots data
+        run: |
+          git config user.name "FireWatch Bot"
+          git config user.email "bot@firewatch-sar.github.io"
+          git add data/hotspots.geojson
+          git diff --staged --quiet || git commit -m "chore: update hotspots $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
