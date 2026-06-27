@@ -114,11 +114,11 @@ function SearchBar({ mapRef }) {
   )
 }
 
-function LayerToggle({ layers: toggleState, onChange, activeModule }) {
+function LayerToggle({ layers: toggleState, onChange, activeModule, intensities }) {
   const module2Layers = [
-    { key: 'hotspots',       label: '🔴 Hotspots',      color: '#FF4400' },
-    { key: 'perimeters',     label: '🟠 Perimeters',     color: '#FF8800' },
-    { key: 'infrastructure', label: '🏥 Infrastructure', color: '#4488FF' },
+    { key: 'hotspots',       label: 'Active Fire Detections',      color: '#FF4400' },
+    { key: 'perimeters',     label: 'Perimeters',     color: '#FF8800' },
+    { key: 'infrastructure', label: 'Infrastructure', color: '#4488FF' },
   ]
   const module1Layers = [
     { key: 'fwi',     label: '🔥 FWI Risk',  color: '#FF4400' },
@@ -155,6 +155,40 @@ function LayerToggle({ layers: toggleState, onChange, activeModule }) {
           <span style={{ color: '#ddd', fontSize: '13px' }}>{label}</span>
         </label>
       ))}
+
+{/* Intensity filter — Module 2 only */}
+      {activeModule === 2 && (
+        <>
+          <div style={{ color: '#7aafd4', fontSize: '11px', fontWeight: 'bold',
+            letterSpacing: '0.08em', marginTop: '12px', marginBottom: '6px',
+            borderTop: '1px solid #2a3a4a', paddingTop: '8px' }}>
+            INTENSITY FILTER
+          </div>
+          {[
+            { key: 'extreme', label: 'Extreme (>200 MW)', color: '#AA0000' },
+            { key: 'high',    label: 'High (50-200 MW)',  color: '#FF4400' },
+            { key: 'moderate',label: 'Moderate (10-50 MW)', color: '#FF9900' },
+            { key: 'low',     label: 'Low (<10 MW)',      color: '#FFEE88' },
+          ].map(({ key, label, color }) => (
+            <label key={key} style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              cursor: 'pointer', marginBottom: '5px',
+            }}>
+              <input
+                type="checkbox"
+                checked={intensities?.[key] !== false}
+                onChange={e => onChange('intensity_' + key, e.target.checked)}
+                style={{ accentColor: color, width: '14px', height: '14px' }}
+              />
+              <span style={{ color: '#ddd', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%',
+                  background: color, display: 'inline-block', flexShrink: 0 }} />
+                {label}
+              </span>
+            </label>
+          ))}
+        </>
+      )}
     </div>
   )
 }
@@ -194,17 +228,29 @@ function WindArrows({ weatherData }) {
 
 // ── Main Map Component ─────────────────────────────────────────────────────────
 
-export default function FireMap({  activeModule, layers, mapRef }) {
-    const [visibleLayers, setVisibleLayers] = useState({
+export default function FireMap({ activeModule, layers, mapRef }) {
+  const [visibleLayers, setVisibleLayers] = useState({
     hotspots: true,
     perimeters: true,
-    infrastructure: false, // off by default to avoid clutter
+    infrastructure: false,
     fwi: true,
     weather: false,
   })
 
+  const [visibleIntensities, setVisibleIntensities] = useState({
+    extreme: true,
+    high: true,
+    moderate: true,
+    low: true,
+  })
+
   const toggleLayer = (key, value) => {
-    setVisibleLayers(prev => ({ ...prev, [key]: value }))
+    if (key.startsWith('intensity_')) {
+      const intensity = key.replace('intensity_', '')
+      setVisibleIntensities(prev => ({ ...prev, [intensity]: value }))
+    } else {
+      setVisibleLayers(prev => ({ ...prev, [key]: value }))
+    }
   }
 
   return (
@@ -263,7 +309,13 @@ export default function FireMap({  activeModule, layers, mapRef }) {
        {/* ── MODULE 2: Fire Hotspots (FIRMS) ── */}
         {activeModule === 2 && visibleLayers.hotspots && 
           layers.hotspots?.data?.features
-            ?.filter(f => f.properties.intensity === 'extreme' || f.properties.intensity === 'high')
+            ?.filter(f => visibleIntensities[f.properties.intensity] !== false)
+            ?.filter((f, i) => {
+              const intensity = f.properties.intensity
+              if (intensity === 'extreme' || intensity === 'high') return true
+              if (intensity === 'moderate') return i % 3 === 0
+              return i % 8 === 0
+            })
             .map((feat, i) => {
               const { frp, intensity, source, acq_datetime, confidence, daynight } = feat.properties
               const [lon, lat] = feat.geometry.coordinates
@@ -351,6 +403,7 @@ export default function FireMap({  activeModule, layers, mapRef }) {
         layers={visibleLayers}
         onChange={toggleLayer}
         activeModule={activeModule}
+	intensities={visibleIntensities}
       />
 
       {/* Loading overlay */}

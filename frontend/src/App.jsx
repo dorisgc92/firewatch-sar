@@ -108,7 +108,7 @@ export default function App() {
             padding: "4px 10px", fontSize: "12px", color: "#ffaaaa",
             flexShrink: 0,
           }}>
-            {layers.hotspots.data.features?.length?.toLocaleString()} active hotspots
+            {layers.hotspots.data.features?.length?.toLocaleString()} active fire detections
           </div>
         )}
       </header>
