@@ -8,9 +8,9 @@
  *   Module 2: FIRMS hotspots, fire perimeters, infrastructure
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
 
 // ── Color helpers ──────────────────────────────────────────────────────────────
 
@@ -40,6 +40,79 @@ function hotspotRadius(frp) {
 }
 
 // ── Layer toggle controls ──────────────────────────────────────────────────────
+function SearchBar({ mapRef }) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  const search = async (q) => {
+    if (q.length < 3) { setResults([]); return }
+    setLoading(true)
+    try {
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`
+      )
+      const data = await r.json()
+      setResults(data)
+    } catch (e) {
+      setResults([])
+    }
+    setLoading(false)
+  }
+
+  const goTo = (place) => {
+    if (!mapRef.current) return
+    const map = mapRef.current
+    map.setView([parseFloat(place.lat), parseFloat(place.lon)], 8)
+    setResults([])
+    setQuery(place.display_name.split(',')[0])
+  }
+
+  return (
+    <div style={{
+      position: 'absolute', top: '10px', left: '50%',
+      transform: 'translateX(-50%)', zIndex: 1000,
+      width: '320px',
+    }}>
+      <div style={{ position: 'relative' }}>
+        <input
+          type="text"
+          placeholder="🔍 Search any region, city, country..."
+          value={query}
+          onChange={e => { setQuery(e.target.value); search(e.target.value) }}
+          style={{
+            width: '100%', padding: '10px 14px',
+            borderRadius: '8px', border: '1px solid #2e5b8a',
+            background: 'rgba(20,30,40,0.95)', color: '#ffffff',
+            fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+          }}
+        />
+        {loading && (
+          <span style={{ position:'absolute', right:'10px', top:'10px', color:'#888' }}>⏳</span>
+        )}
+      </div>
+      {results.length > 0 && (
+        <div style={{
+          background: 'rgba(20,30,40,0.98)', border: '1px solid #2e5b8a',
+          borderRadius: '8px', marginTop: '4px', overflow: 'hidden',
+        }}>
+          {results.map((r, i) => (
+            <div key={i} onClick={() => goTo(r)}
+              style={{
+                padding: '8px 14px', cursor: 'pointer', color: '#ddd',
+                fontSize: '13px', borderBottom: '1px solid #1a2a3a',
+              }}
+              onMouseEnter={e => e.target.style.background = '#1a2a3a'}
+              onMouseLeave={e => e.target.style.background = 'transparent'}
+            >
+              {r.display_name.split(',').slice(0, 3).join(',')}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function LayerToggle({ layers: toggleState, onChange, activeModule }) {
   const module2Layers = [
@@ -121,8 +194,8 @@ function WindArrows({ weatherData }) {
 
 // ── Main Map Component ─────────────────────────────────────────────────────────
 
-export default function FireMap({ activeModule, layers, onRegionSelect }) {
-  const [visibleLayers, setVisibleLayers] = useState({
+export default function FireMap({  activeModule, layers, mapRef }) {
+    const [visibleLayers, setVisibleLayers] = useState({
     hotspots: true,
     perimeters: true,
     infrastructure: false, // off by default to avoid clutter
@@ -137,10 +210,11 @@ export default function FireMap({ activeModule, layers, onRegionSelect }) {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <MapContainer
-        center={[23, -102]}  // Center on Mexico
+        center={[23, -102]}
         zoom={5}
         style={{ width: '100%', height: '100%', background: '#1a2a1a' }}
         zoomControl={true}
+        ref={mapRef}
       >
         {/* Base tile layer — dark theme */}
         <TileLayer
@@ -269,7 +343,7 @@ export default function FireMap({ activeModule, layers, onRegionSelect }) {
         })}
 
       </MapContainer>
-
+      
       {/* Layer toggle UI */}
       <LayerToggle
         layers={visibleLayers}
