@@ -20,7 +20,11 @@ async function fetchInfraForBounds(bounds) {
     `  node["${k}"="${v}"](${bb});\n  way["${k}"="${v}"](${bb});`
   ).join("\n")
   const query = `[out:json][timeout:30];\n(\n${tags}\n);\nout center;`
-  const r = await fetch(OVERPASS_URL, { method: "POST", body: new URLSearchParams({ data: query }) })
+  const r = await fetch(OVERPASS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: query })
+  })
   const data = await r.json()
   return data.elements.map(el => {
     const lat = el.type === "node" ? el.lat : el.center?.lat
