@@ -3,6 +3,10 @@
     {
       "source": "/api/geocode",
       "destination": "https://nominatim.openstreetmap.org/search"
+    },
+    {
+      "source": "/api/overpass",
+      "destination": "https://overpass-api.de/api/interpreter"
     }
   ]
 }

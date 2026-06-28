@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap } from "react-leaflet"
 
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+const OVERPASS_URL = "/api/overpass"
 const INFRA_TYPES = [
   ["amenity", "hospital",     "Hospital",         "#FF4444"],
   ["amenity", "fire_station", "Fire Station",     "#FF6600"],
