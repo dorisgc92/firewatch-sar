@@ -145,7 +145,8 @@ def main():
         r = requests.post(
             OVERPASS_URL,
             data={"data": query},
-            timeout=90
+            timeout=90,
+            headers={"User-Agent": "FireWatchSAR/1.0 (IEEE Response Quest 2026; contact: dorisgc92@github.com)"}
         )
         r.raise_for_status()
         data = r.json()
