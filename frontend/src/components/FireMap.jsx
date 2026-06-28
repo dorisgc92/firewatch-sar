@@ -158,7 +158,7 @@ export default function FireMap({ activeModule, layers, mapRef }) {
           attribution='&copy; OpenStreetMap contributors &copy; CARTO'
           maxZoom={19} />
 
-       <MapController mapRef={mapRef} onMove={loadInfra} active={visibleLayers.infrastructure} />
+       <MapController mapRef={mapRef} onMove={loadInfra} active={false} />
 
         {activeModule === 1 && visibleLayers.fwi && layers.fwi?.data?.features?.map((feat, i) => {
           const { fwi, risk_class, risk_label, temp_c, rh_pct, wind_kmh, trend } = feat.properties
