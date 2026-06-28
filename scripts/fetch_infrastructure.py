@@ -1,4 +1,4 @@
-"""
+﻿"""
 fetch_infrastructure.py
 =======================
 Fetches critical infrastructure from OpenStreetMap via Overpass API.
@@ -6,7 +6,7 @@ Focuses on facilities relevant to wildfire emergency response.
 
 Outputs: data/infrastructure.geojson
 
-OpenStreetMap data: © OpenStreetMap contributors, ODbL license
+OpenStreetMap data: Â© OpenStreetMap contributors, ODbL license
 Overpass API: https://overpass-api.de/
 
 How to run:
@@ -25,24 +25,24 @@ from datetime import datetime, timezone
 OUTPUT_PATH = "data/infrastructure.geojson"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
-# Default bbox — covers Mexico + US border region
+# Default bbox â€” covers Mexico + US border region
 DEFAULT_BBOX = "-118,14,-86,33"
 
 # Infrastructure categories to fetch
 # Each entry: (OSM tag key, OSM tag value, display label, color, icon)
 INFRASTRUCTURE_TYPES = [
-    ("amenity",  "hospital",          "Hospital",           "#FF4444", "🏥"),
-    ("amenity",  "clinic",            "Clinic",             "#FF8888", "🏥"),
-    ("amenity",  "fire_station",      "Fire Station",       "#FF6600", "🚒"),
-    ("amenity",  "police",            "Police Station",     "#0044FF", "👮"),
-    ("amenity",  "school",            "School (shelter)",   "#AA44FF", "🏫"),
-    ("power",    "substation",        "Power Substation",   "#FFAA00", "⚡"),
-    ("power",    "plant",             "Power Plant",        "#FF8800", "⚡"),
-    ("man_made", "tower",             "Tower",              "#666666", "📡"),
-    ("aeroway",  "aerodrome",         "Airport/Airfield",   "#44AAFF", "✈️"),
-    ("amenity",  "fuel",              "Fuel Station",       "#FFDD00", "⛽"),
-    ("landuse",  "reservoir",         "Water Reservoir",    "#0088FF", "💧"),
-    ("natural",  "water",             "Water Body",         "#4488FF", "💧"),
+    ("amenity",  "hospital",          "Hospital",           "#FF4444", "ðŸ¥"),
+    ("amenity",  "clinic",            "Clinic",             "#FF8888", "ðŸ¥"),
+    ("amenity",  "fire_station",      "Fire Station",       "#FF6600", "ðŸš’"),
+    ("amenity",  "police",            "Police Station",     "#0044FF", "ðŸ‘®"),
+    ("amenity",  "school",            "School (shelter)",   "#AA44FF", "ðŸ«"),
+    ("power",    "substation",        "Power Substation",   "#FFAA00", "âš¡"),
+    ("power",    "plant",             "Power Plant",        "#FF8800", "âš¡"),
+    ("man_made", "tower",             "Tower",              "#666666", "ðŸ“¡"),
+    ("aeroway",  "aerodrome",         "Airport/Airfield",   "#44AAFF", "âœˆï¸"),
+    ("amenity",  "fuel",              "Fuel Station",       "#FFDD00", "â›½"),
+    ("landuse",  "reservoir",         "Water Reservoir",    "#0088FF", "ðŸ’§"),
+    ("natural",  "water",             "Water Body",         "#4488FF", "ðŸ’§"),
 ]
 
 
@@ -71,7 +71,7 @@ def classify_element(tags):
     for key, value, label, color, icon in INFRASTRUCTURE_TYPES:
         if tags.get(key) == value:
             return label, color, icon
-    return "Other", "#888888", "📍"
+    return "Other", "#888888", "ðŸ“"
 
 
 def parse_overpass_response(data):
@@ -179,7 +179,7 @@ def main():
         "metadata": {
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "source": "OpenStreetMap via Overpass API",
-            "license": "ODbL — © OpenStreetMap contributors",
+            "license": "ODbL â€” Â© OpenStreetMap contributors",
             "bbox": args.bbox,
             "description": (
                 "Critical infrastructure relevant to wildfire emergency response. "
@@ -202,3 +202,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

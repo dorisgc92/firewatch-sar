@@ -24,7 +24,9 @@ jobs:
         run: pip install -r scripts/requirements.txt
 
       - name: Fetch infrastructure (Mexico + USA border region)
-        run: python scripts/fetch_infrastructure.py --bbox "-118,14,-86,33"
+        run: python scripts/fetch_infrastructure.py
+        env:
+          BBOX: "-118,14,-86,33"
 
       - name: Commit updated infrastructure data
         run: |
