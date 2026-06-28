@@ -8,9 +8,55 @@
  *   Module 2: FIRMS hotspots, fire perimeters, infrastructure
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
+const OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
+
+const INFRA_TYPES = [
+  ['amenity', 'hospital',     'Hospital',        '#FF4444'],
+  ['amenity', 'fire_station', 'Fire Station',    '#FF6600'],
+  ['amenity', 'police',       'Police Station',  '#0044FF'],
+  ['power',   'substation',   'Power Substation','#FFAA00'],
+  ['aeroway', 'aerodrome',    'Airport',         '#44AAFF'],
+]
+
+async function fetchInfrastructureForBounds(bounds) {
+  const s = bounds.getSouth().toFixed(4)
+  const w = bounds.getWest().toFixed(4)
+  const n = bounds.getNorth().toFixed(4)
+  const e = bounds.getEast().toFixed(4)
+  const bb = `${s},${w},${n},${e}`
+
+  const tags = INFRA_TYPES.map(([k, v]) =>
+    `  node["${k}"="${v}"](${bb});\n  way["${k}"="${v}"](${bb});`
+  ).join('\n')
+
+  const query = `[out:json][timeout:30];\n(\n${tags}\n);\nout center;`
+
+  const r = await fetch(OVERPASS_URL, {
+    method: 'POST',
+    body: new URLSearchParams({ data: query })
+  })
+  const data = await r.json()
+
+  return data.elements.map(el => {
+    const lat = el.type === 'node' ? el.lat : el.center?.lat
+    const lon = el.type === 'node' ? el.lon : el.center?.lon
+    if (!lat) return null
+    const tags = el.tags || {}
+    const match = INFRA_TYPES.find(([k, v]) => tags[k] === v)
+    return {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [lon, lat] },
+      properties: {
+        name: tags.name || tags['name:es'] || match?.[2] || 'Unknown',
+        type: match?.[2] || 'Other',
+        color: match?.[3] || '#888888',
+      }
+    }
+  }).filter(Boolean)
+}
 
 // ── Color helpers ──────────────────────────────────────────────────────────────
 
@@ -194,6 +240,24 @@ function LayerToggle({ layers: toggleState, onChange, activeModule, intensities 
 }
 
 // ── Wind arrows ───────────────────────────────────────────────────────────────
+function InfrastructureLoader({ onMove, visibleInfra }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!map) return
+
+    const handleMoveEnd = () => {
+      if (visibleInfra) onMove(map)
+    }
+
+    map.on('moveend', handleMoveEnd)
+    if (visibleInfra) onMove(map)
+
+    return () => map.off('moveend', handleMoveEnd)
+  }, [map, onMove, visibleInfra])
+
+  return null
+}
 
 function WindArrows({ weatherData }) {
   const map = useMap()
@@ -244,6 +308,28 @@ export default function FireMap({ activeModule, layers, mapRef }) {
     low: true,
   })
 
+  const [infraFeatures, setInfraFeatures] = useState([])
+  const [infraLoading, setInfraLoading] = useState(false)
+  const infraTimeoutRef = useRef(null)
+
+  const loadInfrastructure = useCallback(async (map) => {
+    if (!visibleLayers.infrastructure) return
+    const bounds = map.getBounds()
+    const zoom = map.getZoom()
+    if (zoom < 7) {
+      setInfraFeatures([])
+      return
+    }
+    setInfraLoading(true)
+    try {
+      const features = await fetchInfrastructureForBounds(bounds)
+      setInfraFeatures(features)
+    } catch (e) {
+      console.error('Infrastructure fetch error:', e)
+    }
+    setInfraLoading(false)
+  }, [visibleLayers.infrastructure])
+
   const toggleLayer = (key, value) => {
     if (key.startsWith('intensity_')) {
       const intensity = key.replace('intensity_', '')
@@ -252,7 +338,6 @@ export default function FireMap({ activeModule, layers, mapRef }) {
       setVisibleLayers(prev => ({ ...prev, [key]: value }))
     }
   }
-
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <MapContainer
@@ -372,9 +457,9 @@ export default function FireMap({ activeModule, layers, mapRef }) {
           />
         )}
 
-        {/* ── MODULE 2: Infrastructure ── */}
-        {activeModule === 2 && visibleLayers.infrastructure && layers.infrastructure?.data?.features?.map((feat, i) => {
-          const { name, type, color, icon } = feat.properties
+       {/* ── MODULE 2: Infrastructure (loaded on demand by region) ── */}
+        {activeModule === 2 && visibleLayers.infrastructure && infraFeatures.map((feat, i) => {
+          const { name, type, color } = feat.properties
           const [lon, lat] = feat.geometry.coordinates
           return (
             <CircleMarker
@@ -389,15 +474,33 @@ export default function FireMap({ activeModule, layers, mapRef }) {
               }}
             >
               <Popup>
-                <strong>{icon} {name}</strong><br />
+                <strong>{name}</strong><br />
                 Type: {type}
               </Popup>
             </CircleMarker>
           )
         })}
 
+        {/* Infrastructure loading indicator */}
+        {infraLoading && (
+          <div style={{
+            position: 'absolute', bottom: '40px', left: '50%',
+            transform: 'translateX(-50%)', zIndex: 1000,
+            background: 'rgba(20,30,40,0.9)', color: '#7aafd4',
+            padding: '6px 14px', borderRadius: '20px', fontSize: '12px',
+          }}>
+            Loading infrastructure...
+          </div>
+        )}
+
       </MapContainer>
       
+      {/* Infrastructure loader — fires on map move */}
+        <InfrastructureLoader
+          onMove={loadInfrastructure}
+          visibleInfra={visibleLayers.infrastructure}
+        />
+
       {/* Layer toggle UI */}
       <LayerToggle
         layers={visibleLayers}

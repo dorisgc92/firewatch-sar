@@ -5,13 +5,11 @@
  */
 
 const LAYER_LABELS = {
-  hotspots:       { label: 'FIRMS Hotspots',    icon: '🔴', expected: '< 3 hrs' },
-  weather:        { label: 'Weather / FWI',      icon: '🌡️', expected: 'Hourly' },
-  fwi:            { label: 'FWI Grid',           icon: '🔥', expected: 'Hourly' },
-  perimeters:     { label: 'Fire Perimeters',    icon: '🟠', expected: '< 6 hrs' },
-  infrastructure: { label: 'Infrastructure',     icon: '🏥', expected: 'Static' },
+  hotspots:   { label: 'FIRMS Hotspots',  icon: 'FIRMS', expected: '< 3 hrs' },
+  weather:    { label: 'Weather / FWI',   icon: 'MET',   expected: 'Hourly' },
+  fwi:        { label: 'FWI Grid',        icon: 'FWI',   expected: 'Hourly' },
+  perimeters: { label: 'Fire Perimeters', icon: 'PERIM', expected: '< 6 hrs' },
 }
-
 const FRESHNESS_COLORS = {
   green:   { bg: '#1a4a1a', dot: '#44ff44', text: '#aaffaa' },
   amber:   { bg: '#4a3a00', dot: '#ffcc00', text: '#ffeeaa' },
