@@ -15,18 +15,18 @@ export default function App() {
     setSearchQuery(q)
     if (q.length < 3) { setSearchResults([]); return }
     try {
-      const r = await fetch("/api/geocode?q=" + encodeURIComponent(q) + "&format=json&limit=5")
+      const r = await fetch("https://photon.komoot.io/api/?q=" + encodeURIComponent(q) + "&limit=5")
       const data = await r.json()
-      setSearchResults(data)
+      setSearchResults(data.features || [])
     } catch { setSearchResults([]) }
   }
 
   const goTo = (place) => {
     if (mapRef.current) {
-      mapRef.current.setView([parseFloat(place.lat), parseFloat(place.lon)], 7)
+      mapRef.current.setView([place.geometry.coordinates[1], place.geometry.coordinates[0]], 7)
     }
     setSearchResults([])
-    setSearchQuery(place.display_name.split(",")[0])
+    setSearchQuery(place.properties.name || place.properties.city || "")
   }
 
   return (
@@ -76,7 +76,7 @@ export default function App() {
                   style={{ padding: "8px 12px", cursor: "pointer", color: "#ddd", fontSize: "13px", borderBottom: "1px solid #1a2a3a" }}
                   onMouseEnter={e => e.currentTarget.style.background = "#2e5b8a"}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                  {r.display_name.split(",").slice(0, 3).join(",")}
+                  {[r.properties.name, r.properties.city, r.properties.country].filter(Boolean).join(", ")}
                 </div>
               ))}
             </div>
@@ -102,3 +102,5 @@ export default function App() {
     </div>
   )
 }
+
+
