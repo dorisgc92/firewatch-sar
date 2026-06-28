@@ -23,8 +23,10 @@ const DATA_LAYERS = {
   weather:        `${DATA_BASE_URL}/weather.geojson`,
   fwi:            `${DATA_BASE_URL}/fwi_grid.geojson`,
   perimeters:     `${DATA_BASE_URL}/perimeters.geojson`,
-
+  infrastructure: `${DATA_BASE_URL}/infrastructure.geojson`,
 }
+
+
 
 // Refresh interval in milliseconds (5 minutes)
 // Data files update hourly via GitHub Actions, but we poll more often
@@ -53,12 +55,13 @@ function freshnessStatus(generatedAt) {
 
 export function useFireData() {
   const [layers, setLayers] = useState({
-    hotspots:   { data: null, loading: true, error: null, generatedAt: null, freshness: 'unknown' },
-    weather:    { data: null, loading: true, error: null, generatedAt: null, freshness: 'unknown' },
-    fwi:        { data: null, loading: true, error: null, generatedAt: null, freshness: 'unknown' },
-    perimeters: { data: null, loading: true, error: null, generatedAt: null, freshness: 'unknown' },
+    hotspots:       { data: null, loading: true, error: null, generatedAt: null, freshness: 'unknown' },
+    weather:        { data: null, loading: true, error: null, generatedAt: null, freshness: 'unknown' },
+    fwi:            { data: null, loading: true, error: null, generatedAt: null, freshness: 'unknown' },
+    perimeters:     { data: null, loading: true, error: null, generatedAt: null, freshness: 'unknown' },
+    infrastructure: { data: null, loading: true, error: null, generatedAt: null, freshness: 'unknown' },
   })
-
+  
   const fetchAll = useCallback(async () => {
     const results = await Promise.allSettled(
       Object.entries(DATA_LAYERS).map(async ([key, url]) => {

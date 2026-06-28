@@ -211,7 +211,8 @@ export default function FireMap({ activeModule, layers, mapRef }) {
             }} />
         )}
 
-        {activeModule === 2 && visibleLayers.infrastructure && infraFeatures.map((feat, i) => {
+        {activeModule === 2 && visibleLayers.infrastructure && 
+          (layers.infrastructure?.data?.features || []).map((feat, i) => {
           const { name, type, color } = feat.properties
           const [lon, lat] = feat.geometry.coordinates
           return (
