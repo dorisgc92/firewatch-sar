@@ -1,0 +1,35 @@
+﻿name: Fetch Infrastructure
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch-infrastructure:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Fetch infrastructure (Mexico + USA border region)
+        run: python scripts/fetch_infrastructure.py --bbox "-118,14,-86,33"
+
+      - name: Commit updated infrastructure data
+        run: |
+          git config user.name "FireWatch Bot"
+          git config user.email "bot@firewatch-sar.github.io"
+          git add data/infrastructure.geojson
+          git diff --staged --quiet || git commit -m "chore: update infrastructure $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
