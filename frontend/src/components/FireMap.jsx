@@ -47,8 +47,14 @@ function hotspotRadius(frp) {
   return 13
 }
 
-function InfraLoader({ onMove, active }) {
+function MapController({ mapRef, onMove, active }) {
   const map = useMap()
+
+  useEffect(() => {
+    if (!map) return
+    mapRef.current = map
+  }, [map, mapRef])
+
   useEffect(() => {
     if (!map || !active) return
     const handler = () => onMove(map)
@@ -56,9 +62,9 @@ function InfraLoader({ onMove, active }) {
     onMove(map)
     return () => map.off("moveend", handler)
   }, [map, onMove, active])
+
   return null
 }
-
 function LayerToggle({ layers, onChange, activeModule, intensities }) {
   const m2 = [
     { key: "hotspots",       label: "Active Fire Detections", color: "#FF4400" },
@@ -141,14 +147,14 @@ export default function FireMap({ activeModule, layers, mapRef }) {
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
       <MapContainer center={[23, -102]} zoom={5}
         style={{ width: "100%", height: "100%", background: "#1a2a1a" }}
-        zoomControl={true} ref={mapRef}>
+        zoomControl={true}>
 
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; OpenStreetMap contributors &copy; CARTO'
           maxZoom={19} />
 
-        <InfraLoader onMove={loadInfra} active={visibleLayers.infrastructure} />
+       <MapController mapRef={mapRef} onMove={loadInfra} active={visibleLayers.infrastructure} />
 
         {activeModule === 1 && visibleLayers.fwi && layers.fwi?.data?.features?.map((feat, i) => {
           const { fwi, risk_class, risk_label, temp_c, rh_pct, wind_kmh, trend } = feat.properties
