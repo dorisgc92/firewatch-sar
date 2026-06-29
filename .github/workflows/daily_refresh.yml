@@ -1,0 +1,43 @@
+﻿name: Daily Full Refresh
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  full-refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Fetch FIRMS hotspots
+        env:
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+        run: python scripts/fetch_firms.py
+
+      - name: Fetch weather and FWI
+        run: python scripts/fetch_weather.py
+
+      - name: Fetch fire perimeters
+        run: python scripts/fetch_perimeters.py
+
+      - name: Commit all updated data
+        run: |
+          git config user.name "FireWatch Bot"
+          git config user.email "bot@firewatch-sar.github.io"
+          git add data/hotspots.geojson data/weather.geojson data/fwi_grid.geojson data/perimeters.geojson
+          git diff --staged --quiet || git commit -m "chore: daily full refresh $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
