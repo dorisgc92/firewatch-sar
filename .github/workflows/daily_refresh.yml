@@ -34,10 +34,13 @@ jobs:
       - name: Fetch fire perimeters
         run: python scripts/fetch_perimeters.py
 
+      - name: Fetch infrastructure (Jalisco region)
+        run: python scripts/fetch_infrastructure.py --bbox="-104.5,19.5,-101.5,22.5"
+
       - name: Commit all updated data
         run: |
           git config user.name "FireWatch Bot"
           git config user.email "bot@firewatch-sar.github.io"
-          git add data/hotspots.geojson data/weather.geojson data/fwi_grid.geojson data/perimeters.geojson
+          git add data/hotspots.geojson data/weather.geojson data/fwi_grid.geojson data/perimeters.geojson data/infrastructure.geojson
           git diff --staged --quiet || git commit -m "chore: daily full refresh $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
