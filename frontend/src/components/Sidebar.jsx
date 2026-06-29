@@ -113,6 +113,23 @@ export default function Sidebar({ activeModule, layers }) {
                 (extremeDetections > 0 ? extremeDetections + " extreme-intensity detections require immediate attention. " : "") +
                 (totalPerimeters > 0 ? totalPerimeters + " active fire perimeters covering " + Math.round(totalHectares).toLocaleString() + " ha." : "")}
           </div>
+          <SectionTitle>INFRASTRUCTURE LEGEND</SectionTitle>
+          {[
+            { icon: "🏥", label: "Hospital / Clinic" },
+            { icon: "🚒", label: "Fire Station" },
+            { icon: "👮", label: "Police Station" },
+            { icon: "⚡", label: "Power Substation / Plant" },
+            { icon: "🏫", label: "School (shelter)" },
+            { icon: "⛽", label: "Fuel Station" },
+            { icon: "📡", label: "Tower" },
+            { icon: "💧", label: "Water Resource" },
+            { icon: "✈️", label: "Airport" },
+          ].map(({ icon, label }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+              <span style={{ fontSize: "14px" }}>{icon}</span>
+              <span style={{ color: "#aaaaaa", fontSize: "11px" }}>{label}</span>
+            </div>
+          ))}
         </>
       )}
 

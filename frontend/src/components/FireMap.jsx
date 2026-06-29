@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useRef, useCallback } from "react"
-import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap } from "react-leaflet"
+import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
+import L from "leaflet"
 
 const OVERPASS_URL = "/api/overpass"
 const INFRA_TYPES = [
@@ -213,13 +214,28 @@ export default function FireMap({ activeModule, layers, mapRef }) {
 
         {activeModule === 2 && visibleLayers.infrastructure && 
           (layers.infrastructure?.data?.features || []).map((feat, i) => {
-          const { name, type, color } = feat.properties
+          const { name, type, color, icon } = feat.properties
           const [lon, lat] = feat.geometry.coordinates
+          const ICONS = {
+            "Hospital": "🏥", "Clinic": "🏥", "Fire Station": "🚒",
+            "Police Station": "👮", "Power Substation": "⚡", "Power Plant": "⚡",
+            "Airport/Airfield": "✈️", "Fuel Station": "⛽", "Tower": "📡",
+            "School (shelter)": "🏫", "Water Reservoir": "💧", "Water Body": "💧",
+          }
+          const emoji = ICONS[type] || "📍"
+          const divIcon = L.divIcon({
+            html: `<div style="font-size:16px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8))">${emoji}</div>`,
+            className: "",
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+          })
           return (
-            <CircleMarker key={i} center={[lat, lon]} radius={6}
-              pathOptions={{ color: color || "#4488FF", fillColor: color || "#4488FF", fillOpacity: 0.9, weight: 2 }}>
-              <Popup><strong>{name}</strong><br />Type: {type}</Popup>
-            </CircleMarker>
+            <Marker key={i} position={[lat, lon]} icon={divIcon}>
+              <Popup>
+                <strong>{emoji} {name}</strong><br />
+                Type: {type}
+              </Popup>
+            </Marker>
           )
         })}
 
