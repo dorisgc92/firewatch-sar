@@ -1,12 +1,12 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "generated_at": "2026-06-30T08:36:10.310874+00:00",
+    "generated_at": "2026-06-30T08:54:04.360211+00:00",
     "source": "NASA FIRMS (VIIRS SNPP + MODIS NRT)",
     "api_url": "https://firms.modaps.eosdis.nasa.gov/api/",
     "coverage": "Global",
     "lookback_days": 1,
-    "total_hotspots": 7231,
+    "total_hotspots": 7426,
     "description": "Active fire hotspots detected by NASA satellite sensors. FRP = Fire Radiative Power in megawatts (MW). Higher FRP = more intense fire. Data latency: < 3 hours globally.",
     "intensity_scale": {
       "low": "FRP < 10 MW",
@@ -72544,6 +72544,1298 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
+          104.67081,
+          10.39042
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.03,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.31857,
+          11.1283
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 5.27,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.31951,
+          11.13104
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.01,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.85587,
+          12.23753
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 13.72,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.86005,
+          12.23827
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 13.72,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.21184,
+          12.31534
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 6.86,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.94193,
+          12.36567
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.46,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          104.3735,
+          12.4924
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.76,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.71177,
+          12.6059
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 6.51,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.71134,
+          12.60704
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 6.39,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.66919,
+          12.67704
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 6.38,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          104.00964,
+          12.69011
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 2.99,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.6229,
+          12.73435
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 2.82,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.11373,
+          12.9996
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.72,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          104.97151,
+          13.1659
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.14,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          109.00216,
+          13.16849
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.65,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.71291,
+          13.89359
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 23.15,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.7117,
+          13.89765
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 23.15,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.71216,
+          13.89895
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 7.85,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 54:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.96256,
+          14.32881
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.0,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.69389,
+          14.73176
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.84,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.75139,
+          14.76717
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.11,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.72318,
+          14.77775
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.33,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.77505,
+          14.79136
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 2.36,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.67603,
+          14.80721
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 2.16,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.51529,
+          14.86584
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 2.38,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.45864,
+          14.95952
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.33,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.77781,
+          14.99281
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 21.46,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.72832,
+          15.07131
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 1.85,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.68189,
+          15.07991
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 8.4,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.68514,
+          15.08049
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 9.68,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.54499,
+          15.14757
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 1.51,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.60141,
+          15.26999
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 2.65,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.56887,
+          15.28871
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 19.89,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.56837,
+          15.28944
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 10.23,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.57184,
+          15.29005
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 10.23,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.26308,
+          15.35378
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.51,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.19379,
+          15.41875
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 18.31,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.3898,
+          15.41959
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.44,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.19267,
+          15.42286
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 18.31,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.19071,
+          15.43114
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.09,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.19077,
+          15.43206
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.46,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.18987,
+          15.4353
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.13,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.18995,
+          15.43622
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.46,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.13503,
+          15.46935
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.74,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.25896,
+          15.5219
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 24.37,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.30321,
+          15.54265
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 12.81,
+        "intensity": "moderate",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.17732,
+          15.56377
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.77,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.28685,
+          15.56539
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.58,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.28655,
+          15.56666
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 5.19,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.32938,
+          15.57454
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 2.65,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.30621,
+          15.59164
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 8.26,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.98434,
+          15.87159
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 5.15,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.09711,
+          15.93097
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.53,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.10091,
+          15.93165
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.53,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.37732,
+          16.26978
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.43,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.3781,
+          16.27048
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.67,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.6106,
+          16.30984
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.24,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.60957,
+          16.31177
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.05,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.17937,
+          17.84449
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 2.91,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.26259,
+          18.00683
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 3.79,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.25935,
+          18.00684
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 6.3,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37437,
+          18.86753
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 6.77,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37209,
+          18.86909
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 7.96,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.18623,
+          22.86773
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 2.47,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.21848,
+          22.90518
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 4.39,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.73351,
+          24.25094
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 1.47,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.7326,
+          24.26087
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+        "frp": 6.05,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-06-30 55:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
           -61.43749,
           54.7466
         ]
@@ -136517,6 +137809,44 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
+          40.74807,
+          56.98405
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 12.62,
+        "intensity": "moderate",
+        "confidence": "61",
+        "acq_datetime": "2026-06-30 73:1Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          40.72154,
+          56.9902
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 19.48,
+        "intensity": "moderate",
+        "confidence": "69",
+        "acq_datetime": "2026-06-30 73:1Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
           127.03102,
           -17.35843
         ]
@@ -136821,6 +138151,139 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
+          31.05531,
+          50.29799
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.96,
+        "intensity": "low",
+        "confidence": "47",
+        "acq_datetime": "2026-06-30 73:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30.29008,
+          51.33803
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.48,
+        "intensity": "low",
+        "confidence": "60",
+        "acq_datetime": "2026-06-30 73:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30.27574,
+          51.34033
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 26.0,
+        "intensity": "moderate",
+        "confidence": "84",
+        "acq_datetime": "2026-06-30 73:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30.23907,
+          51.38392
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 37.99,
+        "intensity": "moderate",
+        "confidence": "91",
+        "acq_datetime": "2026-06-30 73:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.15784,
+          52.2439
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 15.05,
+        "intensity": "moderate",
+        "confidence": "53",
+        "acq_datetime": "2026-06-30 73:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.98701,
+          53.76971
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.55,
+        "intensity": "low",
+        "confidence": "47",
+        "acq_datetime": "2026-06-30 73:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.66204,
+          55.41996
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.01,
+        "intensity": "low",
+        "confidence": "28",
+        "acq_datetime": "2026-06-30 73:3Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
           119.80862,
           -9.84719
         ]
@@ -136869,6 +138332,120 @@
         "frp": 5.62,
         "intensity": "low",
         "confidence": "29",
+        "acq_datetime": "2026-06-30 73:5Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.14577,
+          45.21574
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 26.21,
+        "intensity": "moderate",
+        "confidence": "43",
+        "acq_datetime": "2026-06-30 73:5Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          38.14135,
+          45.21703
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 29.56,
+        "intensity": "moderate",
+        "confidence": "49",
+        "acq_datetime": "2026-06-30 73:5Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          33.46052,
+          46.91672
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 15.77,
+        "intensity": "moderate",
+        "confidence": "44",
+        "acq_datetime": "2026-06-30 73:5Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          35.13804,
+          47.33113
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 16.79,
+        "intensity": "moderate",
+        "confidence": "55",
+        "acq_datetime": "2026-06-30 73:5Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.06107,
+          47.76379
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 18.46,
+        "intensity": "moderate",
+        "confidence": "60",
+        "acq_datetime": "2026-06-30 73:5Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.06844,
+          47.76533
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 17.04,
+        "intensity": "moderate",
+        "confidence": "57",
         "acq_datetime": "2026-06-30 73:5Z",
         "daynight": "Day"
       }
@@ -137021,6 +138598,690 @@
         "frp": 10.9,
         "intensity": "moderate",
         "confidence": "62",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30.41957,
+          37.88268
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 15.04,
+        "intensity": "moderate",
+        "confidence": "67",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30.41549,
+          37.88741
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 12.85,
+        "intensity": "moderate",
+        "confidence": "45",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          31.61887,
+          38.2995
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 21.7,
+        "intensity": "moderate",
+        "confidence": "62",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          31.62593,
+          38.3004
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 20.54,
+        "intensity": "moderate",
+        "confidence": "59",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.08431,
+          38.58502
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.61,
+        "intensity": "low",
+        "confidence": "31",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          35.35465,
+          38.73013
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 51.24,
+        "intensity": "high",
+        "confidence": "43",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.05816,
+          38.82003
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.02,
+        "intensity": "low",
+        "confidence": "51",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.04522,
+          38.82225
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.5,
+        "intensity": "low",
+        "confidence": "42",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30.78739,
+          38.86634
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 12.67,
+        "intensity": "moderate",
+        "confidence": "58",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.41903,
+          39.09729
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.73,
+        "intensity": "low",
+        "confidence": "52",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.09874,
+          39.34214
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 12.14,
+        "intensity": "moderate",
+        "confidence": "71",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          31.99121,
+          39.5816
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 23.84,
+        "intensity": "moderate",
+        "confidence": "71",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          31.96815,
+          39.58652
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 14.4,
+        "intensity": "moderate",
+        "confidence": "58",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.2193,
+          39.6404
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 25.14,
+        "intensity": "moderate",
+        "confidence": "69",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.42186,
+          39.79885
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 22.22,
+        "intensity": "moderate",
+        "confidence": "30",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.76827,
+          40.02066
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 22.41,
+        "intensity": "moderate",
+        "confidence": "58",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.76289,
+          40.02165
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 18.23,
+        "intensity": "moderate",
+        "confidence": "47",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.60931,
+          40.0415
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 27.87,
+        "intensity": "moderate",
+        "confidence": "38",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          33.02246,
+          40.08569
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 24.55,
+        "intensity": "moderate",
+        "confidence": "47",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.38966,
+          40.09729
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.3,
+        "intensity": "low",
+        "confidence": "23",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.73449,
+          40.20658
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.5,
+        "intensity": "low",
+        "confidence": "45",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.14353,
+          40.43959
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 11.93,
+        "intensity": "moderate",
+        "confidence": "60",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.13076,
+          40.44172
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.0,
+        "intensity": "moderate",
+        "confidence": "0",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          31.7122,
+          40.73537
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 13.65,
+        "intensity": "moderate",
+        "confidence": "59",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.236,
+          40.78707
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 15.24,
+        "intensity": "moderate",
+        "confidence": "35",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.85413,
+          41.12004
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.17,
+        "intensity": "low",
+        "confidence": "35",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.85966,
+          41.13874
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.42,
+        "intensity": "low",
+        "confidence": "31",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.77631,
+          41.14324
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.52,
+        "intensity": "low",
+        "confidence": "57",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.73549,
+          41.16252
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 29.46,
+        "intensity": "moderate",
+        "confidence": "87",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.93784,
+          41.23843
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.06,
+        "intensity": "moderate",
+        "confidence": "49",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.81376,
+          41.27467
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.66,
+        "intensity": "low",
+        "confidence": "61",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.59867,
+          41.27665
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.29,
+        "intensity": "low",
+        "confidence": "51",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.58554,
+          41.27887
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.58,
+        "intensity": "low",
+        "confidence": "63",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.13155,
+          41.40237
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 15.08,
+        "intensity": "moderate",
+        "confidence": "61",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.42212,
+          41.56735
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 22.27,
+        "intensity": "moderate",
+        "confidence": "69",
+        "acq_datetime": "2026-06-30 73:7Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.34974,
+          41.69157
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 11.69,
+        "intensity": "moderate",
+        "confidence": "73",
         "acq_datetime": "2026-06-30 73:7Z",
         "daynight": "Day"
       }
@@ -137326,6 +139587,1450 @@
         "intensity": "low",
         "confidence": "28",
         "acq_datetime": "2026-06-30 73:9Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          19.77737,
+          28.90434
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 70.18,
+        "intensity": "high",
+        "confidence": "98",
+        "acq_datetime": "2026-06-30 73:9Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30.62171,
+          37.07005
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 38.44,
+        "intensity": "moderate",
+        "confidence": "68",
+        "acq_datetime": "2026-06-30 73:9Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30.60635,
+          37.75531
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 23.94,
+        "intensity": "moderate",
+        "confidence": "37",
+        "acq_datetime": "2026-06-30 73:9Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.20037,
+          38.26542
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.61,
+        "intensity": "low",
+        "confidence": "59",
+        "acq_datetime": "2026-06-30 73:9Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.22742,
+          38.3441
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.98,
+        "intensity": "low",
+        "confidence": "34",
+        "acq_datetime": "2026-06-30 73:9Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.23011,
+          38.35361
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.16,
+        "intensity": "low",
+        "confidence": "54",
+        "acq_datetime": "2026-06-30 73:9Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          23.30164,
+          10.46068
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 17.79,
+        "intensity": "moderate",
+        "confidence": "66",
+        "acq_datetime": "2026-06-30 74:4Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.87961,
+          13.1443
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 4.85,
+        "intensity": "low",
+        "confidence": "42",
+        "acq_datetime": "2026-06-30 74:4Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.32107,
+          -4.02499
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.25,
+        "intensity": "low",
+        "confidence": "53",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.31083,
+          -4.02356
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 14.62,
+        "intensity": "moderate",
+        "confidence": "74",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.48862,
+          -3.89337
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.87,
+        "intensity": "low",
+        "confidence": "55",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.00516,
+          -3.80577
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 22.95,
+        "intensity": "moderate",
+        "confidence": "81",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.04157,
+          -3.12765
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 17.69,
+        "intensity": "moderate",
+        "confidence": "78",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.03194,
+          -3.1263
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 20.62,
+        "intensity": "moderate",
+        "confidence": "80",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.38298,
+          -2.82209
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.46,
+        "intensity": "low",
+        "confidence": "59",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.01606,
+          -2.38635
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.73,
+        "intensity": "moderate",
+        "confidence": "32",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.9969,
+          -2.38366
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 33.77,
+        "intensity": "moderate",
+        "confidence": "89",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.99814,
+          -2.37451
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 13.9,
+        "intensity": "moderate",
+        "confidence": "54",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.26514,
+          -2.275
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 4.99,
+        "intensity": "low",
+        "confidence": "62",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.25642,
+          -2.27376
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.2,
+        "intensity": "low",
+        "confidence": "66",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.69186,
+          -2.26174
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.75,
+        "intensity": "low",
+        "confidence": "71",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.39715,
+          -2.09636
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.97,
+        "intensity": "low",
+        "confidence": "70",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.49587,
+          -2.02707
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 18.46,
+        "intensity": "moderate",
+        "confidence": "79",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.88279,
+          -1.90186
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 13.36,
+        "intensity": "moderate",
+        "confidence": "76",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.75717,
+          -1.83904
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 21.31,
+        "intensity": "moderate",
+        "confidence": "83",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.69832,
+          -1.79205
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 25.78,
+        "intensity": "moderate",
+        "confidence": "85",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.68959,
+          -1.7908
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.83,
+        "intensity": "low",
+        "confidence": "61",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.66573,
+          -1.76946
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.56,
+        "intensity": "low",
+        "confidence": "52",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.65699,
+          -1.76821
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.27,
+        "intensity": "low",
+        "confidence": "57",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.62669,
+          -1.14451
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 24.23,
+        "intensity": "moderate",
+        "confidence": "85",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.61798,
+          -1.14327
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 44.47,
+        "intensity": "moderate",
+        "confidence": "93",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.72846,
+          -0.92435
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.05,
+        "intensity": "low",
+        "confidence": "63",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.71938,
+          -0.92304
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 18.73,
+        "intensity": "moderate",
+        "confidence": "80",
+        "acq_datetime": "2026-06-30 74:8Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.88884,
+          -7.82217
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 126.7,
+        "intensity": "high",
+        "confidence": "80",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.89452,
+          -7.8172
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 161.08,
+        "intensity": "high",
+        "confidence": "82",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.85818,
+          -7.81282
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 84.73,
+        "intensity": "high",
+        "confidence": "73",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.02751,
+          -7.43941
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 22.72,
+        "intensity": "moderate",
+        "confidence": "51",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          20.29824,
+          -7.39132
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 43.1,
+        "intensity": "moderate",
+        "confidence": "68",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          20.30023,
+          -7.37778
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 50.01,
+        "intensity": "high",
+        "confidence": "75",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.03714,
+          -7.28689
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 28.08,
+        "intensity": "moderate",
+        "confidence": "67",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.01787,
+          -7.28066
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 26.34,
+        "intensity": "moderate",
+        "confidence": "53",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.9637,
+          -7.23086
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 37.67,
+        "intensity": "moderate",
+        "confidence": "58",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.65208,
+          -6.65933
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 19.82,
+        "intensity": "moderate",
+        "confidence": "83",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.00199,
+          -6.19427
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.78,
+        "intensity": "low",
+        "confidence": "65",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.6175,
+          -5.12211
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 19.41,
+        "intensity": "moderate",
+        "confidence": "29",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.6066,
+          -5.12063
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 38.18,
+        "intensity": "moderate",
+        "confidence": "87",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.61315,
+          -5.11911
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 34.85,
+        "intensity": "moderate",
+        "confidence": "63",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.60229,
+          -5.11758
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 40.57,
+        "intensity": "moderate",
+        "confidence": "51",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.59277,
+          -5.10628
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 88.12,
+        "intensity": "high",
+        "confidence": "97",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.58173,
+          -5.10473
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 20.14,
+        "intensity": "moderate",
+        "confidence": "38",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.83737,
+          -5.06661
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.05,
+        "intensity": "low",
+        "confidence": "69",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.21251,
+          -5.02366
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.92,
+        "intensity": "low",
+        "confidence": "67",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.68487,
+          -4.81287
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.88,
+        "intensity": "low",
+        "confidence": "64",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.35625,
+          -4.69462
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.89,
+        "intensity": "low",
+        "confidence": "60",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.51305,
+          -4.3578
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.62,
+        "intensity": "low",
+        "confidence": "49",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.50245,
+          -4.3563
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.48,
+        "intensity": "low",
+        "confidence": "62",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.70527,
+          -4.27923
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.47,
+        "intensity": "low",
+        "confidence": "45",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.70634,
+          -4.27001
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.04,
+        "intensity": "low",
+        "confidence": "36",
+        "acq_datetime": "2026-06-30 75:0Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.67746,
+          -13.5113
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.23,
+        "intensity": "low",
+        "confidence": "44",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.86683,
+          -12.10425
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 13.27,
+        "intensity": "moderate",
+        "confidence": "74",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          14.86801,
+          -12.09465
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.85,
+        "intensity": "low",
+        "confidence": "69",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.81417,
+          -11.87428
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 18.85,
+        "intensity": "moderate",
+        "confidence": "72",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.06022,
+          -11.33142
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 4.45,
+        "intensity": "low",
+        "confidence": "23",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          19.7815,
+          -10.86458
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 36.79,
+        "intensity": "moderate",
+        "confidence": "69",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          19.77538,
+          -10.85727
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 67.81,
+        "intensity": "high",
+        "confidence": "79",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16.04199,
+          -10.49168
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.69,
+        "intensity": "low",
+        "confidence": "58",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          20.15724,
+          -9.90786
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 44.98,
+        "intensity": "moderate",
+        "confidence": "74",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          20.15277,
+          -9.89937
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 44.69,
+        "intensity": "moderate",
+        "confidence": "74",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          23.04422,
+          -9.82756
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 35.54,
+        "intensity": "moderate",
+        "confidence": "46",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.49526,
+          -9.64501
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 14.83,
+        "intensity": "moderate",
+        "confidence": "69",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.48696,
+          -9.64327
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.96,
+        "intensity": "moderate",
+        "confidence": "69",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.92548,
+          -9.35968
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 48.9,
+        "intensity": "moderate",
+        "confidence": "27",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.9277,
+          -9.34258
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 140.24,
+        "intensity": "high",
+        "confidence": "79",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.88854,
+          -9.33813
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 42.22,
+        "intensity": "moderate",
+        "confidence": "60",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.75215,
+          -9.08897
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 33.48,
+        "intensity": "moderate",
+        "confidence": "59",
+        "acq_datetime": "2026-06-30 75:2Z",
+        "daynight": "Day"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.39301,
+          -8.98312
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 32.04,
+        "intensity": "moderate",
+        "confidence": "56",
+        "acq_datetime": "2026-06-30 75:2Z",
         "daynight": "Day"
       }
     },
