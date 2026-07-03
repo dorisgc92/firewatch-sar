@@ -1,12 +1,12 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "generated_at": "2026-07-03T11:40:58.906326+00:00",
+    "generated_at": "2026-07-03T14:32:46.164854+00:00",
     "source": "Open-Meteo API (https://open-meteo.com/)",
     "description": "Current meteorological conditions at global grid points.",
     "grid_step_deg": 10.0,
-    "total_points": 8,
-    "errors": 0
+    "total_points": 4,
+    "errors": 4
   },
   "features": [
     {
@@ -19,12 +19,12 @@
         ]
       },
       "properties": {
-        "temp_c": 28.4,
-        "rh_pct": 80,
-        "wind_kmh": 16.4,
-        "wind_dir_deg": 91,
+        "temp_c": 28.3,
+        "rh_pct": 79,
+        "wind_kmh": 14.5,
+        "wind_dir_deg": 83,
         "rain_mm": 0.0,
-        "fetched_at": "2026-07-03T11:40:55.740763+00:00"
+        "fetched_at": "2026-07-03T14:30:23.491897+00:00"
       }
     },
     {
@@ -37,48 +37,12 @@
         ]
       },
       "properties": {
-        "temp_c": 28.7,
-        "rh_pct": 84,
-        "wind_kmh": 15.7,
-        "wind_dir_deg": 19,
-        "rain_mm": 0.0,
-        "fetched_at": "2026-07-03T11:40:56.145308+00:00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -98.0,
-          14
-        ]
-      },
-      "properties": {
-        "temp_c": 28.7,
+        "temp_c": 28.5,
         "rh_pct": 82,
-        "wind_kmh": 7.5,
-        "wind_dir_deg": 11,
+        "wind_kmh": 15.7,
+        "wind_dir_deg": 50,
         "rain_mm": 0.0,
-        "fetched_at": "2026-07-03T11:40:56.646479+00:00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -88.0,
-          14
-        ]
-      },
-      "properties": {
-        "temp_c": 15.2,
-        "rh_pct": 93,
-        "wind_kmh": 14.7,
-        "wind_dir_deg": 12,
-        "rain_mm": 0.0,
-        "fetched_at": "2026-07-03T11:40:57.040028+00:00"
+        "fetched_at": "2026-07-03T14:30:33.456031+00:00"
       }
     },
     {
@@ -91,12 +55,12 @@
         ]
       },
       "properties": {
-        "temp_c": 20.2,
-        "rh_pct": 89,
-        "wind_kmh": 17.3,
-        "wind_dir_deg": 45,
+        "temp_c": 20.1,
+        "rh_pct": 91,
+        "wind_kmh": 15.0,
+        "wind_dir_deg": 42,
         "rain_mm": 0.0,
-        "fetched_at": "2026-07-03T11:40:57.666471+00:00"
+        "fetched_at": "2026-07-03T14:31:39.897494+00:00"
       }
     },
     {
@@ -110,47 +74,11 @@
       },
       "properties": {
         "temp_c": 29.3,
-        "rh_pct": 73,
-        "wind_kmh": 9.4,
-        "wind_dir_deg": 173,
+        "rh_pct": 76,
+        "wind_kmh": 14.7,
+        "wind_dir_deg": 152,
         "rain_mm": 0.0,
-        "fetched_at": "2026-07-03T11:40:58.130266+00:00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -98.0,
-          24.0
-        ]
-      },
-      "properties": {
-        "temp_c": 25.3,
-        "rh_pct": 89,
-        "wind_kmh": 7.3,
-        "wind_dir_deg": 160,
-        "rain_mm": 0.0,
-        "fetched_at": "2026-07-03T11:40:58.530277+00:00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -88.0,
-          24.0
-        ]
-      },
-      "properties": {
-        "temp_c": 28.6,
-        "rh_pct": 70,
-        "wind_kmh": 10.3,
-        "wind_dir_deg": 119,
-        "rain_mm": 0.0,
-        "fetched_at": "2026-07-03T11:40:58.906309+00:00"
+        "fetched_at": "2026-07-03T14:31:45.838999+00:00"
       }
     }
   ]
