@@ -129,7 +129,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities }) {
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, setMapZoom }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, mapZoom, setMapZoom }) {
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false })
  
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
