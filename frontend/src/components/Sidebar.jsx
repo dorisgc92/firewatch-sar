@@ -29,7 +29,7 @@ const FWI_LABELS = {
   extreme: { label: "EXTREME", color: "#AA0000" },
 }
 
-export default function Sidebar({ activeModule, layers }) {
+export default function Sidebar({ activeModule, layers, infraFilter, onInfraFilter, mapZoom }) {
   const detections = layers.hotspots?.data?.features || []
   const perimeters = layers.perimeters?.data?.features || []
   const fwiPoints = layers.fwi?.data?.features || []
@@ -113,22 +113,33 @@ export default function Sidebar({ activeModule, layers }) {
                 (extremeDetections > 0 ? extremeDetections + " extreme-intensity detections require immediate attention. " : "") +
                 (totalPerimeters > 0 ? totalPerimeters + " active fire perimeters covering " + Math.round(totalHectares).toLocaleString() + " ha." : "")}
           </div>
-          <SectionTitle>INFRASTRUCTURE LEGEND</SectionTitle>
-          {[
-            { icon: "🏥", label: "Hospital / Clinic" },
-            { icon: "🚒", label: "Fire Station" },
-            { icon: "👮", label: "Police Station" },
-            { icon: "⚡", label: "Power Substation / Plant" },
-            { icon: "🏫", label: "School (shelter)" },
-            { icon: "⛽", label: "Fuel Station" },
-            { icon: "📡", label: "Tower" },
-            { icon: "💧", label: "Water Resource" },
-            { icon: "✈️", label: "Airport" },
-          ].map(({ icon, label }) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-              <span style={{ fontSize: "14px" }}>{icon}</span>
-              <span style={{ color: "#aaaaaa", fontSize: "11px" }}>{label}</span>
+          <SectionTitle>INFRASTRUCTURE FILTER</SectionTitle>
+          {mapZoom < 10 && (
+            <div style={{ color: "#FF8800", fontSize: "11px", marginBottom: "8px", fontStyle: "italic" }}>
+              Zoom in to level 10+ to see infrastructure
             </div>
+          )}
+          {[
+            { key: "hospital",     icon: "🏥", label: "Hospital / Clinic" },
+            { key: "fire_station", icon: "🚒", label: "Fire Station" },
+            { key: "police",       icon: "👮", label: "Police Station" },
+            { key: "power",        icon: "⚡", label: "Power Substation" },
+            { key: "school",       icon: "🏫", label: "School (shelter)" },
+            { key: "fuel",         icon: "⛽", label: "Fuel Station" },
+            { key: "tower",        icon: "📡", label: "Tower" },
+            { key: "water",        icon: "💧", label: "Water Resource" },
+            { key: "airport",      icon: "✈️", label: "Airport" },
+          ].map(({ key, icon, label }) => (
+            <label key={key} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "5px", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={infraFilter?.[key] !== false}
+                onChange={e => onInfraFilter(key, e.target.checked)}
+                style={{ width: "13px", height: "13px" }}
+              />
+              <span style={{ fontSize: "13px" }}>{icon}</span>
+              <span style={{ color: "#aaaaaa", fontSize: "11px" }}>{label}</span>
+            </label>
           ))}
         </>
       )}

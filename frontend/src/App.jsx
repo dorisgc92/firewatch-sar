@@ -10,6 +10,8 @@ export default function App() {
   const [searchResults, setSearchResults] = useState([])
   const mapRef = useRef(null)
   const layers = useFireData()
+  const [infraFilter, setInfraFilter] = useState({ hospital: true, fire_station: true, police: true, power: true, school: true, fuel: true, tower: true, water: true, airport: true })
+  const [mapZoom, setMapZoom] = useState(5)
 
   const handleSearch = async (q) => {
     setSearchQuery(q)
@@ -93,9 +95,9 @@ export default function App() {
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-          <FireMap activeModule={activeModule} layers={layers} mapRef={mapRef} />
+          <FireMap activeModule={activeModule} layers={layers} mapRef={mapRef} infraFilter={infraFilter} setMapZoom={setMapZoom} />
         </div>
-        <Sidebar activeModule={activeModule} layers={layers} />
+        <Sidebar activeModule={activeModule} layers={layers} infraFilter={infraFilter} onInfraFilter={(key, val) => setInfraFilter(prev => ({...prev, [key]: val}))} mapZoom={mapZoom} />
       </div>
 
       <FreshnessPanel layers={layers} />

@@ -52,7 +52,7 @@ function hotspotRadius(frp) {
   return 13
 }
 
-function MapController({ mapRef, onMove, active }) {
+function MapController({ mapRef, onMove, active, onZoom }) {
   const map = useMap()
 
   useEffect(() => {
@@ -67,6 +67,13 @@ function MapController({ mapRef, onMove, active }) {
     onMove(map)
     return () => map.off("moveend", handler)
   }, [map, onMove, active])
+
+  useEffect(() => {
+    if (!map) return
+    const handler = () => onZoom(map.getZoom())
+    map.on("zoomend", handler)
+    return () => map.off("zoomend", handler)
+  }, [map, onZoom])
 
   return null
 }
@@ -122,8 +129,9 @@ function LayerToggle({ layers, onChange, activeModule, intensities }) {
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, setMapZoom }) {
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false })
+ 
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
   const [infraFeatures, setInfraFeatures] = useState([])
   const [infraLoading, setInfraLoading] = useState(false)
@@ -159,7 +167,7 @@ export default function FireMap({ activeModule, layers, mapRef }) {
           attribution='&copy; OpenStreetMap contributors &copy; CARTO'
           maxZoom={19} />
 
-       <MapController mapRef={mapRef} onMove={loadInfra} active={false} />
+       <MapController mapRef={mapRef} onMove={loadInfra} active={false} onZoom={setMapZoom} />
 
         {activeModule === 1 && visibleLayers.fwi && layers.fwi?.data?.features?.map((feat, i) => {
           const { fwi, risk_class, risk_label, temp_c, rh_pct, wind_kmh, trend } = feat.properties
@@ -212,8 +220,22 @@ export default function FireMap({ activeModule, layers, mapRef }) {
             }} />
         )}
 
-        {activeModule === 2 && visibleLayers.infrastructure && 
-          (layers.infrastructure?.data?.features || []).map((feat, i) => {
+        {activeModule === 2 && visibleLayers.infrastructure && mapZoom >= 10 &&
+          (layers.infrastructure?.data?.features || [])
+          .filter(f => {
+            const t = f.properties.type
+            if ((t === "Hospital" || t === "Clinic") && !infraFilter.hospital) return false
+            if (t === "Fire Station" && !infraFilter.fire_station) return false
+            if (t === "Police Station" && !infraFilter.police) return false
+            if ((t === "Power Substation" || t === "Power Plant") && !infraFilter.power) return false
+            if (t === "School (shelter)" && !infraFilter.school) return false
+            if (t === "Fuel Station" && !infraFilter.fuel) return false
+            if (t === "Tower" && !infraFilter.tower) return false
+            if ((t === "Water Reservoir" || t === "Water Body") && !infraFilter.water) return false
+            if (t === "Airport/Airfield" && !infraFilter.airport) return false
+            return true
+          })
+          .map((feat, i) => {
           const { name, type, color, icon } = feat.properties
           const [lon, lat] = feat.geometry.coordinates
           const ICONS = {
