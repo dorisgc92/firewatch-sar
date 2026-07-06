@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, Tooltip, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
 import { filterFeaturesByBbox } from "../utils/spatial"
@@ -16,15 +16,33 @@ const FWI_COLORS = { low: "#38A800", moderate: "#FFFF00", high: "#FFAA00", very_
 // Photon API and slow the map down. Click popups always work regardless.
 const MAX_LABELED_POINTS = 40
 
-function hotspotRadius(frp) {
-  if (!frp) return 5
-  if (frp < 10) return 5
-  if (frp < 50) return 7
-  if (frp < 200) return 10
-  return 14
+// Leaflet CircleMarker radius is a fixed pixel size regardless of zoom, which
+// makes a dot calibrated for a city-level view look enormous once you zoom
+// out to see the whole world. Scale it against zoom level (anchored at 9,
+// the default zone view) so it shrinks when zoomed out and grows slightly
+// when zoomed in close.
+function hotspotRadius(frp, zoom) {
+  let base
+  if (!frp) base = 5
+  else if (frp < 10) base = 5
+  else if (frp < 50) base = 7
+  else if (frp < 200) base = 10
+  else base = 14
+  const z = zoom ?? 9
+  const factor = Math.max(0.35, Math.min(1.4, z / 9))
+  return Math.max(2, Math.round(base * factor))
 }
 
-function MapController({ mapRef, onZoom }) {
+function boundsToBbox(bounds) {
+  return {
+    minLon: bounds.getWest(),
+    maxLon: bounds.getEast(),
+    minLat: bounds.getSouth(),
+    maxLat: bounds.getNorth(),
+  }
+}
+
+function MapController({ mapRef, onZoom, onMove }) {
   const map = useMap()
   useEffect(() => {
     if (!map) return
@@ -37,6 +55,14 @@ function MapController({ mapRef, onZoom }) {
     map.on("zoomend", handler)
     return () => map.off("zoomend", handler)
   }, [map, onZoom])
+
+  useEffect(() => {
+    if (!map) return
+    const handler = () => onMove(boundsToBbox(map.getBounds()))
+    map.on("moveend", handler)
+    handler() // populate the initial viewport immediately, don't wait for the first pan
+    return () => map.off("moveend", handler)
+  }, [map, onMove])
 
   return null
 }
@@ -187,17 +213,27 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     }
   }
 
-  const zoneHotspots = useMemo(() => {
-    const feats = layers.hotspots?.data?.features
-    if (!feats || !zoneInfo?.zoneBbox) return []
-    return filterFeaturesByBbox(feats, zoneInfo.zoneBbox)
-  }, [layers.hotspots?.data, zoneInfo])
+  const [viewportBbox, setViewportBbox] = useState(null)
+  const handleMove = useCallback((bbox) => setViewportBbox(bbox), [])
 
-  const zonePerimeters = useMemo(() => {
+  // The map now shows whatever fires/perimeters fall within the CURRENT
+  // VIEWPORT (updates as you pan/zoom), not a fixed box around the searched
+  // zone — so zooming out reveals fires from other countries too. This is
+  // separate from the sidebar's country/state/zone stats, which still use
+  // the fixed zoneInfo bboxes (that's the "command center" scoping).
+  const viewportHotspots = useMemo(() => {
+    const feats = layers.hotspots?.data?.features
+    const bbox = viewportBbox || zoneInfo?.zoneBbox
+    if (!feats || !bbox) return []
+    return filterFeaturesByBbox(feats, bbox)
+  }, [layers.hotspots?.data, viewportBbox, zoneInfo])
+
+  const viewportPerimeters = useMemo(() => {
     const feats = layers.perimeters?.data?.features
-    if (!feats || !zoneInfo?.zoneBbox) return []
-    return filterFeaturesByBbox(feats, zoneInfo.zoneBbox)
-  }, [layers.perimeters?.data, zoneInfo])
+    const bbox = viewportBbox || zoneInfo?.zoneBbox
+    if (!feats || !bbox) return []
+    return filterFeaturesByBbox(feats, bbox)
+  }, [layers.perimeters?.data, viewportBbox, zoneInfo])
 
   // Bundled infrastructure.geojson currently only covers Jalisco (manually
   // refreshed). If the selected zone falls inside that coverage, use it —
@@ -230,11 +266,11 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
   const zoneInfrastructure = bundledZoneInfrastructure.length > 0 ? bundledZoneInfrastructure : liveInfra.features
 
-  const visibleZoneHotspots = useMemo(
-    () => zoneHotspots.filter(f => visibleIntensities[f.properties.intensity] !== false),
-    [zoneHotspots, visibleIntensities]
+  const visibleViewportHotspots = useMemo(
+    () => viewportHotspots.filter(f => visibleIntensities[f.properties.intensity] !== false),
+    [viewportHotspots, visibleIntensities]
   )
-  const showLabels = visibleZoneHotspots.length <= MAX_LABELED_POINTS
+  const showLabels = visibleViewportHotspots.length <= MAX_LABELED_POINTS
 
   const center = zoneInfo?.center || [23, -102]
 
@@ -249,7 +285,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           attribution='&copy; OpenStreetMap contributors &copy; CARTO'
           maxZoom={19} />
 
-        <MapController mapRef={mapRef} onZoom={setMapZoom} />
+        <MapController mapRef={mapRef} onZoom={setMapZoom} onMove={handleMove} />
 
         {activeModule === 1 && visibleLayers.fwi && layers.fwi?.data?.features?.map((feat, i) => {
           const { fwi, risk_class, risk_label, temp_c, rh_pct, wind_kmh, trend } = feat.properties
@@ -268,16 +304,17 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         })}
 
         {activeModule === 2 && visibleLayers.hotspots &&
-          visibleZoneHotspots.map((feat, i) => {
+          visibleViewportHotspots.map((feat, i) => {
               const { frp, intensity, source, acq_datetime } = feat.properties
               const [lon, lat] = feat.geometry.coordinates
               const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
               const stroke = INTENSITY_STROKE[intensity] || INTENSITY_STROKE.unknown
+              const r = hotspotRadius(frp, mapZoom)
               return (
-                <CircleMarker key={i} center={[lat, lon]} radius={hotspotRadius(frp)}
+                <CircleMarker key={i} center={[lat, lon]} radius={r}
                   pathOptions={{ color: stroke, fillColor: color, fillOpacity: 0.92, weight: 2 }}>
                   {showLabels && (
-                    <Tooltip permanent direction="top" offset={[0, -hotspotRadius(frp)]} opacity={0.92}>
+                    <Tooltip permanent direction="top" offset={[0, -r]} opacity={0.92}>
                       <FireLabel lat={lat} lon={lon} />
                     </Tooltip>
                   )}
@@ -292,11 +329,11 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           const [lon, lat] = selectedFire.geometry.coordinates
           const { frp, intensity, source, acq_datetime } = selectedFire.properties
           const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
-          const r = hotspotRadius(frp)
+          const r = hotspotRadius(frp, mapZoom) + 6
           return (
-            <CircleMarker center={[lat, lon]} radius={r + 6}
+            <CircleMarker center={[lat, lon]} radius={r}
               pathOptions={{ color: theme.navy, fillColor: color, fillOpacity: 0.9, weight: 3, dashArray: "3 3" }}>
-              <Tooltip permanent direction="top" offset={[0, -(r + 6)]} opacity={0.95}>
+              <Tooltip permanent direction="top" offset={[0, -r]} opacity={0.95}>
                 <FireLabel lat={lat} lon={lon} />
               </Tooltip>
               <Popup>
@@ -306,9 +343,9 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           )
         })()}
 
-        {activeModule === 2 && visibleLayers.perimeters && zonePerimeters.length > 0 && (
-          <GeoJSON key={layers.perimeters.generatedAt + "-" + zonePerimeters.length}
-            data={{ type: "FeatureCollection", features: zonePerimeters }}
+        {activeModule === 2 && visibleLayers.perimeters && viewportPerimeters.length > 0 && (
+          <GeoJSON key={layers.perimeters.generatedAt + "-" + viewportPerimeters.length}
+            data={{ type: "FeatureCollection", features: viewportPerimeters }}
             style={() => ({ color: "#FF6600", fillColor: "#FF4400", fillOpacity: 0.25, weight: 2 })}
             onEachFeature={(feature, layer) => {
               const { name, hectares, country, source, date_updated } = feature.properties
