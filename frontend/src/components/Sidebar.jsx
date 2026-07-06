@@ -1,9 +1,15 @@
-﻿function SectionTitle({ children }) {
+import { useEffect, useMemo, useState } from "react"
+import { filterFeaturesByBbox } from "../utils/spatial"
+import { buildCommandBrief } from "../utils/commandAnalysis"
+import { reverseGeocodePlace } from "../utils/geocode"
+import { theme } from "../utils/theme"
+
+function SectionTitle({ children }) {
   return (
     <div style={{
-      color: "#7aafd4", fontSize: "11px", fontWeight: "bold",
+      color: theme.textMuted, fontSize: "11px", fontWeight: "bold",
       letterSpacing: "0.08em", marginTop: "16px", marginBottom: "6px",
-      borderBottom: "1px solid #2a3a4a", paddingBottom: "4px",
+      borderBottom: `1px solid ${theme.border}`, paddingBottom: "4px",
     }}>
       {children}
     </div>
@@ -13,8 +19,8 @@
 function StatRow({ label, value, color }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-      <span style={{ color: "#888", fontSize: "12px" }}>{label}</span>
-      <span style={{ color: color || "#ffffff", fontSize: "12px", fontWeight: "bold" }}>
+      <span style={{ color: theme.textSecondary, fontSize: "12px" }}>{label}</span>
+      <span style={{ color: color || theme.textPrimary, fontSize: "12px", fontWeight: "bold" }}>
         {value}
       </span>
     </div>
@@ -23,124 +29,165 @@ function StatRow({ label, value, color }) {
 
 const FWI_LABELS = {
   low: { label: "LOW", color: "#38A800" },
-  moderate: { label: "MODERATE", color: "#CCCC00" },
+  moderate: { label: "MODERATE", color: "#a8a800" },
   high: { label: "HIGH", color: "#FFAA00" },
   very_high: { label: "VERY HIGH", color: "#FF4400" },
   extreme: { label: "EXTREME", color: "#AA0000" },
 }
 
-export default function Sidebar({ activeModule, layers, infraFilter, onInfraFilter, mapZoom }) {
-  const detections = layers.hotspots?.data?.features || []
-  const perimeters = layers.perimeters?.data?.features || []
+function PriorityFireCard({ fire, index }) {
+  const [place, setPlace] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    reverseGeocodePlace(fire.lat, fire.lon).then(p => { if (!cancelled) setPlace(p) })
+    return () => { cancelled = true }
+  }, [fire.lat, fire.lon])
+
+  const intensityColor = fire.intensity === "extreme" ? theme.danger : "#cc5500"
+
+  return (
+    <div style={{
+      background: "#fff", border: `1px solid ${theme.border}`, borderLeft: `3px solid ${intensityColor}`,
+      borderRadius: "6px", padding: "8px 10px", marginBottom: "8px",
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <span style={{ fontSize: "12.5px", fontWeight: "bold", color: theme.textPrimary }}>
+          #{index + 1} {place || `${fire.lat.toFixed(3)}, ${fire.lon.toFixed(3)}`}
+        </span>
+        <span style={{ fontSize: "11px", fontWeight: "bold", color: intensityColor, textTransform: "uppercase" }}>
+          {fire.intensity}
+        </span>
+      </div>
+      <div style={{ fontSize: "11px", color: theme.textMuted, marginBottom: "5px" }}>
+        {fire.lat.toFixed(4)}, {fire.lon.toFixed(4)} · FRP {fire.frp ? fire.frp + " MW" : "N/A"}
+      </div>
+
+      <div style={{ fontSize: "11.5px", color: theme.textSecondary, lineHeight: "1.7" }}>
+        <div>🏥 Evacuar hacia: {fire.nearestHospital
+          ? `${fire.nearestHospital.name} (${fire.nearestHospital.km.toFixed(1)} km)`
+          : "sin dato de hospital en la zona"}</div>
+        <div>🚒 Unidad más cercana: {fire.nearestFireStation
+          ? `${fire.nearestFireStation.name} (${fire.nearestFireStation.km.toFixed(1)} km)`
+          : "sin dato de estación en la zona"}</div>
+        <div>👮 Apoyo policial: {fire.nearestPolice
+          ? `${fire.nearestPolice.name} (${fire.nearestPolice.km.toFixed(1)} km)`
+          : "sin dato de estación en la zona"}</div>
+        <div>💨 Propagación: {fire.windKmh != null
+          ? `viento ${fire.windKmh.toFixed(0)} km/h ${fire.windDir || ""}, tendencia FWI ${fire.fwiTrend || "N/A"}`
+          : "sin dato de viento cercano"}</div>
+      </div>
+    </div>
+  )
+}
+
+export default function Sidebar({ activeModule, layers, mapZoom, zoneInfo, responderType }) {
+  const allDetections = layers.hotspots?.data?.features || []
   const fwiPoints = layers.fwi?.data?.features || []
 
-  const totalDetections = detections.length
-  const extremeDetections = detections.filter(f => f.properties.intensity === "extreme").length
-  const highDetections = detections.filter(f => f.properties.intensity === "high").length
+  const zoneHotspots = useMemo(
+    () => filterFeaturesByBbox(allDetections, zoneInfo?.zoneBbox),
+    [allDetections, zoneInfo]
+  )
+  const countryHotspots = useMemo(
+    () => filterFeaturesByBbox(allDetections, zoneInfo?.countryBbox),
+    [allDetections, zoneInfo]
+  )
+  const stateHotspots = useMemo(
+    () => filterFeaturesByBbox(allDetections, zoneInfo?.stateBbox),
+    [allDetections, zoneInfo]
+  )
+  const zoneInfrastructure = useMemo(
+    () => filterFeaturesByBbox(layers.infrastructure?.data?.features || [], zoneInfo?.zoneBbox),
+    [layers.infrastructure?.data, zoneInfo]
+  )
+  const zonePerimeters = useMemo(
+    () => filterFeaturesByBbox(layers.perimeters?.data?.features || [], zoneInfo?.zoneBbox),
+    [layers.perimeters?.data, zoneInfo]
+  )
 
-  const totalPerimeters = perimeters.length
-  const totalHectares = perimeters.reduce((sum, f) => sum + (f.properties.hectares || 0), 0)
+  const totalDetectionsGlobal = allDetections.length
+  const zoneExtreme = zoneHotspots.filter(f => f.properties.intensity === "extreme").length
+  const zoneHigh = zoneHotspots.filter(f => f.properties.intensity === "high").length
+  const zoneHectares = zonePerimeters.reduce((sum, f) => sum + (f.properties.hectares || 0), 0)
 
-  const largestFire = perimeters.reduce((max, f) =>
-    (f.properties.hectares || 0) > (max?.properties?.hectares || 0) ? f : max, null)
+  const brief = useMemo(() => buildCommandBrief({
+    zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints, responderType,
+  }), [zoneHotspots, zoneInfrastructure, fwiPoints, responderType])
 
   const maxFWI = fwiPoints.reduce((max, f) =>
     (f.properties.fwi || 0) > (max?.properties?.fwi || 0) ? f : max, null)
-
   const escalatingZones = fwiPoints.filter(f => f.properties.trend === "escalating").length
   const extremeZones = fwiPoints.filter(f => f.properties.risk_class === "extreme").length
   const veryHighZones = fwiPoints.filter(f => f.properties.risk_class === "very_high").length
 
   return (
     <div style={{
-      width: "240px", flexShrink: 0, background: "#111820",
-      borderLeft: "1px solid #2a3a4a", padding: "12px",
+      width: "270px", flexShrink: 0, background: theme.panelBg,
+      borderLeft: `1px solid ${theme.border}`, padding: "12px",
       overflowY: "auto", display: "flex", flexDirection: "column",
     }}>
       <div style={{
-        background: activeModule === 1 ? "#0d2a4a" : "#2a0d00",
-        border: "1px solid " + (activeModule === 1 ? "#2e5b8a" : "#8a3000"),
+        background: activeModule === 1 ? theme.navySoft : theme.orangeSoft,
+        border: `1px solid ${activeModule === 1 ? theme.navy : theme.orange}`,
         borderRadius: "6px", padding: "8px", marginBottom: "4px", textAlign: "center",
       }}>
-        <div style={{ fontSize: "13px", fontWeight: "bold", color: "#ffffff" }}>
+        <div style={{ fontSize: "13px", fontWeight: "bold", color: theme.textPrimary }}>
           {activeModule === 1 ? "Pre-Fire Risk View" : "Active Fire View"}
         </div>
-        <div style={{ fontSize: "11px", color: "#888", marginTop: "2px" }}>
-          {activeModule === 1 ? "Module 1 - FWI Forecast" : "Module 2 - Situational Awareness"}
+        <div style={{ fontSize: "11px", color: theme.textSecondary, marginTop: "2px" }}>
+          {activeModule === 1 ? "Module 1 - FWI Forecast" : "Module 2 - Command Center"}
         </div>
       </div>
 
       {activeModule === 2 && (
         <>
           <SectionTitle>ACTIVE FIRES</SectionTitle>
-          <StatRow label="Total fire detections" value={totalDetections.toLocaleString()} />
-          <StatRow label="Extreme intensity" value={extremeDetections} color="#FF4400" />
-          <StatRow label="High intensity" value={highDetections} color="#FF8800" />
-          <StatRow label="Active perimeters" value={totalPerimeters} />
+          <StatRow label="Total detections (worldwide)" value={totalDetectionsGlobal.toLocaleString()} />
+          <StatRow label={`In ${zoneInfo?.country || "country"}`} value={countryHotspots.length.toLocaleString()} />
+          <StatRow label={`In ${zoneInfo?.state || "state"}`} value={stateHotspots.length.toLocaleString()} />
+          <StatRow label={`In ${zoneInfo?.name || "monitored zone"}`} value={zoneHotspots.length.toLocaleString()} color={theme.orange} />
+          <StatRow label="Extreme intensity (zone)" value={zoneExtreme} color={theme.danger} />
+          <StatRow label="High intensity (zone)" value={zoneHigh} color="#cc5500" />
           <StatRow
-            label="Total area"
-            value={totalHectares > 0 ? Math.round(totalHectares).toLocaleString() + " ha" : "N/A"}
-            color="#FF8800"
+            label="Total burned area (zone)"
+            value={zoneHectares > 0 ? Math.round(zoneHectares).toLocaleString() + " ha" : "N/A"}
+            color="#cc5500"
           />
-
-          {largestFire && (
-            <>
-              <SectionTitle>LARGEST ACTIVE FIRE</SectionTitle>
-              <div style={{ color: "#ffcc88", fontSize: "13px", fontWeight: "bold", marginBottom: "4px" }}>
-                {largestFire.properties.name}
-              </div>
-              <StatRow
-                label="Area"
-                value={Math.round(largestFire.properties.hectares || 0).toLocaleString() + " ha"}
-                color="#FF8800"
-              />
-              <StatRow label="Country" value={largestFire.properties.country || "N/A"} />
-              <StatRow label="Source" value={largestFire.properties.source || "N/A"} />
-            </>
-          )}
 
           <SectionTitle>SITUATION SUMMARY</SectionTitle>
           <div style={{
-            background: "#1a0d00", border: "1px solid #8a3000",
-            borderRadius: "6px", padding: "8px", fontSize: "12px",
-            lineHeight: "1.6", color: "#ffccaa",
+            background: "#fff", border: `1px solid ${theme.border}`,
+            borderRadius: "6px", padding: "10px", fontSize: "12px",
           }}>
-            {totalDetections === 0 && !layers.hotspots?.loading
-              ? "No active fire detections in current view."
-              : layers.hotspots?.loading
-              ? "Loading fire detection data..."
-              : totalDetections.toLocaleString() + " active fire detections globally. " +
-                (extremeDetections > 0 ? extremeDetections + " extreme-intensity detections require immediate attention. " : "") +
-                (totalPerimeters > 0 ? totalPerimeters + " active fire perimeters covering " + Math.round(totalHectares).toLocaleString() + " ha." : "")}
+            {layers.hotspots?.loading ? (
+              <span style={{ color: theme.textSecondary }}>Cargando datos de incendios...</span>
+            ) : brief.empty ? (
+              <span style={{ color: theme.textSecondary }}>
+                No hay focos activos en {zoneInfo?.name}. Vigilancia continua sobre FIRMS (actualización horaria).
+              </span>
+            ) : (
+              <>
+                <div style={{ color: theme.textSecondary, marginBottom: "8px", lineHeight: "1.5" }}>
+                  {brief.priorityFires.length} foco(s) requieren atención prioritaria en {zoneInfo?.name}.
+                  {!brief.hasInfraData && (
+                    <span style={{ color: theme.orange }}> Aún no hay datos de infraestructura mapeados para esta zona.</span>
+                  )}
+                </div>
+                {brief.priorityFires.map((fire, i) => (
+                  <PriorityFireCard key={i} fire={fire} index={i} />
+                ))}
+                {brief.actionLine && (
+                  <div style={{
+                    marginTop: "4px", background: theme.orangeSoft, border: `1px solid ${theme.orange}`,
+                    borderRadius: "6px", padding: "8px", fontSize: "11.5px", color: "#8a4200", lineHeight: "1.5",
+                  }}>
+                    <strong>Acción recomendada:</strong> {brief.actionLine}
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          <SectionTitle>INFRASTRUCTURE FILTER</SectionTitle>
-          {mapZoom < 10 && (
-            <div style={{ color: "#FF8800", fontSize: "11px", marginBottom: "8px", fontStyle: "italic" }}>
-              Zoom in to level 10+ to see infrastructure
-            </div>
-          )}
-          {[
-            { key: "hospital",     icon: "🏥", label: "Hospital / Clinic" },
-            { key: "fire_station", icon: "🚒", label: "Fire Station" },
-            { key: "police",       icon: "👮", label: "Police Station" },
-            { key: "power",        icon: "⚡", label: "Power Substation" },
-            { key: "school",       icon: "🏫", label: "School (shelter)" },
-            { key: "fuel",         icon: "⛽", label: "Fuel Station" },
-            { key: "tower",        icon: "📡", label: "Tower" },
-            { key: "water",        icon: "💧", label: "Water Resource" },
-            { key: "airport",      icon: "✈️", label: "Airport" },
-          ].map(({ key, icon, label }) => (
-            <label key={key} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "5px", cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={infraFilter?.[key] !== false}
-                onChange={e => onInfraFilter(key, e.target.checked)}
-                style={{ width: "13px", height: "13px" }}
-              />
-              <span style={{ fontSize: "13px" }}>{icon}</span>
-              <span style={{ color: "#aaaaaa", fontSize: "11px" }}>{label}</span>
-            </label>
-          ))}
         </>
       )}
 
@@ -149,22 +196,22 @@ export default function Sidebar({ activeModule, layers, infraFilter, onInfraFilt
           <SectionTitle>FIRE WEATHER INDEX</SectionTitle>
           {maxFWI && (
             <div style={{ marginBottom: "8px" }}>
-              <div style={{ color: "#888", fontSize: "11px", marginBottom: "3px" }}>
+              <div style={{ color: theme.textSecondary, fontSize: "11px", marginBottom: "3px" }}>
                 Highest FWI detected:
               </div>
               <div style={{
                 fontSize: "28px", fontWeight: "bold",
-                color: FWI_LABELS[maxFWI.properties.risk_class]?.color || "#ffffff",
+                color: FWI_LABELS[maxFWI.properties.risk_class]?.color || theme.textPrimary,
               }}>
                 {maxFWI.properties.fwi}
               </div>
               <div style={{
                 fontSize: "13px", fontWeight: "bold",
-                color: FWI_LABELS[maxFWI.properties.risk_class]?.color || "#ffffff",
+                color: FWI_LABELS[maxFWI.properties.risk_class]?.color || theme.textPrimary,
               }}>
                 {FWI_LABELS[maxFWI.properties.risk_class]?.label || "UNKNOWN"}
               </div>
-              <div style={{ color: "#666", fontSize: "11px", marginTop: "2px" }}>
+              <div style={{ color: theme.textMuted, fontSize: "11px", marginTop: "2px" }}>
                 at {maxFWI.properties.lat}, {maxFWI.properties.lon}
               </div>
             </div>
@@ -173,7 +220,7 @@ export default function Sidebar({ activeModule, layers, infraFilter, onInfraFilt
           <StatRow
             label="Extreme risk zones"
             value={extremeZones}
-            color={extremeZones > 0 ? "#AA0000" : "#38A800"}
+            color={extremeZones > 0 ? theme.danger : "#38A800"}
           />
           <StatRow
             label="Very high risk zones"
@@ -183,15 +230,15 @@ export default function Sidebar({ activeModule, layers, infraFilter, onInfraFilt
           <StatRow
             label="Escalating zones"
             value={escalatingZones}
-            color={escalatingZones > 0 ? "#FF8800" : "#38A800"}
+            color={escalatingZones > 0 ? theme.orange : "#38A800"}
           />
 
           <SectionTitle>FORECAST ALERT</SectionTitle>
           <div style={{
-            background: extremeZones > 0 ? "#2a0000" : "#0a2a0a",
-            border: "1px solid " + (extremeZones > 0 ? "#cc0000" : "#006600"),
+            background: extremeZones > 0 ? theme.dangerSoft : theme.greenSoft,
+            border: "1px solid " + (extremeZones > 0 ? theme.danger : "#2e7d32"),
             borderRadius: "6px", padding: "8px", fontSize: "12px",
-            lineHeight: "1.6", color: extremeZones > 0 ? "#ffaaaa" : "#aaffaa",
+            lineHeight: "1.6", color: extremeZones > 0 ? "#7a1a15" : "#1b5e20",
           }}>
             {layers.fwi?.loading
               ? "Computing FWI..."
@@ -208,7 +255,7 @@ export default function Sidebar({ activeModule, layers, infraFilter, onInfraFilt
         <>
           <SectionTitle>DATA ERRORS</SectionTitle>
           {Object.entries(layers).filter(([, v]) => v.error).map(([key, v]) => (
-            <div key={key} style={{ color: "#ff8888", fontSize: "11px", marginBottom: "4px" }}>
+            <div key={key} style={{ color: theme.danger, fontSize: "11px", marginBottom: "4px" }}>
               {key}: {v.error}
             </div>
           ))}

@@ -1,48 +1,24 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
-
-const OVERPASS_URL = "/api/overpass"
-const INFRA_TYPES = [
-  ["amenity", "hospital",     "Hospital",         "#FF4444"],
-  ["amenity", "fire_station", "Fire Station",     "#FF6600"],
-  ["amenity", "police",       "Police Station",   "#0044FF"],
-  ["power",   "substation",   "Power Substation", "#FFAA00"],
-  ["aeroway", "aerodrome",    "Airport",          "#44AAFF"],
-]
-
-async function fetchInfraForBounds(bounds) {
-  const s = bounds.getSouth().toFixed(4)
-  const w = bounds.getWest().toFixed(4)
-  const n = bounds.getNorth().toFixed(4)
-  const e = bounds.getEast().toFixed(4)
-  const bb = `${s},${w},${n},${e}`
-  const tags = INFRA_TYPES.map(([k, v]) =>
-    `  node["${k}"="${v}"](${bb});\n  way["${k}"="${v}"](${bb});`
-  ).join("\n")
-  const query = `[out:json][timeout:30];\n(\n${tags}\n);\nout center;`
-  const r = await fetch(OVERPASS_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data: query })
-  })
-  const data = await r.json()
-  return data.elements.map(el => {
-    const lat = el.type === "node" ? el.lat : el.center?.lat
-    const lon = el.type === "node" ? el.lon : el.center?.lon
-    if (!lat) return null
-    const t = el.tags || {}
-    const match = INFRA_TYPES.find(([k, v]) => t[k] === v)
-    return {
-      type: "Feature",
-      geometry: { type: "Point", coordinates: [lon, lat] },
-      properties: { name: t.name || t["name:es"] || match?.[2] || "Unknown", type: match?.[2] || "Other", color: match?.[3] || "#888888" }
-    }
-  }).filter(Boolean)
-}
+import { filterFeaturesByBbox } from "../utils/spatial"
+import { reverseGeocodePlace } from "../utils/geocode"
+import { theme } from "../utils/theme"
 
 const FWI_COLORS = { low: "#38A800", moderate: "#FFFF00", high: "#FFAA00", very_high: "#FF0000", extreme: "#7A0000", unknown: "#888888" }
 const INTENSITY_COLORS = { low: "#FFEE88", moderate: "#FF9900", high: "#FF4400", extreme: "#AA0000", unknown: "#FF6600" }
+
+const INFRA_FILTER_OPTIONS = [
+  { key: "hospital",     icon: "🏥", label: "Hospital / Clinic" },
+  { key: "fire_station", icon: "🚒", label: "Fire Station" },
+  { key: "police",       icon: "👮", label: "Police Station" },
+  { key: "power",        icon: "⚡", label: "Power Substation" },
+  { key: "school",       icon: "🏫", label: "School (shelter)" },
+  { key: "fuel",         icon: "⛽", label: "Fuel Station" },
+  { key: "tower",        icon: "📡", label: "Tower" },
+  { key: "water",        icon: "💧", label: "Water Resource" },
+  { key: "airport",      icon: "✈️", label: "Airport" },
+]
 
 function hotspotRadius(frp) {
   if (!frp) return 4
@@ -52,21 +28,12 @@ function hotspotRadius(frp) {
   return 13
 }
 
-function MapController({ mapRef, onMove, active, onZoom }) {
+function MapController({ mapRef, onZoom }) {
   const map = useMap()
-
   useEffect(() => {
     if (!map) return
     mapRef.current = map
   }, [map, mapRef])
-
-  useEffect(() => {
-    if (!map || !active) return
-    const handler = () => onMove(map)
-    map.on("moveend", handler)
-    onMove(map)
-    return () => map.off("moveend", handler)
-  }, [map, onMove, active])
 
   useEffect(() => {
     if (!map) return
@@ -77,7 +44,34 @@ function MapController({ mapRef, onMove, active, onZoom }) {
 
   return null
 }
-function LayerToggle({ layers, onChange, activeModule, intensities }) {
+
+// Fire detection popups start with lat/lon (always available) and
+// lazily resolve a human-readable place name so responders can see
+// "which forest/area is on fire" instead of just coordinates.
+function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime }) {
+  const [place, setPlace] = useState(null)
+  const [resolved, setResolved] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    reverseGeocodePlace(lat, lon).then((p) => {
+      if (!cancelled) { setPlace(p); setResolved(true) }
+    })
+    return () => { cancelled = true }
+  }, [lat, lon])
+
+  return (
+    <div style={{ fontSize: "12.5px" }}>
+      <strong>{place || (resolved ? "Ubicación sin nombre catastrado" : "Ubicando sitio…")}</strong><br />
+      Coordenadas: {lat.toFixed(4)}, {lon.toFixed(4)}<br />
+      FRP: {frp ? frp + " MW" : "N/A"} · Intensidad: {intensity}<br />
+      Sensor: {source}<br />
+      Detectado: {acq_datetime}
+    </div>
+  )
+}
+
+function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter, onInfraFilter, mapZoom }) {
   const m2 = [
     { key: "hotspots",       label: "Active Fire Detections", color: "#FF4400" },
     { key: "perimeters",     label: "Perimeters",             color: "#FF8800" },
@@ -90,21 +84,23 @@ function LayerToggle({ layers, onChange, activeModule, intensities }) {
   const active = activeModule === 1 ? m1 : m2
   return (
     <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 1000,
-      background: "rgba(20,30,40,0.92)", borderRadius: "8px", padding: "10px",
-      minWidth: "180px", border: "1px solid #2e5b8a" }}>
-      <div style={{ color: "#7aafd4", fontSize: "11px", fontWeight: "bold", marginBottom: "8px" }}>LAYERS</div>
+      background: theme.panelBgSoft, borderRadius: "8px", padding: "10px",
+      minWidth: "195px", maxHeight: "calc(100% - 20px)", overflowY: "auto",
+      border: `1px solid ${theme.border}`, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+      <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold", marginBottom: "8px", letterSpacing: "0.04em" }}>LAYERS</div>
       {active.map(({ key, label, color }) => (
         <label key={key} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", marginBottom: "6px" }}>
           <input type="checkbox" checked={layers[key] !== false}
             onChange={e => onChange(key, e.target.checked)}
             style={{ accentColor: color, width: "14px", height: "14px" }} />
-          <span style={{ color: "#ddd", fontSize: "13px" }}>{label}</span>
+          <span style={{ color: theme.textPrimary, fontSize: "13px" }}>{label}</span>
         </label>
       ))}
+
       {activeModule === 2 && (
         <>
-          <div style={{ color: "#7aafd4", fontSize: "11px", fontWeight: "bold",
-            marginTop: "12px", marginBottom: "6px", borderTop: "1px solid #2a3a4a", paddingTop: "8px" }}>
+          <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold",
+            marginTop: "12px", marginBottom: "6px", borderTop: `1px solid ${theme.border}`, paddingTop: "8px", letterSpacing: "0.04em" }}>
             INTENSITY FILTER
           </div>
           {[
@@ -117,10 +113,29 @@ function LayerToggle({ layers, onChange, activeModule, intensities }) {
               <input type="checkbox" checked={intensities?.[key] !== false}
                 onChange={e => onChange("intensity_" + key, e.target.checked)}
                 style={{ accentColor: color, width: "14px", height: "14px" }} />
-              <span style={{ color: "#ddd", fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ color: theme.textPrimary, fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: color, display: "inline-block" }} />
                 {label}
               </span>
+            </label>
+          ))}
+
+          <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold",
+            marginTop: "12px", marginBottom: "6px", borderTop: `1px solid ${theme.border}`, paddingTop: "8px", letterSpacing: "0.04em" }}>
+            INFRASTRUCTURE FILTER
+          </div>
+          {mapZoom < 10 && (
+            <div style={{ color: theme.orange, fontSize: "10.5px", marginBottom: "8px", fontStyle: "italic" }}>
+              Zoom in to level 10+ to see infrastructure
+            </div>
+          )}
+          {INFRA_FILTER_OPTIONS.map(({ key, icon, label }) => (
+            <label key={key} style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "5px", cursor: "pointer" }}>
+              <input type="checkbox" checked={infraFilter?.[key] !== false}
+                onChange={e => onInfraFilter(key, e.target.checked)}
+                style={{ width: "13px", height: "13px" }} />
+              <span style={{ fontSize: "13px" }}>{icon}</span>
+              <span style={{ color: theme.textSecondary, fontSize: "11px" }}>{label}</span>
             </label>
           ))}
         </>
@@ -129,23 +144,9 @@ function LayerToggle({ layers, onChange, activeModule, intensities }) {
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, mapZoom, setMapZoom }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo }) {
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false })
- 
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
-  const [infraFeatures, setInfraFeatures] = useState([])
-  const [infraLoading, setInfraLoading] = useState(false)
-
-  const loadInfra = useCallback(async (map) => {
-    const zoom = map.getZoom()
-    if (zoom < 7) { setInfraFeatures([]); return }
-    setInfraLoading(true)
-    try {
-      const features = await fetchInfraForBounds(map.getBounds())
-      setInfraFeatures(features)
-    } catch (e) { console.error(e) }
-    setInfraLoading(false)
-  }, [])
 
   const toggleLayer = (key, value) => {
     if (key.startsWith("intensity_")) {
@@ -156,18 +157,40 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, map
     }
   }
 
+  // Scope global datasets down to the monitored zone (with a small buffer
+  // so features just outside the exact boundary still show for context).
+  const zoneHotspots = useMemo(() => {
+    const feats = layers.hotspots?.data?.features
+    if (!feats || !zoneInfo?.zoneBbox) return []
+    return filterFeaturesByBbox(feats, zoneInfo.zoneBbox)
+  }, [layers.hotspots?.data, zoneInfo])
+
+  const zonePerimeters = useMemo(() => {
+    const feats = layers.perimeters?.data?.features
+    if (!feats || !zoneInfo?.zoneBbox) return []
+    return filterFeaturesByBbox(feats, zoneInfo.zoneBbox)
+  }, [layers.perimeters?.data, zoneInfo])
+
+  const zoneInfrastructure = useMemo(() => {
+    const feats = layers.infrastructure?.data?.features
+    if (!feats || !zoneInfo?.zoneBbox) return []
+    return filterFeaturesByBbox(feats, zoneInfo.zoneBbox)
+  }, [layers.infrastructure?.data, zoneInfo])
+
+  const center = zoneInfo?.center || [23, -102]
+
   return (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
-      <MapContainer center={[23, -102]} zoom={5}
-        style={{ width: "100%", height: "100%", background: "#1a2a1a" }}
+      <MapContainer center={center} zoom={9}
+        style={{ width: "100%", height: "100%", background: "#e8ebee" }}
         zoomControl={true}>
 
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           attribution='&copy; OpenStreetMap contributors &copy; CARTO'
           maxZoom={19} />
 
-       <MapController mapRef={mapRef} onMove={loadInfra} active={false} onZoom={setMapZoom} />
+        <MapController mapRef={mapRef} onZoom={setMapZoom} />
 
         {activeModule === 1 && visibleLayers.fwi && layers.fwi?.data?.features?.map((feat, i) => {
           const { fwi, risk_class, risk_label, temp_c, rh_pct, wind_kmh, trend } = feat.properties
@@ -186,33 +209,25 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, map
         })}
 
         {activeModule === 2 && visibleLayers.hotspots &&
-          layers.hotspots?.data?.features
-            ?.filter(f => visibleIntensities[f.properties.intensity] !== false)
-            ?.filter((f, i) => {
-              const s = f.properties.intensity
-              if (s === "extreme" || s === "high") return true
-              if (s === "moderate") return i % 3 === 0
-              return i % 8 === 0
-            })
+          zoneHotspots
+            .filter(f => visibleIntensities[f.properties.intensity] !== false)
             .map((feat, i) => {
-              const { frp, intensity, source, acq_datetime, confidence } = feat.properties
+              const { frp, intensity, source, acq_datetime } = feat.properties
               const [lon, lat] = feat.geometry.coordinates
               const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
               return (
                 <CircleMarker key={i} center={[lat, lon]} radius={hotspotRadius(frp)}
-                  pathOptions={{ color, fillColor: color, fillOpacity: 0.8, weight: 1 }}>
+                  pathOptions={{ color, fillColor: color, fillOpacity: 0.85, weight: 1.5 }}>
                   <Popup>
-                    <strong>Active Fire Detection</strong><br />
-                    FRP: {frp ? frp + " MW" : "N/A"} | Intensity: {intensity}<br />
-                    Sensor: {source}<br />
-                    Detected: {acq_datetime}
+                    <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source} acq_datetime={acq_datetime} />
                   </Popup>
                 </CircleMarker>
               )
             })}
 
-        {activeModule === 2 && visibleLayers.perimeters && layers.perimeters?.data && (
-          <GeoJSON key={layers.perimeters.generatedAt} data={layers.perimeters.data}
+        {activeModule === 2 && visibleLayers.perimeters && zonePerimeters.length > 0 && (
+          <GeoJSON key={layers.perimeters.generatedAt + "-" + zonePerimeters.length}
+            data={{ type: "FeatureCollection", features: zonePerimeters }}
             style={() => ({ color: "#FF6600", fillColor: "#FF4400", fillOpacity: 0.25, weight: 2 })}
             onEachFeature={(feature, layer) => {
               const { name, hectares, country, source, date_updated } = feature.properties
@@ -221,7 +236,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, map
         )}
 
         {activeModule === 2 && visibleLayers.infrastructure && mapZoom >= 10 &&
-          (layers.infrastructure?.data?.features || [])
+          zoneInfrastructure
           .filter(f => {
             const t = f.properties.type
             if ((t === "Hospital" || t === "Clinic") && !infraFilter.hospital) return false
@@ -236,7 +251,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, map
             return true
           })
           .map((feat, i) => {
-          const { name, type, color, icon } = feat.properties
+          const { name, type } = feat.properties
           const [lon, lat] = feat.geometry.coordinates
           const ICONS = {
             "Hospital": "🏥", "Clinic": "🏥", "Fire Station": "🚒",
@@ -246,7 +261,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, map
           }
           const emoji = ICONS[type] || "📍"
           const divIcon = L.divIcon({
-            html: `<div style="font-size:16px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8))">${emoji}</div>`,
+            html: `<div style="font-size:16px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.35))">${emoji}</div>`,
             className: "",
             iconSize: [20, 20],
             iconAnchor: [10, 10],
@@ -264,20 +279,13 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, map
       </MapContainer>
 
       <LayerToggle layers={visibleLayers} onChange={toggleLayer}
-        activeModule={activeModule} intensities={visibleIntensities} />
-
-      {infraLoading && (
-        <div style={{ position: "absolute", bottom: "50px", left: "50%", transform: "translateX(-50%)",
-          zIndex: 1000, background: "rgba(20,30,40,0.9)", color: "#7aafd4",
-          padding: "6px 14px", borderRadius: "20px", fontSize: "12px" }}>
-          Loading infrastructure...
-        </div>
-      )}
+        activeModule={activeModule} intensities={visibleIntensities}
+        infraFilter={infraFilter} onInfraFilter={onInfraFilter} mapZoom={mapZoom} />
 
       {Object.values(layers).every(l => l.loading) && (
-        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)",
+        <div style={{ position: "absolute", inset: 0, background: "rgba(245,243,239,0.9)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 2000, color: "#fff", fontSize: "18px" }}>
+          zIndex: 2000, color: theme.textPrimary, fontSize: "16px" }}>
           Loading fire data...
         </div>
       )}
