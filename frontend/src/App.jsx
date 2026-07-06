@@ -7,7 +7,7 @@ import StartScreen from "./components/StartScreen"
 import { theme } from "./utils/theme"
 import { LanguageProvider, useLanguage } from "./context/LanguageContext"
 import { LANG_LABELS } from "./utils/i18n"
-import { zoneInfoFromPhotonFeature, reverseGeocodeFeature } from "./utils/geocode"
+import { zoneInfoFromPhotonFeature, reverseGeocodeFeature, zoneInfoFromCoordinates } from "./utils/geocode"
 
 function LanguageToggle() {
   const { lang, setLang, detected } = useLanguage()
@@ -84,13 +84,18 @@ function AppInner() {
     setZoneLoading(true)
     try {
       const photonFeature = await reverseGeocodeFeature(lat, lon)
-      if (photonFeature) {
-        const zoneInfo = await zoneInfoFromPhotonFeature(photonFeature)
-        setSession(prev => ({ ...prev, zoneInfo }))
-      }
+      const zoneInfo = photonFeature
+        ? await zoneInfoFromPhotonFeature(photonFeature)
+        : await zoneInfoFromCoordinates(lat, lon)
+      setSession(prev => ({ ...prev, zoneInfo }))
     } catch {
-      // Reverse geocoding failed — keep the previous zoneInfo; the fire
-      // itself still shows highlighted on the map via selectedFire.
+      // Photon itself failed (network/rate-limit) — still rescope using our
+      // own country polygons so remote fires (rainforest, open range) never
+      // leave the sidebar stuck on the previous zone.
+      try {
+        const zoneInfo = await zoneInfoFromCoordinates(lat, lon)
+        setSession(prev => ({ ...prev, zoneInfo }))
+      } catch { /* both paths failed — fire stays highlighted on the map at least */ }
     } finally {
       setZoneLoading(false)
     }

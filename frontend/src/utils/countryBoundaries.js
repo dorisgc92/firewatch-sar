@@ -100,6 +100,17 @@ export function pointInGeometry(point, geometry) {
 }
 
 /**
+ * Finds which country polygon contains a point — a reverse lookup that
+ * works anywhere on Earth (open ocean and rainforest included) since it
+ * doesn't depend on Photon finding a nearby named place. Used as the
+ * fallback when reverse-geocoding a remote fire point returns nothing.
+ */
+export async function reverseCountryLookup(lat, lon) {
+  const boundaries = await loadCountryBoundaries()
+  return boundaries.features.find((f) => pointInGeometry([lon, lat], f.geometry)) || null
+}
+
+/**
  * Filters GeoJSON point features to those actually inside the given country
  * feature's polygon. Falls back to null (caller should use bbox instead) if
  * countryFeature is null (country not found in this simplified dataset).

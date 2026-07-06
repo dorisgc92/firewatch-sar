@@ -12,6 +12,8 @@
  * paid service, no API key.
  */
 
+import { reverseCountryLookup } from "./countryBoundaries"
+
 const PHOTON_URL = "https://photon.komoot.io/api/"
 const REVERSE_URL = "https://photon.komoot.io/reverse"
 
@@ -109,6 +111,38 @@ export async function geocodeZone(query) {
     )
   }
   return zoneInfoFromPhotonFeature(feature, query)
+}
+
+/**
+ * Last-resort zoneInfo builder for points where Photon's reverse-geocoding
+ * finds nothing nearby — which is common for wildfires, since they're
+ * mostly in remote/unpopulated areas by definition (deep forest, open
+ * range). Uses our own bundled country polygons (no external API, works
+ * anywhere) to at least get the country right; state/zone become plain
+ * padded boxes around the point since there's no place name to search for.
+ */
+export async function zoneInfoFromCoordinates(lat, lon) {
+  let country = null
+  try {
+    const countryFeature = await reverseCountryLookup(lat, lon)
+    country = countryFeature?.properties?.name || null
+  } catch { /* proceed without a country label */ }
+
+  const name = country
+    ? `${lat.toFixed(2)}, ${lon.toFixed(2)} — ${country}`
+    : `${lat.toFixed(2)}, ${lon.toFixed(2)}`
+
+  return {
+    query: name,
+    name,
+    city: name,
+    state: null,
+    country,
+    center: [lat, lon],
+    zoneBbox: paddedBbox(lat, lon, 0.35),
+    stateBbox: paddedBbox(lat, lon, 1.5),
+    countryBbox: paddedBbox(lat, lon, 15),
+  }
 }
 
 // Small in-memory cache so we don't hammer the reverse-geocoding API
