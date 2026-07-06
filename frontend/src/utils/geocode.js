@@ -15,15 +15,22 @@
 const PHOTON_URL = "https://photon.komoot.io/api/"
 const REVERSE_URL = "https://photon.komoot.io/reverse"
 
-function extentToBbox(extent) {
+// Some countries (USA with Alaska/Hawaii/Guam, Russia, France with overseas
+// territories...) have a Photon "extent" so spread out that a naive min/max
+// bounding box ends up covering most of the globe's longitude range — which
+// then makes fires in, say, Indonesia count as "in the United States". We
+// reject any extent wider than maxSpanDeg and fall back to a modest padded
+// box around the searched point instead. That box won't cover Guam, but it
+// also won't falsely claim Jakarta is Boston — a much safer failure mode.
+function extentToBbox(extent, maxSpanDeg = 60) {
   if (!extent || extent.length < 4) return null
   const [a, b, c, d] = extent
-  return {
-    minLon: Math.min(a, c),
-    maxLon: Math.max(a, c),
-    minLat: Math.min(b, d),
-    maxLat: Math.max(b, d),
-  }
+  const minLon = Math.min(a, c)
+  const maxLon = Math.max(a, c)
+  const minLat = Math.min(b, d)
+  const maxLat = Math.max(b, d)
+  if (maxLon - minLon > maxSpanDeg || maxLat - minLat > maxSpanDeg) return null
+  return { minLon, maxLon, minLat, maxLat }
 }
 
 function paddedBbox(lat, lon, degrees) {
@@ -43,32 +50,25 @@ async function photonSearch(query) {
 }
 
 /**
- * Resolves a zone query into center + nested bboxes (zone/state/country).
- * Never throws for missing state/country bbox — falls back to a padded
- * box around the zone's own center so the UI always has something to filter with.
+ * Builds a full zoneInfo (center + zone/state/country bboxes) from an
+ * already-fetched Photon feature — used by the navbar search so picking a
+ * new place re-scopes the whole app (fires, infra, stats), not just the map view.
  */
-export async function geocodeZone(query) {
-  const feature = await photonSearch(query)
-  if (!feature) {
-    throw new Error(
-      "No se encontró esa zona. Intenta con un nombre más específico, por ejemplo: 'Zapopan, Jalisco, México'."
-    )
-  }
-
+export async function zoneInfoFromPhotonFeature(feature, fallbackQuery) {
   const [lon, lat] = feature.geometry.coordinates
   const props = feature.properties || {}
-  const name = props.name || query
-  const city = props.city || props.name || query
+  const name = props.name || props.city || fallbackQuery || `${lat.toFixed(2)}, ${lon.toFixed(2)}`
+  const city = props.city || props.name || name
   const state = props.state || null
   const country = props.country || null
 
-  const zoneBbox = extentToBbox(props.extent) || paddedBbox(lat, lon, 0.35)
+  const zoneBbox = extentToBbox(props.extent, 8) || paddedBbox(lat, lon, 0.35)
 
   let stateBbox = null
   if (state) {
     try {
       const stateFeature = await photonSearch(state + (country ? ", " + country : ""))
-      stateBbox = extentToBbox(stateFeature?.properties?.extent)
+      stateBbox = extentToBbox(stateFeature?.properties?.extent, 25)
     } catch { /* fall through to padded box below */ }
   }
   if (!stateBbox) stateBbox = paddedBbox(lat, lon, 1.5)
@@ -77,13 +77,19 @@ export async function geocodeZone(query) {
   if (country) {
     try {
       const countryFeature = await photonSearch(country)
-      countryBbox = extentToBbox(countryFeature?.properties?.extent)
+      countryBbox = extentToBbox(countryFeature?.properties?.extent, 60)
     } catch { /* fall through to padded box below */ }
   }
-  if (!countryBbox) countryBbox = paddedBbox(lat, lon, 8)
+  // Countries with far-flung territories (Alaska/Hawaii/Guam for the US,
+  // Siberia for Russia, overseas départements for France...) get rejected by
+  // the span cap above and land here — a padded box around the searched
+  // point instead. This under-covers those countries' remote territories,
+  // but that's a far safer failure mode than silently matching fires on the
+  // other side of the planet.
+  if (!countryBbox) countryBbox = paddedBbox(lat, lon, 15)
 
   return {
-    query,
+    query: fallbackQuery || name,
     name,
     city,
     state,
@@ -93,6 +99,16 @@ export async function geocodeZone(query) {
     stateBbox,
     countryBbox,
   }
+}
+
+export async function geocodeZone(query) {
+  const feature = await photonSearch(query)
+  if (!feature) {
+    throw new Error(
+      "No se encontró esa zona. Intenta con un nombre más específico, por ejemplo: 'Zapopan, Jalisco, México'."
+    )
+  }
+  return zoneInfoFromPhotonFeature(feature, query)
 }
 
 // Small in-memory cache so we don't hammer the reverse-geocoding API

@@ -3,6 +3,7 @@ import { filterFeaturesByBbox } from "../utils/spatial"
 import { buildCommandBrief } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { theme } from "../utils/theme"
+import { INTENSITY_COLORS } from "../utils/fireColors"
 import { useLanguage } from "../context/LanguageContext"
 
 function SectionTitle({ children }) {
@@ -24,6 +25,80 @@ function StatRow({ label, value, color }) {
       <span style={{ color: color || theme.textPrimary, fontSize: "12px", fontWeight: "bold" }}>
         {value}
       </span>
+    </div>
+  )
+}
+
+// One fire in an expanded list: shows a name (lazily reverse-geocoded, only
+// for smaller lists) or coordinates, and flies the map there when clicked.
+function FireListItem({ feature, showName, onSelect }) {
+  const [lon, lat] = feature.geometry.coordinates
+  const { frp, intensity } = feature.properties
+  const [place, setPlace] = useState(null)
+
+  useEffect(() => {
+    if (!showName) return
+    let cancelled = false
+    reverseGeocodePlace(lat, lon).then(p => { if (!cancelled) setPlace(p) })
+    return () => { cancelled = true }
+  }, [showName, lat, lon])
+
+  const dotColor = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
+
+  return (
+    <div onClick={() => onSelect(feature)}
+      style={{ padding: "6px 8px", fontSize: "11px", cursor: "pointer", borderBottom: `1px solid ${theme.border}`,
+        display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px" }}
+      onMouseEnter={e => e.currentTarget.style.background = theme.orangeSoft}
+      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+      <span style={{ display: "flex", alignItems: "center", gap: "5px", color: theme.textPrimary, minWidth: 0 }}>
+        <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {showName ? (place || `${lat.toFixed(3)}, ${lon.toFixed(3)}`) : `${lat.toFixed(3)}, ${lon.toFixed(3)}`}
+        </span>
+      </span>
+      <span style={{ color: theme.textMuted, flexShrink: 0 }}>{frp ? frp + " MW" : ""}</span>
+    </div>
+  )
+}
+
+// A StatRow with a caret that expands into the list of fires behind that
+// number. Clicking a fire in the list flies the map to it.
+function ExpandableStatRow({ label, value, color, features, showNames, onSelect, t }) {
+  const [open, setOpen] = useState(false)
+  const CAP = 30
+  const sorted = useMemo(
+    () => [...features].sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0)),
+    [features]
+  )
+  const shown = sorted.slice(0, CAP)
+  const hasItems = features.length > 0
+
+  return (
+    <div style={{ marginBottom: "5px" }}>
+      <div
+        onClick={() => hasItems && setOpen(o => !o)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: hasItems ? "pointer" : "default" }}>
+        <span style={{ color: theme.textSecondary, fontSize: "12px", display: "flex", alignItems: "center", gap: "5px" }}>
+          {hasItems && (
+            <span style={{ fontSize: "9px", color: theme.textMuted, display: "inline-block",
+              transform: open ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▸</span>
+          )}
+          {label}
+        </span>
+        <span style={{ color: color || theme.textPrimary, fontSize: "12px", fontWeight: "bold" }}>{value}</span>
+      </div>
+      {open && hasItems && (
+        <div style={{ marginTop: "4px", marginBottom: "4px", maxHeight: "170px", overflowY: "auto",
+          background: "#faf9f6", border: `1px solid ${theme.border}`, borderRadius: "6px" }}>
+          {shown.map((f, i) => <FireListItem key={i} feature={f} showName={showNames} onSelect={onSelect} />)}
+          {sorted.length > CAP && (
+            <div style={{ padding: "5px 8px", fontSize: "10px", color: theme.textMuted }}>
+              {t("showingTop", { n: CAP, total: sorted.length })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -82,7 +157,7 @@ function PriorityFireCard({ fire, index, t }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, zoneInfo, responderType }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire }) {
   const { t } = useLanguage()
   const allDetections = layers.hotspots?.data?.features || []
   const fwiPoints = layers.fwi?.data?.features || []
@@ -108,10 +183,17 @@ export default function Sidebar({ activeModule, layers, mapZoom, zoneInfo, respo
     [layers.perimeters?.data, zoneInfo]
   )
 
+  const zoneExtremeFires = useMemo(() => zoneHotspots.filter(f => f.properties.intensity === "extreme"), [zoneHotspots])
+  const zoneHighFires = useMemo(() => zoneHotspots.filter(f => f.properties.intensity === "high"), [zoneHotspots])
+
   const totalDetectionsGlobal = allDetections.length
-  const zoneExtreme = zoneHotspots.filter(f => f.properties.intensity === "extreme").length
-  const zoneHigh = zoneHotspots.filter(f => f.properties.intensity === "high").length
   const zoneHectares = zonePerimeters.reduce((sum, f) => sum + (f.properties.hectares || 0), 0)
+
+  const flyTo = (feature) => {
+    const [lon, lat] = feature.geometry.coordinates
+    if (mapRef?.current) mapRef.current.setView([lat, lon], 13)
+    onSelectFire?.(feature)
+  }
 
   const brief = useMemo(() => buildCommandBrief({
     zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints, responderType,
@@ -146,11 +228,24 @@ export default function Sidebar({ activeModule, layers, mapZoom, zoneInfo, respo
         <>
           <SectionTitle>{t("activeFiresTitle")}</SectionTitle>
           <StatRow label={t("totalWorldwide")} value={totalDetectionsGlobal.toLocaleString()} />
-          <StatRow label={t("inLabel", { name: zoneInfo?.country || "—" })} value={countryHotspots.length.toLocaleString()} />
-          <StatRow label={t("inLabel", { name: zoneInfo?.state || "—" })} value={stateHotspots.length.toLocaleString()} />
-          <StatRow label={t("inLabel", { name: zoneInfo?.name || "—" })} value={zoneHotspots.length.toLocaleString()} color={theme.orange} />
-          <StatRow label={t("extremeIntensityZone")} value={zoneExtreme} color={theme.danger} />
-          <StatRow label={t("highIntensityZone")} value={zoneHigh} color="#cc5500" />
+          <ExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.country || "—" })}
+            value={countryHotspots.length.toLocaleString()}
+            features={countryHotspots} showNames={false} onSelect={flyTo} t={t} />
+          <ExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.state || "—" })}
+            value={stateHotspots.length.toLocaleString()}
+            features={stateHotspots} showNames={false} onSelect={flyTo} t={t} />
+          <ExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.name || "—" })}
+            value={zoneHotspots.length.toLocaleString()} color={theme.orange}
+            features={zoneHotspots} showNames={true} onSelect={flyTo} t={t} />
+          <ExpandableStatRow
+            label={t("extremeIntensityZone")} value={zoneExtremeFires.length} color={theme.danger}
+            features={zoneExtremeFires} showNames={true} onSelect={flyTo} t={t} />
+          <ExpandableStatRow
+            label={t("highIntensityZone")} value={zoneHighFires.length} color="#cc5500"
+            features={zoneHighFires} showNames={true} onSelect={flyTo} t={t} />
           <StatRow
             label={t("totalBurnedArea")}
             value={zoneHectares > 0 ? Math.round(zoneHectares).toLocaleString() + " ha" : "N/A"}

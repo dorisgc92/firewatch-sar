@@ -7,6 +7,7 @@ import StartScreen from "./components/StartScreen"
 import { theme } from "./utils/theme"
 import { LanguageProvider, useLanguage } from "./context/LanguageContext"
 import { LANG_LABELS } from "./utils/i18n"
+import { zoneInfoFromPhotonFeature } from "./utils/geocode"
 
 function LanguageToggle() {
   const { lang, setLang, detected } = useLanguage()
@@ -41,6 +42,9 @@ function AppInner() {
   const layers = useFireData()
   const [infraFilter, setInfraFilter] = useState({ hospital: true, fire_station: true, police: true, power: true, school: true, fuel: true, tower: true, water: true, airport: true })
   const [mapZoom, setMapZoom] = useState(9)
+  const [selectedFire, setSelectedFire] = useState(null)
+
+  const [zoneLoading, setZoneLoading] = useState(false)
 
   const handleSearch = async (q) => {
     setSearchQuery(q)
@@ -52,12 +56,20 @@ function AppInner() {
     } catch { setSearchResults([]) }
   }
 
-  const goTo = (place) => {
-    if (mapRef.current) {
-      mapRef.current.setView([place.geometry.coordinates[1], place.geometry.coordinates[0]], 11)
-    }
+  const goTo = async (place) => {
     setSearchResults([])
     setSearchQuery(place.properties.name || place.properties.city || "")
+    setZoneLoading(true)
+    try {
+      const zoneInfo = await zoneInfoFromPhotonFeature(place)
+      setSession(prev => ({ ...prev, zoneInfo }))
+      if (mapRef.current) mapRef.current.setView(zoneInfo.center, 11)
+    } catch {
+      // Fallback: at least move the map even if the fuller zone resolution failed
+      if (mapRef.current) mapRef.current.setView([place.geometry.coordinates[1], place.geometry.coordinates[0]], 11)
+    } finally {
+      setZoneLoading(false)
+    }
   }
 
   if (!session) {
@@ -118,6 +130,11 @@ function AppInner() {
               ))}
             </div>
           )}
+          {zoneLoading && (
+            <div style={{ position: "absolute", top: "100%", left: 0, marginTop: "4px", fontSize: "11px", color: theme.textMuted }}>
+              {t("submitLoading")}
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginLeft: "auto", flexShrink: 0 }}>
@@ -145,10 +162,10 @@ function AppInner() {
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
           <FireMap activeModule={activeModule} layers={layers} mapRef={mapRef}
             infraFilter={infraFilter} onInfraFilter={(key, val) => setInfraFilter(prev => ({...prev, [key]: val}))}
-            mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} />
+            mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire} />
         </div>
-        <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom}
-          zoneInfo={zoneInfo} responderType={responderType} />
+        <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
+          zoneInfo={zoneInfo} responderType={responderType} onSelectFire={setSelectedFire} />
       </div>
 
       <FreshnessPanel layers={layers} />

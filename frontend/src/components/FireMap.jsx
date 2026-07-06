@@ -4,15 +4,12 @@ import L from "leaflet"
 import { filterFeaturesByBbox } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
+import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
 
 const FWI_COLORS = { low: "#38A800", moderate: "#FFFF00", high: "#FFAA00", very_high: "#FF0000", extreme: "#7A0000", unknown: "#888888" }
 
-// Fill + stroke colors tuned for visibility against the light Voyager basemap —
-// the previous pale yellow/orange for low/moderate barely showed up on light tiles.
-const INTENSITY_COLORS = { low: "#FFD400", moderate: "#FF8C00", high: "#FF3300", extreme: "#B00020", unknown: "#FF6600" }
-const INTENSITY_STROKE = { low: "#7A5C00", moderate: "#8A4500", high: "#7A0000", extreme: "#4D000A", unknown: "#663300" }
 
 // Only render permanent on-map labels when there aren't too many points in
 // view — reverse-geocoding every single fire point would hammer the public
@@ -175,7 +172,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire }) {
   const { t } = useLanguage()
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
@@ -290,6 +287,24 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                 </CircleMarker>
               )
             })}
+
+        {activeModule === 2 && selectedFire && (() => {
+          const [lon, lat] = selectedFire.geometry.coordinates
+          const { frp, intensity, source, acq_datetime } = selectedFire.properties
+          const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
+          const r = hotspotRadius(frp)
+          return (
+            <CircleMarker center={[lat, lon]} radius={r + 6}
+              pathOptions={{ color: theme.navy, fillColor: color, fillOpacity: 0.9, weight: 3, dashArray: "3 3" }}>
+              <Tooltip permanent direction="top" offset={[0, -(r + 6)]} opacity={0.95}>
+                <FireLabel lat={lat} lon={lon} />
+              </Tooltip>
+              <Popup>
+                <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source} acq_datetime={acq_datetime} />
+              </Popup>
+            </CircleMarker>
+          )
+        })()}
 
         {activeModule === 2 && visibleLayers.perimeters && zonePerimeters.length > 0 && (
           <GeoJSON key={layers.perimeters.generatedAt + "-" + zonePerimeters.length}
