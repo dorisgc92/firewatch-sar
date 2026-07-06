@@ -33,12 +33,23 @@ WORLD_BBOX = "-180,-90,180,90"
 # Days to look back (1 = last 24 hours, max 10)
 DAYS = 1
 
-# Data sources: VIIRS is higher resolution (375m), MODIS is older (1km)
-# We fetch both and merge them
+# Data sources: VIIRS is higher resolution (375m) and now comes from three
+# satellites (Suomi NPP + NOAA-20 + NOAA-21); MODIS is older (1km, Aqua+Terra
+# combined by NASA's API under one endpoint). We fetch all of them and merge.
 SOURCES = [
     {
         "name": "VIIRS_SNPP_NRT",
         "label": "VIIRS (Suomi NPP)",
+        "resolution_m": 375,
+    },
+    {
+        "name": "VIIRS_NOAA20_NRT",
+        "label": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+    },
+    {
+        "name": "VIIRS_NOAA21_NRT",
+        "label": "VIIRS (NOAA-21)",
         "resolution_m": 375,
     },
     {
@@ -89,8 +100,23 @@ def fetch_firms_csv(source_name):
 
     # Parse CSV
     content = response.text
-    if not content.strip() or content.startswith("Error"):
-        print(f"  No data or error for {source_name}: {content[:100]}")
+    stripped = content.strip()
+
+    if not stripped:
+        print(f"  EMPTY RESPONSE for {source_name} (no error message, no data).")
+        return []
+
+    # NASA FIRMS returns plain-text error messages for bad/expired keys or
+    # quota issues (e.g. "Invalid MAP_KEY", "You have exceeded your
+    # transaction limit"). These don't always start with the word "Error",
+    # so we also treat "no comma in the first line" as a signal this isn't
+    # a CSV header — that silently produced 0 rows before, which looked
+    # identical to "no fires today" in the app.
+    first_line = stripped.splitlines()[0]
+    looks_like_csv_header = "," in first_line and "latitude" in first_line.lower()
+
+    if not looks_like_csv_header:
+        print(f"  ERROR-LIKE RESPONSE for {source_name} (not a CSV header): {stripped[:300]!r}")
         return []
 
     reader = csv.DictReader(io.StringIO(content))
@@ -149,7 +175,7 @@ def build_geojson(all_features):
         "type": "FeatureCollection",
         "metadata": {
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "source": "NASA FIRMS (VIIRS SNPP + MODIS NRT)",
+            "source": "NASA FIRMS (VIIRS SNPP/NOAA-20/NOAA-21 + MODIS NRT)",
             "api_url": "https://firms.modaps.eosdis.nasa.gov/api/",
             "coverage": "Global",
             "lookback_days": DAYS,
@@ -212,6 +238,26 @@ def main():
         deduped.append(f)
 
     print(f"After deduplication: {len(deduped)} hotspots")
+
+    if len(deduped) == 0:
+        print("\n" + "=" * 70)
+        print("ERROR: 0 hotspots for a GLOBAL query. This is almost never correct —")
+        print("there are essentially always active fires detected somewhere on Earth.")
+        print("Most likely cause: FIRMS_MAP_KEY is invalid/expired, or its usage quota")
+        print("was exceeded. Check: https://firms.modaps.eosdis.nasa.gov/usage/")
+        print("Refusing to overwrite the existing data/hotspots.geojson with an empty")
+        print("result — leaving last-known-good data in place instead.")
+        print("=" * 70)
+        if os.path.exists(OUTPUT_PATH):
+            raise SystemExit(1)  # fail the workflow loudly; keep old file untouched
+        # No pre-existing file (first-ever run) — write an empty-but-valid file
+        # so the frontend doesn't crash, clearly flagged as a warning.
+        empty = build_geojson([])
+        empty["metadata"]["warning"] = "0 hotspots returned — check FIRMS_MAP_KEY validity/quota"
+        os.makedirs("data", exist_ok=True)
+        with open(OUTPUT_PATH, "w") as f:
+            json.dump(empty, f, indent=2)
+        raise SystemExit(1)
 
     geojson = build_geojson(deduped)
 
