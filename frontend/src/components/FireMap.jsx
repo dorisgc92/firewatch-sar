@@ -198,7 +198,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick }) {
   const { t } = useLanguage()
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
@@ -312,7 +312,8 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               const r = hotspotRadius(frp, mapZoom)
               return (
                 <CircleMarker key={i} center={[lat, lon]} radius={r}
-                  pathOptions={{ color: stroke, fillColor: color, fillOpacity: 0.92, weight: 2 }}>
+                  pathOptions={{ color: stroke, fillColor: color, fillOpacity: 0.92, weight: 2 }}
+                  eventHandlers={{ click: () => onFireClick?.(feat) }}>
                   {showLabels && (
                     <Tooltip permanent direction="top" offset={[0, -r]} opacity={0.92}>
                       <FireLabel lat={lat} lon={lon} />

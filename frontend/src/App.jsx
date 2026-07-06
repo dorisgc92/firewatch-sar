@@ -7,7 +7,7 @@ import StartScreen from "./components/StartScreen"
 import { theme } from "./utils/theme"
 import { LanguageProvider, useLanguage } from "./context/LanguageContext"
 import { LANG_LABELS } from "./utils/i18n"
-import { zoneInfoFromPhotonFeature } from "./utils/geocode"
+import { zoneInfoFromPhotonFeature, reverseGeocodeFeature } from "./utils/geocode"
 
 function LanguageToggle() {
   const { lang, setLang, detected } = useLanguage()
@@ -59,6 +59,7 @@ function AppInner() {
   const goTo = async (place) => {
     setSearchResults([])
     setSearchQuery(place.properties.name || place.properties.city || "")
+    setSelectedFire(null)
     setZoneLoading(true)
     try {
       const zoneInfo = await zoneInfoFromPhotonFeature(place)
@@ -67,6 +68,29 @@ function AppInner() {
     } catch {
       // Fallback: at least move the map even if the fuller zone resolution failed
       if (mapRef.current) mapRef.current.setView([place.geometry.coordinates[1], place.geometry.coordinates[0]], 11)
+    } finally {
+      setZoneLoading(false)
+    }
+  }
+
+  // Selecting a fire — whether clicked directly on the map or from a sidebar
+  // list — re-scopes the whole command center to that location, exactly like
+  // a navbar search: reverse-geocode the point, rebuild zoneInfo, and let
+  // every stat/summary that depends on zoneInfo update on its own.
+  const handleSelectFire = async (feature) => {
+    setSelectedFire(feature)
+    const [lon, lat] = feature.geometry.coordinates
+    if (mapRef.current) mapRef.current.setView([lat, lon], 13)
+    setZoneLoading(true)
+    try {
+      const photonFeature = await reverseGeocodeFeature(lat, lon)
+      if (photonFeature) {
+        const zoneInfo = await zoneInfoFromPhotonFeature(photonFeature)
+        setSession(prev => ({ ...prev, zoneInfo }))
+      }
+    } catch {
+      // Reverse geocoding failed — keep the previous zoneInfo; the fire
+      // itself still shows highlighted on the map via selectedFire.
     } finally {
       setZoneLoading(false)
     }
@@ -162,10 +186,11 @@ function AppInner() {
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
           <FireMap activeModule={activeModule} layers={layers} mapRef={mapRef}
             infraFilter={infraFilter} onInfraFilter={(key, val) => setInfraFilter(prev => ({...prev, [key]: val}))}
-            mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire} />
+            mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire}
+            onFireClick={handleSelectFire} />
         </div>
         <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
-          zoneInfo={zoneInfo} responderType={responderType} onSelectFire={setSelectedFire} />
+          zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire} />
       </div>
 
       <FreshnessPanel layers={layers} />

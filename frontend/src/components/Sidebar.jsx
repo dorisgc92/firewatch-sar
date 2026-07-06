@@ -208,11 +208,7 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
   const totalDetectionsGlobal = allDetections.length
   const zoneHectares = zonePerimeters.reduce((sum, f) => sum + (f.properties.hectares || 0), 0)
 
-  const flyTo = (feature) => {
-    const [lon, lat] = feature.geometry.coordinates
-    if (mapRef?.current) mapRef.current.setView([lat, lon], 13)
-    onSelectFire?.(feature)
-  }
+  const flyTo = (feature) => onSelectFire?.(feature)
 
   const brief = useMemo(() => buildCommandBrief({
     zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints, responderType,

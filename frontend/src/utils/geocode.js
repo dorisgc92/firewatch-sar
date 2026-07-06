@@ -114,6 +114,29 @@ export async function geocodeZone(query) {
 // Small in-memory cache so we don't hammer the reverse-geocoding API
 // when the same fire point gets re-rendered (e.g. re-opening a popup).
 const reverseCache = new Map()
+const reverseFeatureCache = new Map()
+
+/**
+ * Reverse-geocodes a point and returns the raw Photon feature (with
+ * properties.name/city/state/country/extent) — used to rebuild a full
+ * zoneInfo from a clicked fire point, the same way a navbar search does.
+ * Returns null on failure or if nothing is found nearby (e.g. open ocean).
+ */
+export async function reverseGeocodeFeature(lat, lon) {
+  const key = lat.toFixed(3) + "," + lon.toFixed(3)
+  if (reverseFeatureCache.has(key)) return reverseFeatureCache.get(key)
+  try {
+    const r = await fetch(`${REVERSE_URL}?lon=${lon}&lat=${lat}`)
+    if (!r.ok) throw new Error("HTTP " + r.status)
+    const data = await r.json()
+    const feature = data.features?.[0] || null
+    reverseFeatureCache.set(key, feature)
+    return feature
+  } catch {
+    reverseFeatureCache.set(key, null)
+    return null
+  }
+}
 
 /**
  * Best-effort reverse geocode of a fire detection point to a human-readable
