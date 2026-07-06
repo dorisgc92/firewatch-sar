@@ -1,18 +1,14 @@
 import { useState } from "react"
 import { geocodeZone } from "../utils/geocode"
 import { theme } from "../utils/theme"
+import { useLanguage } from "../context/LanguageContext"
+import { LANG_LABELS } from "../utils/i18n"
 
-const RESPONDER_TYPES = [
-  { key: "bombero", label: "Bombero forestal / Brigada", icon: "🚒" },
-  { key: "eoc", label: "Centro de comando (EOC)", icon: "🧭" },
-  { key: "proteccion_civil", label: "Protección Civil / Autoridad", icon: "🛡️" },
-  { key: "ems", label: "EMS / Hospital", icon: "🏥" },
-  { key: "utilities", label: "Utilities / Infraestructura crítica", icon: "⚡" },
-  { key: "analista", label: "Analista post-evento / Seguros", icon: "🛰️" },
-  { key: "ong", label: "ONG / Logística humanitaria", icon: "📦" },
-]
+const RESPONDER_KEYS = ["bombero", "eoc", "proteccion_civil", "ems", "utilities", "analista", "ong"]
+const RESPONDER_ICONS = { bombero: "🚒", eoc: "🧭", proteccion_civil: "🛡️", ems: "🏥", utilities: "⚡", analista: "🛰️", ong: "📦" }
 
 export default function StartScreen({ onReady }) {
+  const { t, lang, setLang, detected } = useLanguage()
   const [responderType, setResponderType] = useState(null)
   const [zoneQuery, setZoneQuery] = useState("")
   const [loading, setLoading] = useState(false)
@@ -29,7 +25,7 @@ export default function StartScreen({ onReady }) {
       const zoneInfo = await geocodeZone(zoneQuery.trim())
       onReady({ responderType, zoneInfo })
     } catch (err) {
-      setError(err.message || "No se pudo ubicar la zona. Intenta de nuevo.")
+      setError(err.message || t("zoneNotFound"))
       setLoading(false)
     }
   }
@@ -39,7 +35,23 @@ export default function StartScreen({ onReady }) {
       height: "100vh", width: "100vw", background: theme.bg,
       display: "flex", alignItems: "center", justifyContent: "center",
       fontFamily: "system-ui, -apple-system, sans-serif", padding: "24px", boxSizing: "border-box",
+      position: "relative",
     }}>
+      <div style={{ position: "absolute", top: "16px", right: "20px", display: "flex", gap: "4px" }}>
+        <button type="button" onClick={() => setLang("en")} style={{
+          border: `1px solid ${theme.border}`, borderRadius: "5px", padding: "3px 8px",
+          fontSize: "11px", fontWeight: "bold", cursor: "pointer",
+          background: lang === "en" ? theme.navy : "#fff",
+          color: lang === "en" ? "#fff" : theme.textSecondary }}>EN</button>
+        {detected !== "en" && (
+          <button type="button" onClick={() => setLang(detected)} style={{
+            border: `1px solid ${theme.border}`, borderRadius: "5px", padding: "3px 8px",
+            fontSize: "11px", fontWeight: "bold", cursor: "pointer",
+            background: lang === detected ? theme.navy : "#fff",
+            color: lang === detected ? "#fff" : theme.textSecondary }}>{LANG_LABELS[detected]}</button>
+        )}
+      </div>
+
       <form onSubmit={handleSubmit} style={{
         background: theme.panelBg, borderRadius: "14px", border: `1px solid ${theme.border}`,
         boxShadow: "0 8px 30px rgba(30,58,92,0.08)", padding: "36px 40px",
@@ -51,16 +63,14 @@ export default function StartScreen({ onReady }) {
           <span style={{ fontWeight: "bold", fontSize: "22px", color: theme.orange }}>Watch SAR</span>
         </div>
         <p style={{ color: theme.textSecondary, fontSize: "13.5px", lineHeight: "1.6", margin: "10px 0 26px" }}>
-          Plataforma de inteligencia de incendios forestales en tiempo casi real. Combina detecciones
-          satelitales (NASA FIRMS), perímetros activos, infraestructura crítica y Fire Weather Index
-          para dar a los equipos de respuesta una vista de comando de su zona.
+          {t("appTagline")}
         </p>
 
         <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", color: theme.textPrimary, marginBottom: "8px", letterSpacing: "0.03em" }}>
-          ¿QUÉ TIPO DE RESPONDER ERES?
+          {t("responderQuestion")}
         </label>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "22px" }}>
-          {RESPONDER_TYPES.map(({ key, label, icon }) => (
+          {RESPONDER_KEYS.map((key) => (
             <button type="button" key={key} onClick={() => setResponderType(key)}
               style={{
                 display: "flex", alignItems: "center", gap: "8px", textAlign: "left",
@@ -69,25 +79,25 @@ export default function StartScreen({ onReady }) {
                 background: responderType === key ? theme.orangeSoft : "#fff",
                 color: theme.textPrimary, fontSize: "12.5px", fontWeight: responderType === key ? "600" : "400",
               }}>
-              <span style={{ fontSize: "16px" }}>{icon}</span>
-              {label}
+              <span style={{ fontSize: "16px" }}>{RESPONDER_ICONS[key]}</span>
+              {t("responder." + key)}
             </button>
           ))}
         </div>
 
         <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", color: theme.textPrimary, marginBottom: "8px", letterSpacing: "0.03em" }}>
-          ¿QUÉ ZONA DESEAS MONITOREAR?
+          {t("zoneQuestion")}
         </label>
         <input
           type="text" value={zoneQuery} onChange={(e) => setZoneQuery(e.target.value)}
-          placeholder="Ej. Zapopan, Jalisco, México"
+          placeholder={t("zonePlaceholder")}
           style={{
             width: "100%", padding: "10px 12px", borderRadius: "8px", boxSizing: "border-box",
             border: `1.5px solid ${theme.border}`, fontSize: "13.5px", outline: "none",
             marginBottom: "6px", color: theme.textPrimary,
           }} />
         <div style={{ color: theme.textMuted, fontSize: "11px", marginBottom: "20px" }}>
-          Municipio, estado o país. La app ubica la zona automáticamente.
+          {t("zoneHint")}
         </div>
 
         {error && (
@@ -102,7 +112,7 @@ export default function StartScreen({ onReady }) {
           color: canSubmit ? "#fff" : theme.textMuted,
           fontWeight: "bold", fontSize: "14px", cursor: canSubmit ? "pointer" : "not-allowed",
         }}>
-          {loading ? "Ubicando zona..." : "Entrar al centro de comando"}
+          {loading ? t("submitLoading") : t("submitButton")}
         </button>
       </form>
     </div>

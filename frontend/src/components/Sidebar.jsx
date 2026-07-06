@@ -3,6 +3,7 @@ import { filterFeaturesByBbox } from "../utils/spatial"
 import { buildCommandBrief } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { theme } from "../utils/theme"
+import { useLanguage } from "../context/LanguageContext"
 
 function SectionTitle({ children }) {
   return (
@@ -35,7 +36,7 @@ const FWI_LABELS = {
   extreme: { label: "EXTREME", color: "#AA0000" },
 }
 
-function PriorityFireCard({ fire, index }) {
+function PriorityFireCard({ fire, index, t }) {
   const [place, setPlace] = useState(null)
 
   useEffect(() => {
@@ -64,24 +65,25 @@ function PriorityFireCard({ fire, index }) {
       </div>
 
       <div style={{ fontSize: "11.5px", color: theme.textSecondary, lineHeight: "1.7" }}>
-        <div>🏥 Evacuar hacia: {fire.nearestHospital
+        <div>🏥 {t("evacuateTo")}: {fire.nearestHospital
           ? `${fire.nearestHospital.name} (${fire.nearestHospital.km.toFixed(1)} km)`
-          : "sin dato de hospital en la zona"}</div>
-        <div>🚒 Unidad más cercana: {fire.nearestFireStation
+          : t("noHospitalData")}</div>
+        <div>🚒 {t("nearestUnit")}: {fire.nearestFireStation
           ? `${fire.nearestFireStation.name} (${fire.nearestFireStation.km.toFixed(1)} km)`
-          : "sin dato de estación en la zona"}</div>
-        <div>👮 Apoyo policial: {fire.nearestPolice
+          : t("noStationData")}</div>
+        <div>👮 {t("policeSupport")}: {fire.nearestPolice
           ? `${fire.nearestPolice.name} (${fire.nearestPolice.km.toFixed(1)} km)`
-          : "sin dato de estación en la zona"}</div>
-        <div>💨 Propagación: {fire.windKmh != null
-          ? `viento ${fire.windKmh.toFixed(0)} km/h ${fire.windDir || ""}, tendencia FWI ${fire.fwiTrend || "N/A"}`
-          : "sin dato de viento cercano"}</div>
+          : t("noStationData")}</div>
+        <div>💨 {t("spreadRisk")}: {fire.windKmh != null
+          ? t("windTrend", { wind: fire.windKmh.toFixed(0), dir: fire.windDir || "", trend: fire.fwiTrend || "N/A" })
+          : t("noWindData")}</div>
       </div>
     </div>
   )
 }
 
 export default function Sidebar({ activeModule, layers, mapZoom, zoneInfo, responderType }) {
+  const { t } = useLanguage()
   const allDetections = layers.hotspots?.data?.features || []
   const fwiPoints = layers.fwi?.data?.features || []
 
@@ -133,56 +135,56 @@ export default function Sidebar({ activeModule, layers, mapZoom, zoneInfo, respo
         borderRadius: "6px", padding: "8px", marginBottom: "4px", textAlign: "center",
       }}>
         <div style={{ fontSize: "13px", fontWeight: "bold", color: theme.textPrimary }}>
-          {activeModule === 1 ? "Pre-Fire Risk View" : "Active Fire View"}
+          {activeModule === 1 ? t("preFireView") : t("activeFireView")}
         </div>
         <div style={{ fontSize: "11px", color: theme.textSecondary, marginTop: "2px" }}>
-          {activeModule === 1 ? "Module 1 - FWI Forecast" : "Module 2 - Command Center"}
+          {activeModule === 1 ? t("module1Sub") : t("module2Sub")}
         </div>
       </div>
 
       {activeModule === 2 && (
         <>
-          <SectionTitle>ACTIVE FIRES</SectionTitle>
-          <StatRow label="Total detections (worldwide)" value={totalDetectionsGlobal.toLocaleString()} />
-          <StatRow label={`In ${zoneInfo?.country || "country"}`} value={countryHotspots.length.toLocaleString()} />
-          <StatRow label={`In ${zoneInfo?.state || "state"}`} value={stateHotspots.length.toLocaleString()} />
-          <StatRow label={`In ${zoneInfo?.name || "monitored zone"}`} value={zoneHotspots.length.toLocaleString()} color={theme.orange} />
-          <StatRow label="Extreme intensity (zone)" value={zoneExtreme} color={theme.danger} />
-          <StatRow label="High intensity (zone)" value={zoneHigh} color="#cc5500" />
+          <SectionTitle>{t("activeFiresTitle")}</SectionTitle>
+          <StatRow label={t("totalWorldwide")} value={totalDetectionsGlobal.toLocaleString()} />
+          <StatRow label={t("inLabel", { name: zoneInfo?.country || "—" })} value={countryHotspots.length.toLocaleString()} />
+          <StatRow label={t("inLabel", { name: zoneInfo?.state || "—" })} value={stateHotspots.length.toLocaleString()} />
+          <StatRow label={t("inLabel", { name: zoneInfo?.name || "—" })} value={zoneHotspots.length.toLocaleString()} color={theme.orange} />
+          <StatRow label={t("extremeIntensityZone")} value={zoneExtreme} color={theme.danger} />
+          <StatRow label={t("highIntensityZone")} value={zoneHigh} color="#cc5500" />
           <StatRow
-            label="Total burned area (zone)"
+            label={t("totalBurnedArea")}
             value={zoneHectares > 0 ? Math.round(zoneHectares).toLocaleString() + " ha" : "N/A"}
             color="#cc5500"
           />
 
-          <SectionTitle>SITUATION SUMMARY</SectionTitle>
+          <SectionTitle>{t("situationSummaryTitle")}</SectionTitle>
           <div style={{
             background: "#fff", border: `1px solid ${theme.border}`,
             borderRadius: "6px", padding: "10px", fontSize: "12px",
           }}>
             {layers.hotspots?.loading ? (
-              <span style={{ color: theme.textSecondary }}>Cargando datos de incendios...</span>
+              <span style={{ color: theme.textSecondary }}>{t("loadingFireData")}</span>
             ) : brief.empty ? (
               <span style={{ color: theme.textSecondary }}>
-                No hay focos activos en {zoneInfo?.name}. Vigilancia continua sobre FIRMS (actualización horaria).
+                {t("noActiveFires", { zone: zoneInfo?.name })}
               </span>
             ) : (
               <>
                 <div style={{ color: theme.textSecondary, marginBottom: "8px", lineHeight: "1.5" }}>
-                  {brief.priorityFires.length} foco(s) requieren atención prioritaria en {zoneInfo?.name}.
+                  {t("fociRequireAttention", { count: brief.priorityFires.length, zone: zoneInfo?.name })}
                   {!brief.hasInfraData && (
-                    <span style={{ color: theme.orange }}> Aún no hay datos de infraestructura mapeados para esta zona.</span>
+                    <span style={{ color: theme.orange }}> {t("noInfraDataYet")}</span>
                   )}
                 </div>
                 {brief.priorityFires.map((fire, i) => (
-                  <PriorityFireCard key={i} fire={fire} index={i} />
+                  <PriorityFireCard key={i} fire={fire} index={i} t={t} />
                 ))}
                 {brief.actionLine && (
                   <div style={{
                     marginTop: "4px", background: theme.orangeSoft, border: `1px solid ${theme.orange}`,
                     borderRadius: "6px", padding: "8px", fontSize: "11.5px", color: "#8a4200", lineHeight: "1.5",
                   }}>
-                    <strong>Acción recomendada:</strong> {brief.actionLine}
+                    <strong>{t("recommendedAction")}</strong> {brief.actionLine}
                   </div>
                 )}
               </>
@@ -193,11 +195,11 @@ export default function Sidebar({ activeModule, layers, mapZoom, zoneInfo, respo
 
       {activeModule === 1 && (
         <>
-          <SectionTitle>FIRE WEATHER INDEX</SectionTitle>
+          <SectionTitle>{t("fwiTitle")}</SectionTitle>
           {maxFWI && (
             <div style={{ marginBottom: "8px" }}>
               <div style={{ color: theme.textSecondary, fontSize: "11px", marginBottom: "3px" }}>
-                Highest FWI detected:
+                {t("highestFWI")}
               </div>
               <div style={{
                 fontSize: "28px", fontWeight: "bold",
@@ -218,22 +220,22 @@ export default function Sidebar({ activeModule, layers, mapZoom, zoneInfo, respo
           )}
 
           <StatRow
-            label="Extreme risk zones"
+            label={t("extremeRiskZones")}
             value={extremeZones}
             color={extremeZones > 0 ? theme.danger : "#38A800"}
           />
           <StatRow
-            label="Very high risk zones"
+            label={t("veryHighRiskZones")}
             value={veryHighZones}
             color={veryHighZones > 0 ? "#FF4400" : "#38A800"}
           />
           <StatRow
-            label="Escalating zones"
+            label={t("escalatingZones")}
             value={escalatingZones}
             color={escalatingZones > 0 ? theme.orange : "#38A800"}
           />
 
-          <SectionTitle>FORECAST ALERT</SectionTitle>
+          <SectionTitle>{t("forecastAlertTitle")}</SectionTitle>
           <div style={{
             background: extremeZones > 0 ? theme.dangerSoft : theme.greenSoft,
             border: "1px solid " + (extremeZones > 0 ? theme.danger : "#2e7d32"),
@@ -241,19 +243,19 @@ export default function Sidebar({ activeModule, layers, mapZoom, zoneInfo, respo
             lineHeight: "1.6", color: extremeZones > 0 ? "#7a1a15" : "#1b5e20",
           }}>
             {layers.fwi?.loading
-              ? "Computing FWI..."
+              ? t("computingFWI")
               : extremeZones > 0
-              ? extremeZones + " zone(s) at EXTREME fire danger. " + (escalatingZones > 0 ? escalatingZones + " zone(s) escalating. " : "") + "Consider pre-positioning resources."
+              ? extremeZones + " " + t("extremeRiskZones").toLowerCase() + ". " + (escalatingZones > 0 ? escalatingZones + " " + t("escalatingZones").toLowerCase() + ". " : "") + t("preposition")
               : veryHighZones > 0
-              ? veryHighZones + " zone(s) at VERY HIGH fire danger. Monitor conditions closely."
-              : "Current fire weather conditions are within manageable range."}
+              ? veryHighZones + " " + t("veryHighRiskZones").toLowerCase() + ". " + t("monitorClosely")
+              : t("manageable")}
           </div>
         </>
       )}
 
       {Object.entries(layers).some(([, v]) => v.error) && (
         <>
-          <SectionTitle>DATA ERRORS</SectionTitle>
+          <SectionTitle>{t("dataErrorsTitle")}</SectionTitle>
           {Object.entries(layers).filter(([, v]) => v.error).map(([key, v]) => (
             <div key={key} style={{ color: theme.danger, fontSize: "11px", marginBottom: "4px" }}>
               {key}: {v.error}

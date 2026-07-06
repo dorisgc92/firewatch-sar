@@ -5,18 +5,34 @@ import FreshnessPanel from "./components/FreshnessPanel"
 import Sidebar from "./components/Sidebar"
 import StartScreen from "./components/StartScreen"
 import { theme } from "./utils/theme"
+import { LanguageProvider, useLanguage } from "./context/LanguageContext"
+import { LANG_LABELS } from "./utils/i18n"
 
-const RESPONDER_LABELS = {
-  bombero: "Bombero forestal / Brigada",
-  eoc: "Centro de comando (EOC)",
-  proteccion_civil: "Protección Civil / Autoridad",
-  ems: "EMS / Hospital",
-  utilities: "Utilities / Infraestructura crítica",
-  analista: "Analista post-evento / Seguros",
-  ong: "ONG / Logística humanitaria",
+function LanguageToggle() {
+  const { lang, setLang, detected } = useLanguage()
+  const showToggle = detected !== "en"
+  return (
+    <div style={{ display: "flex", gap: "3px", flexShrink: 0 }}>
+      <button onClick={() => setLang("en")} style={{
+        border: `1px solid ${theme.border}`, borderRadius: "5px", padding: "3px 7px",
+        fontSize: "11px", fontWeight: "bold", cursor: "pointer",
+        background: lang === "en" ? theme.navy : "#fff",
+        color: lang === "en" ? "#fff" : theme.textSecondary,
+      }}>EN</button>
+      {showToggle && (
+        <button onClick={() => setLang(detected)} style={{
+          border: `1px solid ${theme.border}`, borderRadius: "5px", padding: "3px 7px",
+          fontSize: "11px", fontWeight: "bold", cursor: "pointer",
+          background: lang === detected ? theme.navy : "#fff",
+          color: lang === detected ? "#fff" : theme.textSecondary,
+        }}>{LANG_LABELS[detected]}</button>
+      )}
+    </div>
+  )
 }
 
-export default function App() {
+function AppInner() {
+  const { t } = useLanguage()
   const [session, setSession] = useState(null) // { responderType, zoneInfo }
   const [activeModule, setActiveModule] = useState(2)
   const [searchQuery, setSearchQuery] = useState("")
@@ -70,7 +86,7 @@ export default function App() {
             background: activeModule === 1 ? theme.navySoft : "transparent",
             color: activeModule === 1 ? theme.navy : theme.textSecondary,
             borderBottom: activeModule === 1 ? `2px solid ${theme.navy}` : "2px solid transparent" }}>
-            Module 1: Pre-Fire Risk
+            {t("module1")}
           </button>
           <button onClick={() => setActiveModule(2)} style={{
             padding: "5px 10px", borderRadius: "6px", border: "none", cursor: "pointer",
@@ -78,12 +94,12 @@ export default function App() {
             background: activeModule === 2 ? theme.orangeSoft : "transparent",
             color: activeModule === 2 ? theme.orange : theme.textSecondary,
             borderBottom: activeModule === 2 ? `2px solid ${theme.orange}` : "2px solid transparent" }}>
-            Module 2: Active Fire
+            {t("module2")}
           </button>
         </div>
 
         <div style={{ flex: 1, minWidth: "200px", maxWidth: "380px", position: "relative" }}>
-          <input type="text" placeholder="Search any region, city or country..."
+          <input type="text" placeholder={t("searchPlaceholder")}
             value={searchQuery} onChange={e => handleSearch(e.target.value)}
             style={{ width: "100%", padding: "6px 12px", borderRadius: "6px",
               border: `1px solid ${theme.border}`, background: "#fff",
@@ -105,20 +121,21 @@ export default function App() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginLeft: "auto", flexShrink: 0 }}>
+          <LanguageToggle />
           <div style={{ fontSize: "11px", color: theme.textMuted, textAlign: "right", lineHeight: 1.3 }}>
-            <div>{RESPONDER_LABELS[responderType]}</div>
-            <div>Zona: {zoneInfo.name}</div>
+            <div>{t("responder." + responderType)}</div>
+            <div>{zoneInfo.name}</div>
           </div>
-          <button onClick={() => setSession(null)} title="Cambiar responder o zona" style={{
+          <button onClick={() => setSession(null)} title={t("changeButton")} style={{
             border: `1px solid ${theme.border}`, background: "#fff", color: theme.textSecondary,
             borderRadius: "6px", padding: "5px 8px", fontSize: "11px", cursor: "pointer" }}>
-            Cambiar
+            {t("changeButton")}
           </button>
           {layers.hotspots?.data && (
             <div style={{ background: theme.dangerSoft, border: `1px solid ${theme.danger}`,
               borderRadius: "12px", padding: "4px 10px", fontSize: "12px", color: theme.danger, textAlign: "right" }}>
               <div style={{ fontWeight: "bold" }}>{layers.hotspots.data.features?.length?.toLocaleString()}</div>
-              <div style={{ fontSize: "9px" }}>active fire detections — WORLDWIDE</div>
+              <div style={{ fontSize: "9px" }}>{t("worldwideDetections")}</div>
             </div>
           )}
         </div>
@@ -136,5 +153,13 @@ export default function App() {
 
       <FreshnessPanel layers={layers} />
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppInner />
+    </LanguageProvider>
   )
 }

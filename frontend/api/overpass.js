@@ -1,4 +1,6 @@
-﻿export default async function handler(req, res) {
+﻿export const config = { maxDuration: 30 }
+
+export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*")
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
   res.setHeader("Access-Control-Allow-Headers", "Content-Type")
@@ -16,6 +18,11 @@
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "data=" + encodeURIComponent(req.body?.data || query)
     })
+
+    if (!response.ok) {
+      const text = await response.text()
+      return res.status(response.status).json({ error: `Overpass HTTP ${response.status}: ${text.slice(0, 300)}` })
+    }
 
     const data = await response.json()
     res.status(200).json(data)

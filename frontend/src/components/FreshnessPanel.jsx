@@ -3,12 +3,13 @@
  * Shows acquisition timestamp and traffic-light freshness status
  * for each data layer. Visible in both Module 1 and Module 2.
  */
+import { useLanguage } from "../context/LanguageContext"
 
-const LAYER_LABELS = {
-  hotspots:   { label: 'Hotspots (FIRMS)', expected: '< 3 hrs' },
-  weather:    { label: 'Weather / FWI',    expected: 'Hourly' },
-  fwi:        { label: 'FWI Grid',         expected: 'Hourly' },
-  perimeters: { label: 'Fire Perimeters',  expected: '< 6 hrs' },
+const LAYER_KEYS = {
+  hotspots:   { i18nKey: 'freshness.hotspots', expected: '< 3 hrs' },
+  weather:    { i18nKey: 'freshness.weather',  expected: 'Hourly' },
+  fwi:        { i18nKey: 'freshness.fwi',      expected: 'Hourly' },
+  perimeters: { i18nKey: 'freshness.perimeters', expected: '< 6 hrs' },
 }
 const FRESHNESS_COLORS = {
   green:   { bg: '#eaf7ea', dot: '#2e7d32', text: '#1b5e20' },
@@ -29,6 +30,7 @@ function formatAge(generatedAt) {
 }
 
 export default function FreshnessPanel({ layers }) {
+  const { t } = useLanguage()
   return (
     <div style={{
       background: '#ffffff',
@@ -40,19 +42,20 @@ export default function FreshnessPanel({ layers }) {
       alignItems: 'center',
     }}>
       <span style={{ color: '#6b7280', fontSize: '11px', fontWeight: 'bold', marginRight: '4px' }}>
-        DATA FRESHNESS
+        {t('dataFreshness')}
       </span>
 
-      {Object.entries(LAYER_LABELS).map(([key, meta]) => {
+      {Object.entries(LAYER_KEYS).map(([key, meta]) => {
         const layer = layers[key]
         const freshness = layer?.freshness || 'unknown'
         const colors = FRESHNESS_COLORS[freshness]
         const age = formatAge(layer?.generatedAt)
+        const label = t(meta.i18nKey)
 
         return (
           <div
             key={key}
-            title={`${meta.label}: updated ${age} (expected: ${meta.expected})`}
+            title={`${label}: updated ${age} (expected: ${meta.expected})`}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -72,7 +75,7 @@ export default function FreshnessPanel({ layers }) {
               boxShadow: `0 0 4px ${colors.dot}`,
             }} />
             <span style={{ color: colors.text, fontSize: '11px', whiteSpace: 'nowrap' }}>
-              {meta.label}: {layer?.loading ? '…' : age}
+              {label}: {layer?.loading ? '…' : age}
             </span>
           </div>
         )
