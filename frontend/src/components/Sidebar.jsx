@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { filterFeaturesByBbox } from "../utils/spatial"
+import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } from "../utils/countryBoundaries"
 import { buildCommandBrief } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { theme } from "../utils/theme"
@@ -166,10 +167,28 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     () => filterFeaturesByBbox(allDetections, zoneInfo?.zoneBbox),
     [allDetections, zoneInfo]
   )
-  const countryHotspots = useMemo(
-    () => filterFeaturesByBbox(allDetections, zoneInfo?.countryBbox),
-    [allDetections, zoneInfo]
-  )
+  const [countryFeature, setCountryFeature] = useState(null)
+  useEffect(() => {
+    if (!zoneInfo?.country) { setCountryFeature(null); return }
+    let cancelled = false
+    loadCountryBoundaries()
+      .then((boundaries) => {
+        if (!cancelled) setCountryFeature(findCountryFeature(boundaries, zoneInfo.country))
+      })
+      .catch(() => { if (!cancelled) setCountryFeature(null) })
+    return () => { cancelled = true }
+  }, [zoneInfo?.country])
+
+  const countryHotspots = useMemo(() => {
+    // Prefer the real country polygon (accurate at borders) — a padded box
+    // around the searched point will happily include the neighboring
+    // country if the search point is near a border (e.g. Boston -> Quebec).
+    // Only fall back to the bbox approximation if this country isn't in our
+    // simplified boundary dataset.
+    const byPolygon = filterFeaturesByCountry(allDetections, countryFeature)
+    if (byPolygon !== null) return byPolygon
+    return filterFeaturesByBbox(allDetections, zoneInfo?.countryBbox)
+  }, [allDetections, countryFeature, zoneInfo])
   const stateHotspots = useMemo(
     () => filterFeaturesByBbox(allDetections, zoneInfo?.stateBbox),
     [allDetections, zoneInfo]
