@@ -1,7 +1,7 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "generated_at": "2026-07-14T19:40:57.486031+00:00",
+    "generated_at": "2026-07-14T21:12:52.908205+00:00",
     "source": "Computed from Open-Meteo data using Canadian Forest Service FWI System",
     "description": "Fire Weather Index (FWI) grid. FWI integrates temperature, relative humidity, wind speed, and precipitation into a single fire danger rating. Higher values indicate greater fire danger.",
     "fwi_classes": {
@@ -47,12 +47,12 @@
       "properties": {
         "lat": 14,
         "lon": -118,
-        "temp_c": 29.1,
-        "rh_pct": 80,
-        "wind_kmh": 31.2,
-        "wind_dir_deg": 45,
+        "temp_c": 29.0,
+        "rh_pct": 81,
+        "wind_kmh": 27.3,
+        "wind_dir_deg": 43,
         "rain_mm": 0.0,
-        "fwi": 17.6,
+        "fwi": 14.8,
         "risk_class": "high",
         "risk_label": "High",
         "risk_color": "#FFAA00",
@@ -114,7 +114,7 @@
             "rain": 14.9
           }
         ],
-        "fetched_at": "2026-07-14T19:40:53.181453+00:00"
+        "fetched_at": "2026-07-14T21:12:48.594158+00:00"
       }
     },
     {
@@ -129,12 +129,12 @@
       "properties": {
         "lat": 14,
         "lon": -108.0,
-        "temp_c": 27.6,
+        "temp_c": 28.0,
         "rh_pct": 83,
-        "wind_kmh": 33.5,
-        "wind_dir_deg": 165,
-        "rain_mm": 0.5,
-        "fwi": 17.6,
+        "wind_kmh": 34.2,
+        "wind_dir_deg": 162,
+        "rain_mm": 0.3,
+        "fwi": 18.1,
         "risk_class": "high",
         "risk_label": "High",
         "risk_color": "#FFAA00",
@@ -196,7 +196,7 @@
             "rain": 31.2
           }
         ],
-        "fetched_at": "2026-07-14T19:40:53.771665+00:00"
+        "fetched_at": "2026-07-14T21:12:49.223721+00:00"
       }
     },
     {
@@ -211,12 +211,12 @@
       "properties": {
         "lat": 14,
         "lon": -98.0,
-        "temp_c": 30.2,
-        "rh_pct": 79,
-        "wind_kmh": 26.8,
+        "temp_c": 30.3,
+        "rh_pct": 78,
+        "wind_kmh": 26.3,
         "wind_dir_deg": 84,
         "rain_mm": 0.0,
-        "fwi": 15.3,
+        "fwi": 15.0,
         "risk_class": "high",
         "risk_label": "High",
         "risk_color": "#FFAA00",
@@ -278,7 +278,7 @@
             "rain": 2.1
           }
         ],
-        "fetched_at": "2026-07-14T19:40:54.396641+00:00"
+        "fetched_at": "2026-07-14T21:12:49.821973+00:00"
       }
     },
     {
@@ -293,12 +293,12 @@
       "properties": {
         "lat": 14,
         "lon": -88.0,
-        "temp_c": 20.3,
-        "rh_pct": 76,
-        "wind_kmh": 11.7,
-        "wind_dir_deg": 58,
+        "temp_c": 18.3,
+        "rh_pct": 89,
+        "wind_kmh": 12.6,
+        "wind_dir_deg": 53,
         "rain_mm": 0.4,
-        "fwi": 7.7,
+        "fwi": 6.6,
         "risk_class": "moderate",
         "risk_label": "Moderate",
         "risk_color": "#FFFF00",
@@ -360,7 +360,7 @@
             "rain": 0
           }
         ],
-        "fetched_at": "2026-07-14T19:40:55.011422+00:00"
+        "fetched_at": "2026-07-14T21:12:50.430477+00:00"
       }
     },
     {
@@ -375,12 +375,12 @@
       "properties": {
         "lat": 24.0,
         "lon": -118,
-        "temp_c": 21.5,
-        "rh_pct": 92,
-        "wind_kmh": 20.3,
-        "wind_dir_deg": 30,
+        "temp_c": 21.6,
+        "rh_pct": 91,
+        "wind_kmh": 21.9,
+        "wind_dir_deg": 25,
         "rain_mm": 0.0,
-        "fwi": 8.8,
+        "fwi": 9.5,
         "risk_class": "moderate",
         "risk_label": "Moderate",
         "risk_color": "#FFFF00",
@@ -388,35 +388,35 @@
         "forecast": [
           {
             "date": "2026-07-14",
-            "fwi": 11.3,
+            "fwi": 11.7,
             "risk_class": "moderate",
             "risk_label": "Moderate",
             "color": "#FFFF00",
             "temp_max": 22.1,
-            "rh_min": 88,
-            "wind_max": 25.5,
+            "rh_min": 89,
+            "wind_max": 26.8,
             "rain": 0
           },
           {
             "date": "2026-07-15",
-            "fwi": 9.7,
+            "fwi": 10.0,
             "risk_class": "moderate",
             "risk_label": "Moderate",
             "color": "#FFFF00",
-            "temp_max": 22.1,
+            "temp_max": 22.3,
             "rh_min": 85,
-            "wind_max": 20.4,
-            "rain": 0.1
+            "wind_max": 21.0,
+            "rain": 0.2
           },
           {
             "date": "2026-07-16",
-            "fwi": 10.8,
+            "fwi": 11.0,
             "risk_class": "moderate",
             "risk_label": "Moderate",
             "color": "#FFFF00",
             "temp_max": 24.5,
             "rh_min": 76,
-            "wind_max": 18.3,
+            "wind_max": 18.7,
             "rain": 0
           },
           {
@@ -442,7 +442,7 @@
             "rain": 0
           }
         ],
-        "fetched_at": "2026-07-14T19:40:55.634326+00:00"
+        "fetched_at": "2026-07-14T21:12:51.049237+00:00"
       }
     },
     {
@@ -457,12 +457,12 @@
       "properties": {
         "lat": 24.0,
         "lon": -108.0,
-        "temp_c": 29.3,
-        "rh_pct": 82,
-        "wind_kmh": 12.1,
-        "wind_dir_deg": 197,
+        "temp_c": 29.6,
+        "rh_pct": 79,
+        "wind_kmh": 14.3,
+        "wind_dir_deg": 208,
         "rain_mm": 0.0,
-        "fwi": 7.8,
+        "fwi": 9.2,
         "risk_class": "moderate",
         "risk_label": "Moderate",
         "risk_color": "#FFFF00",
@@ -470,36 +470,36 @@
         "forecast": [
           {
             "date": "2026-07-14",
-            "fwi": 12.8,
+            "fwi": 12.4,
             "risk_class": "high",
             "risk_label": "High",
             "color": "#FFAA00",
-            "temp_max": 29.6,
+            "temp_max": 29.7,
             "rh_min": 77,
-            "wind_max": 22.3,
+            "wind_max": 21.4,
             "rain": 0
           },
           {
             "date": "2026-07-15",
-            "fwi": 8.4,
+            "fwi": 10.9,
             "risk_class": "moderate",
             "risk_label": "Moderate",
             "color": "#FFFF00",
-            "temp_max": 29.4,
-            "rh_min": 75,
-            "wind_max": 12.3,
+            "temp_max": 29.6,
+            "rh_min": 74,
+            "wind_max": 18.3,
             "rain": 0
           },
           {
             "date": "2026-07-16",
-            "fwi": 12.1,
+            "fwi": 18.0,
             "risk_class": "high",
             "risk_label": "High",
             "color": "#FFAA00",
             "temp_max": 30.5,
             "rh_min": 62,
             "wind_max": 26.7,
-            "rain": 3.78
+            "rain": 0.7
           },
           {
             "date": "2026-07-17",
@@ -524,7 +524,7 @@
             "rain": 5.3
           }
         ],
-        "fetched_at": "2026-07-14T19:40:56.271347+00:00"
+        "fetched_at": "2026-07-14T21:12:51.651954+00:00"
       }
     },
     {
@@ -539,12 +539,12 @@
       "properties": {
         "lat": 24.0,
         "lon": -98.0,
-        "temp_c": 32.3,
-        "rh_pct": 52,
-        "wind_kmh": 20.5,
-        "wind_dir_deg": 145,
-        "rain_mm": 0.1,
-        "fwi": 17.9,
+        "temp_c": 31.0,
+        "rh_pct": 60,
+        "wind_kmh": 23.6,
+        "wind_dir_deg": 138,
+        "rain_mm": 0.2,
+        "fwi": 17.2,
         "risk_class": "high",
         "risk_label": "High",
         "risk_color": "#FFAA00",
@@ -606,7 +606,7 @@
             "rain": 1.2
           }
         ],
-        "fetched_at": "2026-07-14T19:40:56.858548+00:00"
+        "fetched_at": "2026-07-14T21:12:52.275641+00:00"
       }
     },
     {
@@ -621,12 +621,12 @@
       "properties": {
         "lat": 24.0,
         "lon": -88.0,
-        "temp_c": 29.1,
-        "rh_pct": 75,
-        "wind_kmh": 10.0,
-        "wind_dir_deg": 103,
+        "temp_c": 29.3,
+        "rh_pct": 77,
+        "wind_kmh": 10.2,
+        "wind_dir_deg": 80,
         "rain_mm": 0.0,
-        "fwi": 7.6,
+        "fwi": 7.7,
         "risk_class": "moderate",
         "risk_label": "Moderate",
         "risk_color": "#FFFF00",
@@ -634,36 +634,36 @@
         "forecast": [
           {
             "date": "2026-07-14",
-            "fwi": 13.0,
-            "risk_class": "high",
-            "risk_label": "High",
-            "color": "#FFAA00",
-            "temp_max": 29.2,
-            "rh_min": 75,
-            "wind_max": 22.7,
-            "rain": 0
-          },
-          {
-            "date": "2026-07-15",
-            "fwi": 15.4,
+            "fwi": 13.3,
             "risk_class": "high",
             "risk_label": "High",
             "color": "#FFAA00",
             "temp_max": 29.3,
-            "rh_min": 74,
-            "wind_max": 27.0,
+            "rh_min": 76,
+            "wind_max": 23.2,
+            "rain": 0
+          },
+          {
+            "date": "2026-07-15",
+            "fwi": 15.9,
+            "risk_class": "high",
+            "risk_label": "High",
+            "color": "#FFAA00",
+            "temp_max": 29.3,
+            "rh_min": 75,
+            "wind_max": 27.9,
             "rain": 0
           },
           {
             "date": "2026-07-16",
-            "fwi": 14.2,
+            "fwi": 13.7,
             "risk_class": "high",
             "risk_label": "High",
             "color": "#FFAA00",
             "temp_max": 29.2,
-            "rh_min": 78,
-            "wind_max": 29.8,
-            "rain": 0.9
+            "rh_min": 79,
+            "wind_max": 28.9,
+            "rain": 0.73
           },
           {
             "date": "2026-07-17",
@@ -688,7 +688,7 @@
             "rain": 0
           }
         ],
-        "fetched_at": "2026-07-14T19:40:57.486017+00:00"
+        "fetched_at": "2026-07-14T21:12:52.908189+00:00"
       }
     }
   ]
