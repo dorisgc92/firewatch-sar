@@ -2,7 +2,11 @@
 
 on:
   schedule:
-    - cron: '0 6 * * *'
+    # Infrastructure (hospitals, fire stations, roads, etc.) barely changes
+    # month to month, unlike fires/weather — so this runs on the 1st of
+    # every month instead of daily to save Overpass API load. Trigger
+    # manually (workflow_dispatch) any time it needs an out-of-cycle refresh.
+    - cron: '0 6 1 * *'
   workflow_dispatch:
 
 jobs:
@@ -32,6 +36,6 @@ jobs:
         run: |
           git config user.name "FireWatch Bot"
           git config user.email "bot@firewatch-sar.github.io"
-          git add data/infrastructure.geojson
+          git add data/infrastructure.geojson data/manifest.json
           git diff --staged --quiet || git commit -m "chore: update infrastructure $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push

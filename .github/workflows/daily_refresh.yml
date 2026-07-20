@@ -38,6 +38,6 @@ jobs:
         run: |
           git config user.name "FireWatch Bot"
           git config user.email "bot@firewatch-sar.github.io"
-          git add data/hotspots.geojson data/weather.geojson data/fwi_grid.geojson data/perimeters.geojson
+          git add data/hotspots.geojson data/weather.geojson data/fwi_grid.geojson data/perimeters.geojson data/manifest.json
           git diff --staged --quiet || git commit -m "chore: daily full refresh $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push

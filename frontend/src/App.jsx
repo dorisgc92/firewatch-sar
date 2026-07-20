@@ -45,6 +45,12 @@ function AppInner() {
   const [selectedFire, setSelectedFire] = useState(null)
 
   const [zoneLoading, setZoneLoading] = useState(false)
+  // Bumped on every new zone-resolution request; a request only gets to
+  // apply its result if it's still the most recent one by the time it
+  // finishes. Without this, clicking fire A then quickly fire B could let
+  // A's slower response overwrite B's already-applied zoneInfo — which is
+  // exactly the "wrong municipio/estado stuck on screen" symptom reported.
+  const zoneRequestId = useRef(0)
 
   const handleSearch = async (q) => {
     setSearchQuery(q)
@@ -61,15 +67,19 @@ function AppInner() {
     setSearchQuery(place.properties.name || place.properties.city || "")
     setSelectedFire(null)
     setZoneLoading(true)
+    const requestId = ++zoneRequestId.current
     try {
       const zoneInfo = await zoneInfoFromPhotonFeature(place)
+      if (requestId !== zoneRequestId.current) return // a newer selection already superseded this one
       setSession(prev => ({ ...prev, zoneInfo }))
       if (mapRef.current) mapRef.current.setView(zoneInfo.center, 11)
     } catch {
       // Fallback: at least move the map even if the fuller zone resolution failed
-      if (mapRef.current) mapRef.current.setView([place.geometry.coordinates[1], place.geometry.coordinates[0]], 11)
+      if (requestId === zoneRequestId.current && mapRef.current) {
+        mapRef.current.setView([place.geometry.coordinates[1], place.geometry.coordinates[0]], 11)
+      }
     } finally {
-      setZoneLoading(false)
+      if (requestId === zoneRequestId.current) setZoneLoading(false)
     }
   }
 
@@ -82,11 +92,13 @@ function AppInner() {
     const [lon, lat] = feature.geometry.coordinates
     if (mapRef.current) mapRef.current.setView([lat, lon], 13)
     setZoneLoading(true)
+    const requestId = ++zoneRequestId.current
     try {
       const photonFeature = await reverseGeocodeFeature(lat, lon)
       const zoneInfo = photonFeature
         ? await zoneInfoFromPhotonFeature(photonFeature)
         : await zoneInfoFromCoordinates(lat, lon)
+      if (requestId !== zoneRequestId.current) return
       setSession(prev => ({ ...prev, zoneInfo }))
     } catch {
       // Photon itself failed (network/rate-limit) — still rescope using our
@@ -94,10 +106,10 @@ function AppInner() {
       // leave the sidebar stuck on the previous zone.
       try {
         const zoneInfo = await zoneInfoFromCoordinates(lat, lon)
-        setSession(prev => ({ ...prev, zoneInfo }))
+        if (requestId === zoneRequestId.current) setSession(prev => ({ ...prev, zoneInfo }))
       } catch { /* both paths failed — fire stays highlighted on the map at least */ }
     } finally {
-      setZoneLoading(false)
+      if (requestId === zoneRequestId.current) setZoneLoading(false)
     }
   }
 
@@ -192,7 +204,7 @@ function AppInner() {
           <FireMap activeModule={activeModule} layers={layers} mapRef={mapRef}
             infraFilter={infraFilter} onInfraFilter={(key, val) => setInfraFilter(prev => ({...prev, [key]: val}))}
             mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire}
-            onFireClick={handleSelectFire} />
+            onFireClick={handleSelectFire} zoneLoading={zoneLoading} />
         </div>
         <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
           zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire} />

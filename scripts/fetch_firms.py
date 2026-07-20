@@ -21,6 +21,7 @@ import requests
 import csv
 import io
 from datetime import datetime, timezone
+from manifest import update_manifest
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 
@@ -206,6 +207,7 @@ def main():
         empty["metadata"]["error"] = "No API key provided"
         with open(OUTPUT_PATH, "w") as f:
             json.dump(empty, f, indent=2)
+        update_manifest("hotspots", OUTPUT_PATH)
         return
 
     all_features = []
@@ -257,6 +259,7 @@ def main():
         os.makedirs("data", exist_ok=True)
         with open(OUTPUT_PATH, "w") as f:
             json.dump(empty, f, indent=2)
+        update_manifest("hotspots", OUTPUT_PATH)
         raise SystemExit(1)
 
     geojson = build_geojson(deduped)
@@ -264,6 +267,8 @@ def main():
     os.makedirs("data", exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
         json.dump(geojson, f, indent=2)
+
+    update_manifest("hotspots", OUTPUT_PATH)
 
     print(f"Saved to {OUTPUT_PATH}")
 

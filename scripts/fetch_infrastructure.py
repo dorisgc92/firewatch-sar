@@ -21,6 +21,7 @@ import sys
 import argparse
 import requests
 from datetime import datetime, timezone
+from manifest import update_manifest
 
 OUTPUT_PATH = "data/infrastructure.geojson"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
@@ -164,6 +165,7 @@ def main():
         }
         with open(OUTPUT_PATH, "w") as f:
             json.dump(empty, f, indent=2)
+        update_manifest("infrastructure", OUTPUT_PATH)
         return
 
     features = parse_overpass_response(data)
@@ -195,6 +197,7 @@ def main():
 
     with open(OUTPUT_PATH, "w") as f:
         json.dump(geojson, f, indent=2)
+    update_manifest("infrastructure", OUTPUT_PATH)
 
     print(f"Saved {OUTPUT_PATH}")
     for t, count in sorted(type_counts.items(), key=lambda x: -x[1]):

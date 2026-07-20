@@ -44,11 +44,22 @@ function paddedBbox(lat, lon, degrees) {
   }
 }
 
+// Photon is a free public API with no SLA — without a timeout, a slow
+// response can hang zone resolution (and the loading overlay) indefinitely.
+// 6s is generous for a single lookup but still bounded.
+const PHOTON_TIMEOUT_MS = 6000
+
 async function photonSearch(query) {
-  const r = await fetch(PHOTON_URL + "?q=" + encodeURIComponent(query) + "&limit=1")
-  if (!r.ok) throw new Error("HTTP " + r.status)
-  const data = await r.json()
-  return data.features?.[0] || null
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), PHOTON_TIMEOUT_MS)
+  try {
+    const r = await fetch(PHOTON_URL + "?q=" + encodeURIComponent(query) + "&limit=1", { signal: controller.signal })
+    if (!r.ok) throw new Error("HTTP " + r.status)
+    const data = await r.json()
+    return data.features?.[0] || null
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 /**
@@ -66,29 +77,22 @@ export async function zoneInfoFromPhotonFeature(feature, fallbackQuery) {
 
   const zoneBbox = extentToBbox(props.extent, 8) || paddedBbox(lat, lon, 0.35)
 
-  let stateBbox = null
-  if (state) {
-    try {
-      const stateFeature = await photonSearch(state + (country ? ", " + country : ""))
-      stateBbox = extentToBbox(stateFeature?.properties?.extent, 25)
-    } catch { /* fall through to padded box below */ }
-  }
-  if (!stateBbox) stateBbox = paddedBbox(lat, lon, 1.5)
+  // State and country lookups are independent of each other — run them in
+  // parallel instead of one-after-the-other. This alone roughly halves the
+  // wait time for zone resolution (previously ~2 sequential round-trips).
+  const [stateFeature, countryFeature] = await Promise.all([
+    state ? photonSearch(state + (country ? ", " + country : "")).catch(() => null) : Promise.resolve(null),
+    country ? photonSearch(country).catch(() => null) : Promise.resolve(null),
+  ])
 
-  let countryBbox = null
-  if (country) {
-    try {
-      const countryFeature = await photonSearch(country)
-      countryBbox = extentToBbox(countryFeature?.properties?.extent, 60)
-    } catch { /* fall through to padded box below */ }
-  }
+  const stateBbox = extentToBbox(stateFeature?.properties?.extent, 25) || paddedBbox(lat, lon, 1.5)
   // Countries with far-flung territories (Alaska/Hawaii/Guam for the US,
   // Siberia for Russia, overseas départements for France...) get rejected by
   // the span cap above and land here — a padded box around the searched
   // point instead. This under-covers those countries' remote territories,
   // but that's a far safer failure mode than silently matching fires on the
   // other side of the planet.
-  if (!countryBbox) countryBbox = paddedBbox(lat, lon, 15)
+  const countryBbox = extentToBbox(countryFeature?.properties?.extent, 60) || paddedBbox(lat, lon, 15)
 
   return {
     query: fallbackQuery || name,
@@ -159,8 +163,10 @@ const reverseFeatureCache = new Map()
 export async function reverseGeocodeFeature(lat, lon) {
   const key = lat.toFixed(3) + "," + lon.toFixed(3)
   if (reverseFeatureCache.has(key)) return reverseFeatureCache.get(key)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), PHOTON_TIMEOUT_MS)
   try {
-    const r = await fetch(`${REVERSE_URL}?lon=${lon}&lat=${lat}`)
+    const r = await fetch(`${REVERSE_URL}?lon=${lon}&lat=${lat}`, { signal: controller.signal })
     if (!r.ok) throw new Error("HTTP " + r.status)
     const data = await r.json()
     const feature = data.features?.[0] || null
@@ -169,6 +175,8 @@ export async function reverseGeocodeFeature(lat, lon) {
   } catch {
     reverseFeatureCache.set(key, null)
     return null
+  } finally {
+    clearTimeout(timeout)
   }
 }
 
@@ -181,8 +189,10 @@ export async function reverseGeocodeFeature(lat, lon) {
 export async function reverseGeocodePlace(lat, lon) {
   const key = lat.toFixed(3) + "," + lon.toFixed(3)
   if (reverseCache.has(key)) return reverseCache.get(key)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), PHOTON_TIMEOUT_MS)
   try {
-    const r = await fetch(`${REVERSE_URL}?lon=${lon}&lat=${lat}`)
+    const r = await fetch(`${REVERSE_URL}?lon=${lon}&lat=${lat}`, { signal: controller.signal })
     if (!r.ok) throw new Error("HTTP " + r.status)
     const data = await r.json()
     const props = data.features?.[0]?.properties
@@ -194,5 +204,7 @@ export async function reverseGeocodePlace(lat, lon) {
   } catch {
     reverseCache.set(key, null)
     return null
+  } finally {
+    clearTimeout(timeout)
   }
 }

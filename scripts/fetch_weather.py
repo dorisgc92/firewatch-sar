@@ -21,6 +21,7 @@ import json
 import math
 import requests
 from datetime import datetime, timezone
+from manifest import update_manifest
 
 OUTPUT_WEATHER = "data/weather.geojson"
 OUTPUT_FWI = "data/fwi_grid.geojson"
@@ -325,6 +326,7 @@ def main():
     }
     with open(OUTPUT_WEATHER, "w") as f:
         json.dump(weather_geojson, f, indent=2)
+    update_manifest("weather", OUTPUT_WEATHER)
     print(f"Saved {OUTPUT_WEATHER} ({len(weather_features)} points)")
 
     # Save fwi_grid.geojson
@@ -347,6 +349,7 @@ def main():
     }
     with open(OUTPUT_FWI, "w") as f:
         json.dump(fwi_geojson, f, indent=2)
+    update_manifest("fwi", OUTPUT_FWI)
     print(f"Saved {OUTPUT_FWI} ({len(fwi_features)} points)")
     print(f"Errors: {errors}")
 

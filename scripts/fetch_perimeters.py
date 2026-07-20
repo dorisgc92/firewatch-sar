@@ -14,6 +14,7 @@ How to run:
 import json
 import requests
 from datetime import datetime, timezone
+from manifest import update_manifest
 
 OUTPUT_PATH = "data/perimeters.geojson"
 
@@ -176,6 +177,7 @@ def main():
 
     with open(OUTPUT_PATH, "w") as f:
         json.dump(geojson, f, indent=2)
+    update_manifest("perimeters", OUTPUT_PATH)
 
     print(f"\nSaved {OUTPUT_PATH}")
     print(f"Total: {len(all_features)} perimeters, {round(total_hectares):,} hectares")

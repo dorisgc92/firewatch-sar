@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, Tooltip, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
-import { filterFeaturesByBbox } from "../utils/spatial"
+import { filterFeaturesByBbox, linkedPerimeterForFire } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
@@ -85,7 +85,7 @@ function FireLabel({ lat, lon }) {
   )
 }
 
-function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime }) {
+function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, linkedPerimeter, onZoomToLocation }) {
   const { t } = useLanguage()
   const [place, setPlace] = useState(null)
   const [resolved, setResolved] = useState(false)
@@ -98,13 +98,33 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime }) {
     return () => { cancelled = true }
   }, [lat, lon])
 
+  const perimeterProps = linkedPerimeter?.properties
+  const hectares = perimeterProps?.hectares
+
   return (
-    <div style={{ fontSize: "12.5px" }}>
-      <strong>{place || (resolved ? t("unnamedSite") : t("locatingSite"))}</strong><br />
+    <div style={{ fontSize: "12.5px", minWidth: "200px" }}>
+      <strong style={{ fontSize: "13.5px" }}>{place || (resolved ? t("unnamedSite") : t("locatingSite"))}</strong><br />
       {t("coordinates")}: {lat.toFixed(4)}, {lon.toFixed(4)}<br />
       FRP: {frp ? frp + " MW" : "N/A"} · {t("intensity")}: {intensity}<br />
       {t("sensor")}: {source}<br />
       {t("detected")}: {acq_datetime}
+      {perimeterProps && (
+        <div style={{ marginTop: "6px", paddingTop: "6px", borderTop: `1px solid ${theme.border}` }}>
+          {hectares != null && (
+            <div><strong>{t("burnedArea") || "Area"}:</strong> {hectares.toLocaleString()} ha</div>
+          )}
+          {perimeterProps.name && <div>{perimeterProps.name}</div>}
+        </div>
+      )}
+      <button
+        onClick={onZoomToLocation}
+        style={{
+          marginTop: "8px", width: "100%", padding: "6px 10px", borderRadius: "6px",
+          border: "none", background: theme.orange, color: "#fff", fontWeight: "bold",
+          fontSize: "12px", cursor: "pointer",
+        }}>
+        🔍 {t("zoomToLocation") || "Zoom to location"}
+      </button>
     </div>
   )
 }
@@ -198,7 +218,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading }) {
   const { t } = useLanguage()
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
@@ -276,6 +296,14 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
   return (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
+      <div style={{
+        width: "100%", height: "100%",
+        filter: zoneLoading ? "blur(4px)" : "none",
+        transition: "filter 0.25s ease",
+        // Blocks map interaction while resolving a new zone so clicks
+        // don't land on stale content mid-transition.
+        pointerEvents: zoneLoading ? "none" : "auto",
+      }}>
       <MapContainer center={center} zoom={9}
         style={{ width: "100%", height: "100%", background: "#e8ebee" }}
         zoomControl={true}>
@@ -310,17 +338,24 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
               const stroke = INTENSITY_STROKE[intensity] || INTENSITY_STROKE.unknown
               const r = hotspotRadius(frp, mapZoom)
+              // Clicking a fire on the general map only opens this summary
+              // popup (cheap, local) — it no longer eagerly re-scopes the
+              // whole command center sidebar. That only happens if the
+              // responder explicitly presses "Zoom to location" below,
+              // matching the two-step flow: browse -> confirm -> drill in.
+              const linkedPerimeter = linkedPerimeterForFire(feat, layers.perimeters?.data?.features || [])
               return (
                 <CircleMarker key={i} center={[lat, lon]} radius={r}
-                  pathOptions={{ color: stroke, fillColor: color, fillOpacity: 0.92, weight: 2 }}
-                  eventHandlers={{ click: () => onFireClick?.(feat) }}>
+                  pathOptions={{ color: stroke, fillColor: color, fillOpacity: 0.92, weight: 2 }}>
                   {showLabels && (
                     <Tooltip permanent direction="top" offset={[0, -r]} opacity={0.92}>
                       <FireLabel lat={lat} lon={lon} />
                     </Tooltip>
                   )}
                   <Popup>
-                    <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source} acq_datetime={acq_datetime} />
+                    <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
+                      acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
+                      onZoomToLocation={() => onFireClick?.(feat)} />
                   </Popup>
                 </CircleMarker>
               )
@@ -331,18 +366,35 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           const { frp, intensity, source, acq_datetime } = selectedFire.properties
           const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
           const r = hotspotRadius(frp, mapZoom) + 6
+          const linkedPerimeter = linkedPerimeterForFire(selectedFire, layers.perimeters?.data?.features || [])
+
           return (
-            <CircleMarker center={[lat, lon]} radius={r}
-              pathOptions={{ color: theme.navy, fillColor: color, fillOpacity: 0.9, weight: 3, dashArray: "3 3" }}>
-              <Tooltip permanent direction="top" offset={[0, -r]} opacity={0.95}>
-                <FireLabel lat={lat} lon={lon} />
-              </Tooltip>
-              <Popup>
-                <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source} acq_datetime={acq_datetime} />
-              </Popup>
-            </CircleMarker>
+            <>
+              {/* When we have a real burned-area polygon (official perimeter
+                  data or, once available, SAR-derived extent) for this fire,
+                  show the actual shape of the fire — not just a dot — the
+                  same way NASA FIRMS renders perimeters. */}
+              {linkedPerimeter && (
+                <GeoJSON
+                  key={"selected-perimeter-" + (linkedPerimeter.properties?.name || `${lat.toFixed(3)},${lon.toFixed(3)}`)}
+                  data={linkedPerimeter}
+                  style={() => ({ color: theme.navy, fillColor: "#FF4400", fillOpacity: 0.3, weight: 3, dashArray: "4 3" })} />
+              )}
+              <CircleMarker center={[lat, lon]} radius={r}
+                pathOptions={{ color: theme.navy, fillColor: color, fillOpacity: 0.9, weight: 3, dashArray: "3 3" }}>
+                <Tooltip permanent direction="top" offset={[0, -r]} opacity={0.95}>
+                  <FireLabel lat={lat} lon={lon} />
+                </Tooltip>
+                <Popup>
+                  <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
+                    acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
+                    onZoomToLocation={() => onFireClick?.(selectedFire)} />
+                </Popup>
+              </CircleMarker>
+            </>
           )
         })()}
+
 
         {activeModule === 2 && visibleLayers.perimeters && viewportPerimeters.length > 0 && (
           <GeoJSON key={layers.perimeters.generatedAt + "-" + viewportPerimeters.length}
@@ -396,6 +448,25 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         })}
 
       </MapContainer>
+      </div>
+
+      {zoneLoading && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
+          justifyContent: "center", zIndex: 2500, pointerEvents: "none" }}>
+          <div style={{ background: theme.panelBg, color: theme.textPrimary,
+            padding: "14px 28px", borderRadius: "10px", fontSize: "14px", fontWeight: "bold",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.25)", border: `1px solid ${theme.border}`,
+            display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{
+              width: "14px", height: "14px", borderRadius: "50%",
+              border: `2px solid ${theme.border}`, borderTopColor: theme.orange,
+              animation: "firewatch-spin 0.8s linear infinite",
+            }} />
+            {t("loadingZone") || "Loading..."}
+          </div>
+          <style>{`@keyframes firewatch-spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
 
       <LayerToggle layers={visibleLayers} onChange={toggleLayer}
         activeModule={activeModule} intensities={visibleIntensities}
