@@ -94,6 +94,24 @@ function pointInPolygonGeometry(lat, lon, geom) {
   return false
 }
 
+// True if a hotspot sits within `maxDistanceKm` of a mapped industrial site
+// (cement plants, factories, refineries...). These run hot around the
+// clock and are a well-known source of satellite thermal-anomaly false
+// positives — NASA's own `type` classification field (which would flag
+// this directly) isn't available on the NRT CSV endpoint FireWatch SAR
+// uses, so this cross-reference against OSM industrial landuse is the
+// practical stand-in.
+export function isNearIndustrialSite(fireFeature, infrastructureFeatures, maxDistanceKm = 0.3) {
+  if (!infrastructureFeatures?.length) return false
+  const [lon, lat] = fireFeature.geometry.coordinates
+  return infrastructureFeatures.some((f) => {
+    if (f.properties?.type !== "Industrial Zone") return false
+    const c = featureCentroid(f)
+    if (!c) return false
+    return distanceKm(lat, lon, c[0], c[1]) <= maxDistanceKm
+  })
+}
+
 // Links a hotspot detection (a single point) to the burned-area polygon it
 // belongs to, when the app has one — this is where SAR-derived / official
 // perimeter data upgrades a fire from "a dot" to "the actual shape of the

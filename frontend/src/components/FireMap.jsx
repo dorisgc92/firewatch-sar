@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, Circle, GeoJSON, Popup, Tooltip, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
-import { filterFeaturesByBbox, linkedPerimeterForFire } from "../utils/spatial"
+import { filterFeaturesByBbox, linkedPerimeterForFire, isNearIndustrialSite } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
@@ -374,7 +374,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             see the note on the main marker below. */}
         {activeModule === 2 && visibleLayers.hotspots && visibleViewportHotspots.length > 0 && visibleViewportHotspots.length <= 800 &&
           visibleViewportHotspots
-            .filter((feat) => feat.properties.fire_type == null || feat.properties.fire_type === 0)
+            .filter((feat) => (feat.properties.fire_type == null || feat.properties.fire_type === 0) && !isNearIndustrialSite(feat, zoneInfrastructure))
             .map((feat, i) => {
               const { frp, intensity, resolution_m } = feat.properties
               const [lon, lat] = feat.geometry.coordinates
@@ -398,11 +398,15 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               // FIRMS classifies each thermal anomaly itself: 0 = presumed
               // vegetation fire (a real wildfire), 1 = volcano, 2 = other
               // static/industrial source (gas flares, plants — this is the
-              // "not actually a wildfire" case), 3 = offshore. When the
-              // field is present and not 0, style it as a muted, dashed
-              // grey marker instead of a normal intensity color, so it
-              // doesn't read as a confirmed wildfire on the map.
-              const isNonVegetation = fire_type != null && fire_type !== 0
+              // "not actually a wildfire" case), 3 = offshore. That field
+              // isn't available on the NRT endpoint we use though, so it's
+              // combined with a proximity check against mapped industrial
+              // sites (cement plants, factories...) — either signal is
+              // enough to style this as a muted, dashed grey marker
+              // instead of a normal intensity color, so it doesn't read as
+              // a confirmed wildfire on the map.
+              const nearIndustrial = isNearIndustrialSite(feat, zoneInfrastructure)
+              const isNonVegetation = (fire_type != null && fire_type !== 0) || nearIndustrial
               const color = isNonVegetation ? "#888888" : (INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown)
               const stroke = isNonVegetation ? "#555555" : (INTENSITY_STROKE[intensity] || INTENSITY_STROKE.unknown)
               const r = hotspotRadius(frp, mapZoom)
@@ -425,7 +429,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                   <Popup>
                     <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                       acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
-                      fireTypeLabel={isNonVegetation ? fire_type_label : null}
+                      fireTypeLabel={isNonVegetation ? (fire_type_label || (nearIndustrial ? "static_land_source" : "unknown")) : null}
                       onZoomToLocation={() => onFireClick?.(feat)} />
                   </Popup>
                 </CircleMarker>
@@ -438,7 +442,8 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
           const r = hotspotRadius(frp, mapZoom) + 6
           const linkedPerimeter = linkedPerimeterForFire(selectedFire, layers.perimeters?.data?.features || [])
-          const isNonVegetation = fire_type != null && fire_type !== 0
+          const nearIndustrial = isNearIndustrialSite(selectedFire, zoneInfrastructure)
+          const isNonVegetation = (fire_type != null && fire_type !== 0) || nearIndustrial
 
           return (
             <>
@@ -465,7 +470,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                 <Popup>
                   <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                     acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
-                    fireTypeLabel={isNonVegetation ? fire_type_label : null}
+                    fireTypeLabel={isNonVegetation ? (fire_type_label || (nearIndustrial ? "static_land_source" : "unknown")) : null}
                     onZoomToLocation={() => onFireClick?.(selectedFire)} />
                 </Popup>
               </CircleMarker>

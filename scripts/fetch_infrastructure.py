@@ -44,6 +44,15 @@ INFRASTRUCTURE_TYPES = [
     ("amenity",  "fuel",              "Fuel Station",       "#FFDD00", "â›½"),
     ("landuse",  "reservoir",         "Water Reservoir",    "#0088FF", "ðŸ’§"),
     ("natural",  "water",             "Water Body",         "#4488FF", "ðŸ’§"),
+    # Industrial sites (cement plants, factories, refineries, quarries...)
+    # run hot 24/7 and are a common source of satellite thermal-anomaly
+    # false positives for wildfire -- VIIRS/MODIS just see "hot pixel", not
+    # "kiln" vs "wildfire". Fetching these lets the frontend flag a hotspot
+    # that lands on/near a known industrial site as a likely non-wildfire
+    # detection, since NASA's own `type` classification field isn't
+    # available on the NRT CSV endpoint we use.
+    ("landuse",  "industrial",        "Industrial Zone",    "#996633", "factory"),
+    ("man_made", "works",             "Industrial Zone",    "#996633", "factory"),
 ]
 
 
@@ -208,6 +217,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
