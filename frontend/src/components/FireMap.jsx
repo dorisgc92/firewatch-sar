@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, Tooltip, useMap, Marker } from "react-leaflet"
+import { MapContainer, TileLayer, CircleMarker, Circle, GeoJSON, Popup, Tooltip, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
-import { filterFeaturesByBbox, linkedPerimeterForFire, clusterHotspots, estimatedAreaForCluster } from "../utils/spatial"
+import { filterFeaturesByBbox, linkedPerimeterForFire } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
@@ -85,7 +85,7 @@ function FireLabel({ lat, lon }) {
   )
 }
 
-function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, linkedPerimeter, onZoomToLocation }) {
+function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, linkedPerimeter, fireTypeLabel, onZoomToLocation }) {
   const { t } = useLanguage()
   const [place, setPlace] = useState(null)
   const [resolved, setResolved] = useState(false)
@@ -101,6 +101,13 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
   const perimeterProps = linkedPerimeter?.properties
   const hectares = perimeterProps?.hectares
 
+  const fireTypeDisplay = {
+    volcano: t("fireTypeVolcano") || "active volcano",
+    static_land_source: t("fireTypeStatic") || "industrial/static heat source",
+    offshore: t("fireTypeOffshore") || "offshore detection",
+    unknown: t("fireTypeUnknown") || "unclassified source",
+  }[fireTypeLabel]
+
   return (
     <div style={{ fontSize: "12.5px", minWidth: "200px" }}>
       <strong style={{ fontSize: "13.5px" }}>{place || (resolved ? t("unnamedSite") : t("locatingSite"))}</strong><br />
@@ -108,6 +115,14 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
       FRP: {frp ? frp + " MW" : "N/A"} · {t("intensity")}: {intensity}<br />
       {t("sensor")}: {source}<br />
       {t("detected")}: {acq_datetime}
+      {fireTypeLabel && (
+        <div style={{
+          marginTop: "6px", padding: "5px 6px", borderRadius: "5px",
+          background: "#F0F0F0", border: "1px solid #ccc", fontSize: "11px", color: "#555",
+        }}>
+          ⚠️ {t("nonVegetationSource") || "Not confirmed as a vegetation fire"} ({fireTypeDisplay})
+        </div>
+      )}
       {perimeterProps && (
         <div style={{ marginTop: "6px", paddingTop: "6px", borderTop: `1px solid ${theme.border}` }}>
           {hectares != null && (
@@ -344,41 +359,52 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           )
         })}
 
-        {/* Estimated burned-area shading for clusters of nearby hotspots —
-            drawn UNDER the individual dots below, so a fire cluster reads
-            as a shaded zone (colored by its worst intensity present) while
-            each dot on top still shows its own real intensity color. Skips
-            on very dense views (>600 points) to stay responsive at world
-            zoom, where individual dots aren't meaningfully distinguishable
-            anyway. */}
-        {activeModule === 2 && visibleLayers.hotspots && visibleViewportHotspots.length > 0 && visibleViewportHotspots.length <= 600 &&
-          clusterHotspots(visibleViewportHotspots, 2)
-            .filter((cluster) => cluster.length >= 3)
-            .map((cluster, ci) => {
-              const area = estimatedAreaForCluster(cluster)
-              if (!area) return null
-              const fillColor = INTENSITY_COLORS[area.properties.dominant_intensity] || INTENSITY_COLORS.unknown
+        {/* Real-world-sized footprint under each hotspot dot — sized to
+            roughly the sensor's pixel footprint (VIIRS ~375m, MODIS ~1km),
+            using geographic Circle (meters) rather than the fixed-pixel
+            CircleMarker used for the clickable dot on top. This is
+            deliberately simpler than computing a cluster hull: when fires
+            sit close together, their footprints overlap and naturally
+            blend into a continuous shaded zone (no geometry/hull math, and
+            no risk of a fire being left "outside" its own zone); isolated
+            fires just show their own small true-sized footprint. Each
+            footprint keeps its own point's real intensity color, so a
+            blended zone still visibly shows where within it burns hotter.
+            Skipped for likely non-wildfire detections (fire_type != 0) —
+            see the note on the main marker below. */}
+        {activeModule === 2 && visibleLayers.hotspots && visibleViewportHotspots.length > 0 && visibleViewportHotspots.length <= 800 &&
+          visibleViewportHotspots
+            .filter((feat) => feat.properties.fire_type == null || feat.properties.fire_type === 0)
+            .map((feat, i) => {
+              const { frp, intensity, resolution_m } = feat.properties
+              const [lon, lat] = feat.geometry.coordinates
+              const fillColor = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
+              // Base radius from the sensor's own pixel size, nudged up for
+              // higher-FRP detections (larger/more active fires tend to
+              // scorch a wider area than a single pixel).
+              const base = (resolution_m || 375) / 2
+              const frpBoost = frp ? Math.min(300, Math.sqrt(frp) * 12) : 0
+              const radiusM = base + frpBoost
               return (
-                <GeoJSON key={"cluster-area-" + ci} data={area}
-                  style={() => ({ color: fillColor, weight: 1.5, dashArray: "5 3", fillColor, fillOpacity: 0.22 })}>
-                  <Popup>
-                    <div style={{ fontSize: "12.5px", minWidth: "180px" }}>
-                      <strong>{t("estimatedArea") || "ESTIMATED"} — {cluster.length} {t("detections") || "detections"}</strong>
-                      <div style={{ fontSize: "10.5px", color: "#777", marginTop: "4px" }}>
-                        {t("estimatedAreaNote") || "Derived from clustered hotspots, not a surveyed perimeter."}
-                      </div>
-                    </div>
-                  </Popup>
-                </GeoJSON>
+                <Circle key={"footprint-" + i} center={[lat, lon]} radius={radiusM}
+                  pathOptions={{ stroke: false, fillColor, fillOpacity: 0.28 }} />
               )
             })}
 
         {activeModule === 2 && visibleLayers.hotspots &&
           visibleViewportHotspots.map((feat, i) => {
-              const { frp, intensity, source, acq_datetime } = feat.properties
+              const { frp, intensity, source, acq_datetime, fire_type, fire_type_label } = feat.properties
               const [lon, lat] = feat.geometry.coordinates
-              const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
-              const stroke = INTENSITY_STROKE[intensity] || INTENSITY_STROKE.unknown
+              // FIRMS classifies each thermal anomaly itself: 0 = presumed
+              // vegetation fire (a real wildfire), 1 = volcano, 2 = other
+              // static/industrial source (gas flares, plants — this is the
+              // "not actually a wildfire" case), 3 = offshore. When the
+              // field is present and not 0, style it as a muted, dashed
+              // grey marker instead of a normal intensity color, so it
+              // doesn't read as a confirmed wildfire on the map.
+              const isNonVegetation = fire_type != null && fire_type !== 0
+              const color = isNonVegetation ? "#888888" : (INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown)
+              const stroke = isNonVegetation ? "#555555" : (INTENSITY_STROKE[intensity] || INTENSITY_STROKE.unknown)
               const r = hotspotRadius(frp, mapZoom)
               // Clicking a fire on the general map only opens this summary
               // popup (cheap, local) — it no longer eagerly re-scopes the
@@ -388,7 +414,9 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               const linkedPerimeter = linkedPerimeterForFire(feat, layers.perimeters?.data?.features || [])
               return (
                 <CircleMarker key={i} center={[lat, lon]} radius={r}
-                  pathOptions={{ color: stroke, fillColor: color, fillOpacity: 0.92, weight: 2 }}>
+                  pathOptions={isNonVegetation
+                    ? { color: stroke, fillColor: color, fillOpacity: 0.75, weight: 2, dashArray: "3 2" }
+                    : { color: stroke, fillColor: color, fillOpacity: 0.92, weight: 2 }}>
                   {showLabels && (
                     <Tooltip permanent direction="top" offset={[0, -r]} opacity={0.92}>
                       <FireLabel lat={lat} lon={lon} />
@@ -397,6 +425,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                   <Popup>
                     <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                       acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
+                      fireTypeLabel={isNonVegetation ? fire_type_label : null}
                       onZoomToLocation={() => onFireClick?.(feat)} />
                   </Popup>
                 </CircleMarker>
@@ -405,10 +434,11 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
         {activeModule === 2 && selectedFire && (() => {
           const [lon, lat] = selectedFire.geometry.coordinates
-          const { frp, intensity, source, acq_datetime } = selectedFire.properties
+          const { frp, intensity, source, acq_datetime, fire_type, fire_type_label } = selectedFire.properties
           const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
           const r = hotspotRadius(frp, mapZoom) + 6
           const linkedPerimeter = linkedPerimeterForFire(selectedFire, layers.perimeters?.data?.features || [])
+          const isNonVegetation = fire_type != null && fire_type !== 0
 
           return (
             <>
@@ -435,6 +465,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                 <Popup>
                   <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                     acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
+                    fireTypeLabel={isNonVegetation ? fire_type_label : null}
                     onZoomToLocation={() => onFireClick?.(selectedFire)} />
                 </Popup>
               </CircleMarker>

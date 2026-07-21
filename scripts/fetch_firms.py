@@ -136,6 +136,15 @@ def row_to_feature(row, source_label, resolution_m):
     MODIS columns: latitude, longitude, brightness, scan, track,
                    acq_date, acq_time, satellite, instrument,
                    confidence, version, bright_t31, frp, daynight
+
+    Some FIRMS distributions also include a `type` column classifying the
+    thermal anomaly itself (0=presumed vegetation fire, 1=active volcano,
+    2=other static/industrial land source, 3=offshore). It isn't present
+    on every endpoint/sensor combination, so this is read defensively —
+    when present, it lets us flag likely non-wildfire detections (gas
+    flares, industrial plants, volcanoes) instead of showing every thermal
+    anomaly as an undifferentiated "fire". When absent, `fire_type` is
+    just null and every detection displays exactly as before.
     """
     try:
         lat = float(row.get("latitude", 0))
@@ -148,6 +157,21 @@ def row_to_feature(row, source_label, resolution_m):
     acq_date = row.get("acq_date", "")
     acq_time = row.get("acq_time", "")
     daynight = row.get("daynight", "D")
+
+    fire_type_raw = row.get("type", "")
+    fire_type = None
+    fire_type_label = None
+    if fire_type_raw not in (None, ""):
+        try:
+            fire_type = int(fire_type_raw)
+            fire_type_label = {
+                0: "vegetation_fire",
+                1: "volcano",
+                2: "static_land_source",
+                3: "offshore",
+            }.get(fire_type, "unknown")
+        except ValueError:
+            fire_type = None
 
     # Build acquisition datetime string
     acq_datetime = f"{acq_date} {acq_time[:2]}:{acq_time[2:]}Z" if acq_time else acq_date
@@ -166,6 +190,8 @@ def row_to_feature(row, source_label, resolution_m):
             "confidence": confidence,
             "acq_datetime": acq_datetime,
             "daynight": "Day" if daynight == "D" else "Night",
+            "fire_type": fire_type,
+            "fire_type_label": fire_type_label,
         }
     }
 
