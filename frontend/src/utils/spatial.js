@@ -114,3 +114,151 @@ export function linkedPerimeterForFire(fireFeature, perimeterFeatures, maxDistan
   if (closest && closest.distanceKm <= maxDistanceKm) return closest.feature
   return null
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Hotspot clustering + estimated-area hulls
+// ─────────────────────────────────────────────────────────────────────────
+// When no official/estimated perimeter exists for a fire (most of the
+// world — we only have real polygon data for USA, Mexico, and Canada),
+// we build one ourselves from the FIRMS hotspot cloud we already fetch
+// every 5 minutes: group nearby detections into clusters, then draw the
+// shape (convex hull, buffered outward a bit) that wraps around each
+// cluster. This is the same basic idea CWFIS uses officially for Canada
+// (cluster + buffer hotspots), just computed client-side so it works
+// anywhere in the world with zero extra API dependency.
+
+const INTENSITY_RANK = { low: 0, moderate: 1, high: 2, extreme: 3, unknown: -1 }
+
+/**
+ * Groups hotspot features into clusters where every point is within
+ * `maxDistanceKm` of at least one other point in the same cluster
+ * (single-linkage clustering via union-find). Returns an array of
+ * clusters, each an array of features.
+ */
+export function clusterHotspots(features, maxDistanceKm = 2) {
+  const n = features.length
+  if (n === 0) return []
+
+  const parent = Array.from({ length: n }, (_, i) => i)
+  function find(i) {
+    while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i] }
+    return i
+  }
+  function union(a, b) {
+    const ra = find(a), rb = find(b)
+    if (ra !== rb) parent[ra] = rb
+  }
+
+  // Grid-bucket points so we only compare pairs that could plausibly be
+  // within range, instead of a full O(n^2) scan — keeps this fast even
+  // with a few hundred hotspots in view.
+  const cellDeg = maxDistanceKm / 111 // ~km per degree latitude
+  const cellOf = (lat, lon) => `${Math.floor(lat / cellDeg)}:${Math.floor(lon / cellDeg)}`
+  const buckets = new Map()
+  const coords = features.map((f) => {
+    const [lon, lat] = f.geometry.coordinates
+    return [lat, lon]
+  })
+  coords.forEach(([lat, lon], i) => {
+    const key = cellOf(lat, lon)
+    if (!buckets.has(key)) buckets.set(key, [])
+    buckets.get(key).push(i)
+  })
+
+  for (let i = 0; i < n; i++) {
+    const [lat, lon] = coords[i]
+    const cLat = Math.floor(lat / cellDeg)
+    const cLon = Math.floor(lon / cellDeg)
+    for (let dLat = -1; dLat <= 1; dLat++) {
+      for (let dLon = -1; dLon <= 1; dLon++) {
+        const neighbors = buckets.get(`${cLat + dLat}:${cLon + dLon}`)
+        if (!neighbors) continue
+        for (const j of neighbors) {
+          if (j <= i) continue
+          const [lat2, lon2] = coords[j]
+          if (distanceKm(lat, lon, lat2, lon2) <= maxDistanceKm) union(i, j)
+        }
+      }
+    }
+  }
+
+  const groups = new Map()
+  for (let i = 0; i < n; i++) {
+    const root = find(i)
+    if (!groups.has(root)) groups.set(root, [])
+    groups.get(root).push(features[i])
+  }
+  return Array.from(groups.values())
+}
+
+/** Andrew's monotone chain convex hull. Points: [[lat, lon], ...]. */
+function convexHull(points) {
+  const pts = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  if (pts.length < 3) return pts
+
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+  const lower = []
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop()
+    lower.push(p)
+  }
+  const upper = []
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i]
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop()
+    upper.push(p)
+  }
+  upper.pop(); lower.pop()
+  return lower.concat(upper)
+}
+
+/**
+ * Builds a shaded "estimated burned area" polygon for a hotspot cluster:
+ * the convex hull of the points, pushed outward a little so the shape
+ * reads as a zone around the detections rather than a shape drawn exactly
+ * through them (real fire extent is always a bit larger than the pixels
+ * that triggered detection).
+ */
+export function estimatedAreaForCluster(clusterFeatures, bufferKm = 0.8) {
+  const points = clusterFeatures.map((f) => {
+    const [lon, lat] = f.geometry.coordinates
+    return [lat, lon]
+  })
+  if (points.length < 3) return null
+
+  const hull = convexHull(points)
+  const centroid = hull.reduce((acc, p) => [acc[0] + p[0] / hull.length, acc[1] + p[1] / hull.length], [0, 0])
+  const bufferDeg = bufferKm / 111
+
+  const buffered = hull.map(([lat, lon]) => {
+    const dLat = lat - centroid[0]
+    const dLon = lon - centroid[1]
+    const dist = Math.sqrt(dLat * dLat + dLon * dLon) || 1
+    return [lon + (dLon / dist) * bufferDeg, lat + (dLat / dist) * bufferDeg] // GeoJSON = [lon, lat]
+  })
+  buffered.push(buffered[0]) // close the ring
+
+  // Dominant intensity in the cluster drives the fill color, so the shaded
+  // zone itself hints at severity even before looking at the individual
+  // dots on top of it.
+  let dominant = "unknown"
+  for (const f of clusterFeatures) {
+    const cls = f.properties?.intensity
+    if (INTENSITY_RANK[cls] > INTENSITY_RANK[dominant]) dominant = cls
+  }
+
+  const totalFrp = clusterFeatures.reduce((sum, f) => sum + (f.properties?.frp || 0), 0)
+
+  return {
+    type: "Feature",
+    geometry: { type: "Polygon", coordinates: [buffered] },
+    properties: {
+      estimated: true,
+      hotspot_count: clusterFeatures.length,
+      dominant_intensity: dominant,
+      total_frp: Math.round(totalFrp * 10) / 10,
+      name: `Estimated area (${clusterFeatures.length} detections)`,
+    },
+  }
+}

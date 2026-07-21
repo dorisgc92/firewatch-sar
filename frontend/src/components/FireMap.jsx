@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, Tooltip, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
-import { filterFeaturesByBbox, linkedPerimeterForFire } from "../utils/spatial"
+import { filterFeaturesByBbox, linkedPerimeterForFire, clusterHotspots, estimatedAreaForCluster } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
@@ -111,9 +111,22 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
       {perimeterProps && (
         <div style={{ marginTop: "6px", paddingTop: "6px", borderTop: `1px solid ${theme.border}` }}>
           {hectares != null && (
-            <div><strong>{t("burnedArea") || "Area"}:</strong> {hectares.toLocaleString()} ha</div>
+            <div>
+              <strong>{t("burnedArea") || "Area"}:</strong> {hectares.toLocaleString()} ha
+              {perimeterProps.estimated && (
+                <span style={{
+                  marginLeft: "6px", fontSize: "10px", fontWeight: "bold", color: theme.orange,
+                  border: `1px solid ${theme.orange}`, borderRadius: "4px", padding: "0 4px",
+                }}>{t("estimatedArea") || "ESTIMATED"}</span>
+              )}
+            </div>
           )}
           {perimeterProps.name && <div>{perimeterProps.name}</div>}
+          {perimeterProps.estimated && (
+            <div style={{ fontSize: "10.5px", color: theme.textSecondary || "#777", marginTop: "2px" }}>
+              {t("estimatedAreaNote") || "Derived from clustered hotspots, not a surveyed perimeter."}
+            </div>
+          )}
         </div>
       )}
       <button
@@ -331,6 +344,35 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           )
         })}
 
+        {/* Estimated burned-area shading for clusters of nearby hotspots —
+            drawn UNDER the individual dots below, so a fire cluster reads
+            as a shaded zone (colored by its worst intensity present) while
+            each dot on top still shows its own real intensity color. Skips
+            on very dense views (>600 points) to stay responsive at world
+            zoom, where individual dots aren't meaningfully distinguishable
+            anyway. */}
+        {activeModule === 2 && visibleLayers.hotspots && visibleViewportHotspots.length > 0 && visibleViewportHotspots.length <= 600 &&
+          clusterHotspots(visibleViewportHotspots, 2)
+            .filter((cluster) => cluster.length >= 3)
+            .map((cluster, ci) => {
+              const area = estimatedAreaForCluster(cluster)
+              if (!area) return null
+              const fillColor = INTENSITY_COLORS[area.properties.dominant_intensity] || INTENSITY_COLORS.unknown
+              return (
+                <GeoJSON key={"cluster-area-" + ci} data={area}
+                  style={() => ({ color: fillColor, weight: 1.5, dashArray: "5 3", fillColor, fillOpacity: 0.22 })}>
+                  <Popup>
+                    <div style={{ fontSize: "12.5px", minWidth: "180px" }}>
+                      <strong>{t("estimatedArea") || "ESTIMATED"} — {cluster.length} {t("detections") || "detections"}</strong>
+                      <div style={{ fontSize: "10.5px", color: "#777", marginTop: "4px" }}>
+                        {t("estimatedAreaNote") || "Derived from clustered hotspots, not a surveyed perimeter."}
+                      </div>
+                    </div>
+                  </Popup>
+                </GeoJSON>
+              )
+            })}
+
         {activeModule === 2 && visibleLayers.hotspots &&
           visibleViewportHotspots.map((feat, i) => {
               const { frp, intensity, source, acq_datetime } = feat.properties
@@ -370,15 +412,20 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
           return (
             <>
-              {/* When we have a real burned-area polygon (official perimeter
-                  data or, once available, SAR-derived extent) for this fire,
-                  show the actual shape of the fire — not just a dot — the
-                  same way NASA FIRMS renders perimeters. */}
+              {/* When we have a real burned-area polygon for this fire, show
+                  the actual shape — not just a dot — same as NASA FIRMS.
+                  Surveyed/official perimeters (WFIGS, CONAFOR) get a solid
+                  outline; hotspot-derived estimates (CWFIS Canada, or any
+                  future SAR-derived extent) get a dashed, more translucent
+                  style so responders don't mistake an estimate for a
+                  confirmed boundary. */}
               {linkedPerimeter && (
                 <GeoJSON
                   key={"selected-perimeter-" + (linkedPerimeter.properties?.name || `${lat.toFixed(3)},${lon.toFixed(3)}`)}
                   data={linkedPerimeter}
-                  style={() => ({ color: theme.navy, fillColor: "#FF4400", fillOpacity: 0.3, weight: 3, dashArray: "4 3" })} />
+                  style={() => linkedPerimeter.properties?.estimated
+                    ? { color: theme.orange, fillColor: "#FF8800", fillOpacity: 0.22, weight: 2, dashArray: "6 4" }
+                    : { color: theme.navy, fillColor: "#FF4400", fillOpacity: 0.3, weight: 3 }} />
               )}
               <CircleMarker center={[lat, lon]} radius={r}
                 pathOptions={{ color: theme.navy, fillColor: color, fillOpacity: 0.9, weight: 3, dashArray: "3 3" }}>
@@ -399,10 +446,15 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         {activeModule === 2 && visibleLayers.perimeters && viewportPerimeters.length > 0 && (
           <GeoJSON key={layers.perimeters.generatedAt + "-" + viewportPerimeters.length}
             data={{ type: "FeatureCollection", features: viewportPerimeters }}
-            style={() => ({ color: "#FF6600", fillColor: "#FF4400", fillOpacity: 0.25, weight: 2 })}
+            style={(feature) => feature?.properties?.estimated
+              ? { color: "#FFAA33", fillColor: "#FF8800", fillOpacity: 0.18, weight: 1.5, dashArray: "6 4" }
+              : { color: "#FF6600", fillColor: "#FF4400", fillOpacity: 0.25, weight: 2 }}
             onEachFeature={(feature, layer) => {
-              const { name, hectares, country, source, date_updated } = feature.properties
-              layer.bindPopup(`<strong>${name}</strong><br/>Area: ${hectares ? hectares.toLocaleString() + " ha" : "N/A"}<br/>Country: ${country}<br/>Updated: ${date_updated || "N/A"}<br/>Source: ${source}`)
+              const { name, hectares, country, source, date_updated, estimated } = feature.properties
+              const estimatedNote = estimated
+                ? `<br/><em style="color:#CC6600;font-size:11px;">${t("estimatedAreaNote") || "Derived from clustered hotspots, not a surveyed perimeter."}</em>`
+                : ""
+              layer.bindPopup(`<strong>${name}</strong><br/>Area: ${hectares ? hectares.toLocaleString() + " ha" : "N/A"}<br/>Country: ${country}<br/>Updated: ${date_updated || "N/A"}<br/>Source: ${source}${estimatedNote}`)
             }} />
         )}
 

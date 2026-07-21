@@ -4,6 +4,13 @@ fetch_perimeters.py
 Fetches active fire perimeter polygons from:
   - NIFC WFIGS API (USA) — https://data-nifc.opendata.arcgis.com/
   - CONAFOR (Mexico) — https://snigf.cnf.gob.mx/
+  - CWFIS (Canada) — https://cwfis.cfs.nrcan.gc.ca/
+    Canada has no single official real-time perimeter survey like NIFC's,
+    so NRCan instead publishes "m3_polygons_current": a polygon layer built
+    by clustering and buffering the day's satellite hotspots into an
+    estimated burned-area shape. It's explicitly labeled by NRCan as a
+    rough estimate (not a surveyed perimeter), so we carry that through as
+    an `estimated: true` property the frontend can style/label distinctly.
 
 Outputs: data/perimeters.geojson
 
@@ -14,7 +21,7 @@ How to run:
 import json
 import requests
 from datetime import datetime, timezone
-from manifest import update_manifest
+from manifest import update_manifest, stabilize_generated_at
 
 OUTPUT_PATH = "data/perimeters.geojson"
 
@@ -141,14 +148,80 @@ def fetch_conafor():
     return normalized
 
 
+# ── CWFIS (Canada) ─────────────────────────────────────────────────────────────
+# Natural Resources Canada's Canadian Wildland Fire Information System.
+# "m3_polygons_current" = current-day burned-area ESTIMATE, built by NRCan
+# from clustering + buffering the season-to-date satellite hotspots — not a
+# ground-surveyed perimeter. Served in Canada Atlas Lambert (EPSG:3978) by
+# default; we ask for EPSG:4326 so it lines up with everything else on the map.
+
+CWFIS_URL = "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/ows"
+
+CWFIS_PARAMS = {
+    "service": "WFS",
+    "version": "2.0.0",
+    "request": "GetFeature",
+    "typeName": "public:m3_polygons_current",
+    "outputFormat": "application/json",
+    "srsName": "EPSG:4326",
+}
+
+
+def fetch_cwfis():
+    """Fetch current-day estimated burned-area polygons for Canada from CWFIS."""
+    print("Fetching Canada fire perimeter estimates from CWFIS...")
+    try:
+        r = requests.get(CWFIS_URL, params=CWFIS_PARAMS, timeout=60)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        print(f"  CWFIS unavailable (service may be intermittent): {e}")
+        print("  Returning empty Canada perimeters — will retry next run.")
+        return []
+
+    features = data.get("features", [])
+    print(f"  Got {len(features)} Canada burned-area estimate polygons")
+
+    normalized = []
+    for feat in features:
+        props = feat.get("properties", {}) or {}
+        hectares = props.get("area") or 0
+        try:
+            hectares = float(hectares)
+        except (TypeError, ValueError):
+            hectares = 0.0
+
+        normalized.append({
+            "type": "Feature",
+            "geometry": feat.get("geometry"),
+            "properties": {
+                "name": f"Estimated burned area (cluster {props.get('uid', '?')})",
+                "hectares": round(hectares, 1),
+                "acres": round(hectares * 2.47105, 1),
+                "hotspot_count": props.get("hcount"),
+                "date_created": props.get("firstdate"),
+                "date_updated": props.get("lastdate"),
+                "country": "Canada",
+                "source": "CWFIS (Natural Resources Canada)",
+                "source_url": "https://cwfis.cfs.nrcan.gc.ca/",
+                # Distinguishes this from a surveyed/official perimeter
+                # (WFIGS, CONAFOR) so the frontend can label it honestly as
+                # an estimate rather than a confirmed burned-area boundary.
+                "estimated": True,
+            }
+        })
+    return normalized
+
+
 def main():
     import os
     os.makedirs("data", exist_ok=True)
 
     usa_features = fetch_wfigs()
     mex_features = fetch_conafor()
+    can_features = fetch_cwfis()
 
-    all_features = usa_features + mex_features
+    all_features = usa_features + mex_features + can_features
     total_hectares = sum(
         f["properties"].get("hectares", 0) or 0
         for f in all_features
@@ -161,19 +234,25 @@ def main():
             "sources": {
                 "USA": "NIFC WFIGS — https://data-nifc.opendata.arcgis.com/",
                 "Mexico": "CONAFOR SNIGF — https://snigf.cnf.gob.mx/",
+                "Canada": "CWFIS (NRCan) — https://cwfis.cfs.nrcan.gc.ca/ (hotspot-derived estimate)",
             },
             "description": (
-                "Active wildfire perimeter polygons. Each polygon represents "
-                "the confirmed burned area boundary of an active or recently "
-                "contained fire. Area in hectares and acres provided."
+                "Active wildfire perimeter polygons. USA and Mexico polygons are "
+                "surveyed/confirmed burned-area boundaries. Canada polygons are "
+                "estimates derived by NRCan from clustering same-day satellite "
+                "hotspots (see each feature's `estimated` property). Area in "
+                "hectares and acres provided."
             ),
             "total_fires": len(all_features),
             "total_hectares": round(total_hectares, 1),
             "usa_fires": len(usa_features),
             "mexico_fires": len(mex_features),
+            "canada_fires": len(can_features),
         },
         "features": all_features
     }
+
+    geojson = stabilize_generated_at(geojson, OUTPUT_PATH)
 
     with open(OUTPUT_PATH, "w") as f:
         json.dump(geojson, f, indent=2)

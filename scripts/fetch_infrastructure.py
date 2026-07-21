@@ -21,7 +21,7 @@ import sys
 import argparse
 import requests
 from datetime import datetime, timezone
-from manifest import update_manifest
+from manifest import update_manifest, stabilize_generated_at
 
 OUTPUT_PATH = "data/infrastructure.geojson"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
@@ -194,6 +194,8 @@ def main():
         },
         "features": features
     }
+
+    geojson = stabilize_generated_at(geojson, OUTPUT_PATH)
 
     with open(OUTPUT_PATH, "w") as f:
         json.dump(geojson, f, indent=2)

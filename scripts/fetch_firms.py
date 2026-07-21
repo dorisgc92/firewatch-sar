@@ -21,7 +21,7 @@ import requests
 import csv
 import io
 from datetime import datetime, timezone
-from manifest import update_manifest
+from manifest import update_manifest, stabilize_generated_at
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 
@@ -263,6 +263,7 @@ def main():
         raise SystemExit(1)
 
     geojson = build_geojson(deduped)
+    geojson = stabilize_generated_at(geojson, OUTPUT_PATH)
 
     os.makedirs("data", exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
