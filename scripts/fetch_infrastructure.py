@@ -5,46 +5,113 @@ Fetches critical infrastructure from OpenStreetMap via Overpass API.
 Focuses on facilities relevant to wildfire emergency response.
 
 Outputs: data/infrastructure.geojson
+Progress state: data/infra_progress.json
 
 OpenStreetMap data: Â© OpenStreetMap contributors, ODbL license
 Overpass API: https://overpass-api.de/
 
-How to run:
-    python scripts/fetch_infrastructure.py [--bbox "west,south,east,north"]
+WORLD COVERAGE, ONE TILE AT A TIME
+-----------------------------------
+A single Overpass query for the whole world (or even one big country) times
+out on the shared public Overpass server -- we learned this the hard way
+when adding just the industrial-landuse tag over the Mexico/US bbox wiped
+out a season's worth of data (see the zero-features safety check below).
 
-Example for Mexico:
-    python scripts/fetch_infrastructure.py --bbox "-118,14,-86,33"
+So instead of one giant request, the world is split into small tiles
+(WORLD_TILE_SIZE_DEG degrees square). Each run of this script fetches
+exactly ONE tile, merges its features into the existing
+data/infrastructure.geojson (features from every other tile are left
+untouched), and advances a progress cursor in data/infra_progress.json for
+the next run to pick up where this one left off. Scheduling this to run
+every ~15-20 minutes means a full pass over the whole world completes in
+about a week -- slow, but it never blows a timeout budget, and the
+dataset keeps growing/refreshing indefinitely (it just loops back to tile
+0 and starts a fresh pass once it reaches the end).
+
+How to run manually:
+    python scripts/fetch_infrastructure.py                  # next tile in the crawl
+    python scripts/fetch_infrastructure.py --bbox "-118,14,-86,33"   # one-off region, bypasses the crawler
 """
 
 import json
 import sys
+import os
 import argparse
 import requests
 from datetime import datetime, timezone
 from manifest import update_manifest, stabilize_generated_at
 
 OUTPUT_PATH = "data/infrastructure.geojson"
+PROGRESS_PATH = "data/infra_progress.json"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
-# Default bbox â€” covers Mexico + US border region
+# Default bbox â€” covers Mexico + US border region (used only for manual
+# --bbox one-off runs; the scheduled crawl uses WORLD_TILES instead).
 DEFAULT_BBOX = "-118,14,-86,33"
 
-# Infrastructure categories to fetch
+# Tile size for the world crawl. Smaller = safer against timeouts but more
+# runs (and more days) needed for full coverage. 10 degrees keeps most
+# tiles well within the Overpass timeout even over dense urban areas,
+# while keeping the full-world tile count manageable (~650 tiles incl.
+# ocean, which return near-instantly).
+WORLD_TILE_SIZE_DEG = 10
+# Skip the poles -- negligible population/infrastructure, not worth tiles.
+WORLD_LAT_RANGE = (-60, 80)
+WORLD_LON_RANGE = (-180, 180)
+
+
+def build_world_tiles():
+    """Generates the full list of (west, south, east, north) tile bboxes covering the crawl area."""
+    tiles = []
+    lat = WORLD_LAT_RANGE[0]
+    while lat < WORLD_LAT_RANGE[1]:
+        lon = WORLD_LON_RANGE[0]
+        while lon < WORLD_LON_RANGE[1]:
+            tiles.append((lon, lat, lon + WORLD_TILE_SIZE_DEG, lat + WORLD_TILE_SIZE_DEG))
+            lon += WORLD_TILE_SIZE_DEG
+        lat += WORLD_TILE_SIZE_DEG
+    return tiles
+
+
+WORLD_TILES = build_world_tiles()
+
+# Infrastructure categories to fetch.
 # Each entry: (OSM tag key, OSM tag value, display label, color, icon)
-INFRASTRUCTURE_TYPES = [
+#
+# Split into two groups because a WORLD-scale crawl of some of these tags
+# would blow past GitHub's 100MB file limit almost immediately -- schools
+# alone came to ~10,000 features for just the state of Jalisco in early
+# testing; extrapolated worldwide, schools/water bodies/fuel stations would
+# be in the millions. So:
+#   CORE_WORLD_TYPES  -- relatively rare, high wildfire-response value.
+#                        Safe to crawl and store for the whole planet.
+#   ZONE_ONLY_TYPES   -- numerous/lower-priority categories. Only fetched
+#                        on demand for whatever zone the responder is
+#                        actually looking at (see utils/liveInfra.js on the
+#                        frontend), never accumulated into the global file.
+CORE_WORLD_TYPES = [
     ("amenity",  "hospital",          "Hospital",           "#FF4444", "ðŸ¥"),
-    ("amenity",  "clinic",            "Clinic",             "#FF8888", "ðŸ¥"),
     ("amenity",  "fire_station",      "Fire Station",       "#FF6600", "ðŸš’"),
     ("amenity",  "police",            "Police Station",     "#0044FF", "ðŸ‘®"),
-    ("amenity",  "school",            "School (shelter)",   "#AA44FF", "ðŸ«"),
     ("power",    "substation",        "Power Substation",   "#FFAA00", "âš¡"),
     ("power",    "plant",             "Power Plant",        "#FF8800", "âš¡"),
-    ("man_made", "tower",             "Tower",              "#666666", "ðŸ“¡"),
     ("aeroway",  "aerodrome",         "Airport/Airfield",   "#44AAFF", "âœˆï¸"),
+]
+
+ZONE_ONLY_TYPES = [
+    ("amenity",  "clinic",            "Clinic",             "#FF8888", "ðŸ¥"),
+    ("amenity",  "school",            "School (shelter)",   "#AA44FF", "ðŸ«"),
+    ("man_made", "tower",             "Tower",              "#666666", "ðŸ“¡"),
     ("amenity",  "fuel",              "Fuel Station",       "#FFDD00", "â›½"),
     ("landuse",  "reservoir",         "Water Reservoir",    "#0088FF", "ðŸ’§"),
     ("natural",  "water",             "Water Body",         "#4488FF", "ðŸ’§"),
 ]
+
+# Kept for anything that still wants "every category" (e.g. a manual --bbox
+# refresh of a specific, deliberately small region where size isn't a
+# concern) and so classify_element() can label an element regardless of
+# which query it came from.
+INFRASTRUCTURE_TYPES = CORE_WORLD_TYPES + ZONE_ONLY_TYPES
 
 # Industrial sites (cement plants, factories, refineries, quarries...) run
 # hot 24/7 and are a common source of satellite thermal-anomaly false
@@ -57,7 +124,9 @@ INFRASTRUCTURE_TYPES = [
 # worth of good hospital/school/etc. data with nothing (see main()'s
 # zero-features safety check for the other half of this fix). Keeping this
 # query separate means a timeout here only loses the industrial layer for
-# this run, never the rest of the infrastructure dataset.
+# this run, never the rest of the infrastructure dataset. Included in the
+# world crawl (explicitly requested, and needed everywhere for the
+# wildfire/false-positive flagging to work globally).
 INDUSTRIAL_TYPES = [
     ("landuse",  "industrial",        "Industrial Zone",    "#996633", "factory"),
     ("man_made", "works",             "Industrial Zone",    "#996633", "factory"),
@@ -170,42 +239,101 @@ def parse_overpass_response(data, types):
     return features
 
 
+def load_progress():
+    if os.path.exists(PROGRESS_PATH):
+        try:
+            with open(PROGRESS_PATH, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            pass
+    return {"next_index": 0, "laps_completed": 0, "last_tile_bbox": None}
+
+
+def save_progress(progress):
+    with open(PROGRESS_PATH, "w") as f:
+        json.dump(progress, f, indent=2)
+
+
+def merge_features(existing_features, new_features, tile_bbox_str):
+    """
+    Merges one tile's freshly-fetched features into the accumulated global
+    dataset: replaces anything previously stored for THIS tile (so a
+    re-crawl refreshes stale entries) while leaving every other tile's
+    features untouched, and de-duplicates by (osm_type, osm_id) in case an
+    element straddles a tile boundary and gets returned by two tiles.
+    """
+    kept = [f for f in existing_features if f["properties"].get("_tile") != tile_bbox_str]
+    for f in new_features:
+        f["properties"]["_tile"] = tile_bbox_str
+
+    seen = set()
+    merged = []
+    for f in kept + new_features:
+        key = (f["properties"].get("osm_type"), f["properties"].get("osm_id"))
+        if key in seen and key != (None, None):
+            continue
+        seen.add(key)
+        merged.append(f)
+    return merged
+
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch infrastructure from OpenStreetMap")
     parser.add_argument(
         "--bbox",
-        default=DEFAULT_BBOX,
-        help="Bounding box: west,south,east,north (default: Mexico region)"
+        default=None,
+        help="One-off bounding box: west,south,east,north. If omitted, fetches "
+             "the next tile in the world crawl (data/infra_progress.json)."
     )
     args = parser.parse_args()
 
-    import os
     os.makedirs("data", exist_ok=True)
+
+    manual_run = args.bbox is not None
+    if manual_run:
+        bbox_str = args.bbox
+        progress = None
+    else:
+        progress = load_progress()
+        tile = WORLD_TILES[progress["next_index"] % len(WORLD_TILES)]
+        bbox_str = ",".join(str(v) for v in tile)
+        print(f"World crawl: tile {progress['next_index'] % len(WORLD_TILES)}/{len(WORLD_TILES)} "
+              f"(lap {progress['laps_completed']}) -- bbox {bbox_str}")
 
     # How many features a previous successful run already had committed —
     # used below to tell "genuinely nothing out there" apart from "Overpass
     # silently failed", so a bad run can never wipe out good data.
+    existing_features = []
     previous_total = 0
     if os.path.exists(OUTPUT_PATH):
         try:
             with open(OUTPUT_PATH, "r") as f:
-                previous_total = json.load(f).get("metadata", {}).get("total", 0) or 0
+                existing = json.load(f)
+            existing_features = existing.get("features", [])
+            previous_total = existing.get("metadata", {}).get("total", 0) or 0
         except (json.JSONDecodeError, FileNotFoundError):
-            previous_total = 0
+            pass
 
-    print(f"Fetching infrastructure for bbox: {args.bbox}")
-    features = fetch_overpass(args.bbox, INFRASTRUCTURE_TYPES, "core infrastructure")
+    print(f"Fetching infrastructure for bbox: {bbox_str}")
+    # The world crawl only fetches the compact, high-value category set
+    # (CORE_WORLD_TYPES) to keep the accumulated file well under GitHub's
+    # size limit. A manual one-off --bbox run (a deliberately small,
+    # specific region) still gets every category, matching the old
+    # behavior, since size isn't a concern at that scale.
+    core_types = INFRASTRUCTURE_TYPES if manual_run else CORE_WORLD_TYPES
+    features = fetch_overpass(bbox_str, core_types, "core infrastructure")
 
     if features is None:
         print("Core infrastructure fetch failed outright -- keeping last committed data, not overwriting.")
         sys.exit(1)
 
-    if len(features) == 0 and previous_total > 0:
-        # A request that returns 200 OK with zero elements almost always
-        # means the shared public Overpass server timed out or truncated
-        # the response rather than "there is truly nothing here" -- this
-        # bbox has thousands of hospitals/schools/etc. in real life. Refuse
-        # to let a bad run silently erase a previously-good dataset.
+    if len(features) == 0 and manual_run and previous_total > 0:
+        # This guard only makes sense for a one-off full-region refresh,
+        # where "0 results" for a big populated bbox is almost certainly a
+        # silent Overpass failure. In the tile crawl, an individual 10°
+        # tile legitimately CAN be all ocean/desert with zero features, so
+        # this check is skipped there — a bad tile just contributes
+        # nothing this lap and gets re-tried next time the crawl reaches it.
         print(f"WARNING: got 0 features but the last commit had {previous_total} -- "
               f"this looks like a silent Overpass failure, not a real result. Keeping last committed data.")
         sys.exit(1)
@@ -215,13 +343,19 @@ def main():
     # still keep everything else. Missing industrial data for one run just
     # means the wildfire/false-positive flagging is slightly less complete
     # until the next successful fetch, never a data-loss event.
-    industrial_features = fetch_overpass(args.bbox, INDUSTRIAL_TYPES, "industrial zone")
+    industrial_features = fetch_overpass(bbox_str, INDUSTRIAL_TYPES, "industrial zone")
     if industrial_features is None:
         print("Industrial zone fetch failed -- continuing without it for this run.")
         industrial_features = []
 
-    all_features = features + industrial_features
-    print(f"Got {len(all_features)} infrastructure elements total")
+    new_features = features + industrial_features
+
+    if manual_run:
+        all_features = new_features
+    else:
+        all_features = merge_features(existing_features, new_features, bbox_str)
+
+    print(f"This run: {len(new_features)} new/updated elements. Total accumulated: {len(all_features)}")
 
     # Count by type
     type_counts = {}
@@ -235,7 +369,7 @@ def main():
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "source": "OpenStreetMap via Overpass API",
             "license": "ODbL â€” Â© OpenStreetMap contributors",
-            "bbox": args.bbox,
+            "bbox": bbox_str if manual_run else "world (crawled tile by tile)",
             "description": (
                 "Critical infrastructure relevant to wildfire emergency response. "
                 "Includes hospitals, fire stations, police, power infrastructure, "
@@ -253,6 +387,14 @@ def main():
     with open(OUTPUT_PATH, "w") as f:
         json.dump(geojson, f, indent=2)
     update_manifest("infrastructure", OUTPUT_PATH)
+
+    if not manual_run:
+        progress["next_index"] = (progress["next_index"] + 1) % len(WORLD_TILES)
+        progress["last_tile_bbox"] = bbox_str
+        if progress["next_index"] == 0:
+            progress["laps_completed"] += 1
+            print(f"World crawl completed lap {progress['laps_completed']} -- starting over from tile 0.")
+        save_progress(progress)
 
     print(f"Saved {OUTPUT_PATH}")
     for t, count in sorted(type_counts.items(), key=lambda x: -x[1]):
