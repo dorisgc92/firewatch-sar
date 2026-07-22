@@ -2,19 +2,22 @@
 
 on:
   schedule:
-    # Near-real-time refresh: every 5 minutes. GitHub doesn't guarantee
-    # exact timing on schedules this frequent — during high platform load
-    # a run can slip by a few minutes, but it always catches up on the
-    # next tick. Safe to run this often since the repo is public (no
-    # Actions-minutes budget to worry about).
-    - cron: '*/5 * * * *'
+    # Near-real-time refresh: every 10 minutes. Started at 5 minutes, but
+    # dialed back to 10 as a safety margin after a 2026-07-21 run returned
+    # 0 hotspots from all 4 sources -- a valid (non-error) empty CSV, most
+    # likely FIRMS_MAP_KEY quota throttling from the higher call volume.
+    # GitHub doesn't guarantee exact timing on frequent schedules -- a run
+    # can slip by a few minutes under high platform load, but it always
+    # catches up on the next tick. Safe to run this often since the repo
+    # is public (no Actions-minutes budget to worry about).
+    - cron: '*/10 * * * *'
   workflow_dispatch:
 
-# At a 5-minute cadence a slow run (pip install, slow FIRMS response) can
-# still be going when the next scheduled run starts. Without this guard,
-# two runs could both `git push` around the same time and fight over the
-# same branch. `cancel-in-progress: false` means a newer run *waits* for
-# the older one to finish instead of racing or being killed mid-write.
+# At this cadence a slow run (pip install, slow FIRMS response) can still
+# be going when the next scheduled run starts. Without this guard, two runs
+# could both `git push` around the same time and fight over the same
+# branch. cancel-in-progress: false means a newer run *waits* for the
+# older one to finish instead of racing or being killed mid-write.
 concurrency:
   group: fetch-firms
   cancel-in-progress: false
