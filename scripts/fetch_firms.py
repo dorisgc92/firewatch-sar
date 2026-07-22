@@ -28,9 +28,27 @@ from manifest import update_manifest, stabilize_generated_at
 
 FIRMS_API_KEY = os.environ.get("FIRMS_MAP_KEY", "")
 
-# Global bounding box — covers the entire world
-# Format: west,south,east,north
+# Global bounding box — kept for reference, but NOT used for requests
+# anymore: NASA's area/csv endpoint silently returns a header with zero
+# data rows for the full-world extent (-180,-90,180,90) AND for the
+# literal 'world' keyword, confirmed by testing directly in a browser with
+# a known-good MAP_KEY (their own South America example URL worked fine,
+# ruling out the key/account). Splitting into continental regions below
+# works around this undocumented quirk/limit on their end.
 WORLD_BBOX = "-180,-90,180,90"
+
+# Continental regions covering the whole world, used instead of one
+# world-spanning request. Slight overlap at the edges is fine — dedup
+# happens later by rounded coordinates regardless of which region a
+# detection came from.
+REGIONS = [
+    ("North America",      "-170,5,-50,75"),
+    ("South America",      "-85,-57,-32,14"),
+    ("Europe",             "-25,34,45,72"),
+    ("Africa",             "-20,-38,55,38"),
+    ("Asia",               "45,-12,180,78"),
+    ("Oceania",            "110,-50,180,0"),
+]
 
 # Days to look back (1 = last 24 hours, max 10)
 DAYS = 1
@@ -81,24 +99,24 @@ def classify_intensity(frp):
         return "extreme"
 
 
-def fetch_firms_csv(source_name, max_retries=3):
+def fetch_firms_csv(source_name, bbox, max_retries=3):
     """
-    Fetch FIRMS data as CSV for a given source.
+    Fetch FIRMS data as CSV for a given source and region bbox.
     Returns list of dicts, one per hotspot.
 
-    Retries a few times with backoff before giving up on this source --
-    transient network blips (DNS hiccups, GitHub Actions runner routing
-    issues, a momentary NASA-side outage) are common enough at a 10-minute
-    cadence that treating the very first failure as final wastes a whole
-    cycle's data for no reason. A run only reports this source as failed
-    after every attempt has failed.
+    Retries a few times with backoff before giving up on this
+    source+region -- transient network blips (DNS hiccups, GitHub Actions
+    runner routing issues, a momentary NASA-side outage) are common enough
+    at a 10-minute cadence that treating the very first failure as final
+    wastes a whole cycle's data for no reason. A run only reports this
+    source+region as failed after every attempt has failed.
     """
     url = (
         f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/"
-        f"{FIRMS_API_KEY}/{source_name}/{WORLD_BBOX}/{DAYS}"
+        f"{FIRMS_API_KEY}/{source_name}/{bbox}/{DAYS}"
     )
 
-    print(f"  Fetching {source_name} from NASA FIRMS...")
+    print(f"  Fetching {source_name} ({bbox}) from NASA FIRMS...")
 
     response = None
     for attempt in range(1, max_retries + 1):
@@ -263,14 +281,33 @@ def main():
 
     all_features = []
 
-    for source in SOURCES:
-        rows = fetch_firms_csv(source["name"])
-        for row in rows:
-            feature = row_to_feature(row, source["label"], source["resolution_m"])
-            if feature:
-                all_features.append(feature)
+    for region_name, bbox in REGIONS:
+        print(f"\n--- {region_name} ---")
+        for source in SOURCES:
+            rows = fetch_firms_csv(source["name"], bbox)
+            for row in rows:
+                feature = row_to_feature(row, source["label"], source["resolution_m"])
+                if feature:
+                    all_features.append(feature)
 
-    print(f"\nTotal hotspots collected: {len(all_features)}")
+    print(f"\nTotal hotspots collected (incl. regional overlap): {len(all_features)}")
+
+    # Regions overlap slightly at their edges on purpose (Asia/Oceania,
+    # North America/Asia near the antimeridian) so no fire falls in a gap
+    # between them -- but that means the same detection can come back from
+    # two regional queries. Drop exact repeats (same source + coordinates
+    # + acquisition time) before the VIIRS/MODIS dedup pass below.
+    seen_exact = set()
+    region_deduped = []
+    for f in all_features:
+        p = f["properties"]
+        key = (p["source"], f["geometry"]["coordinates"][0], f["geometry"]["coordinates"][1], p["acq_datetime"])
+        if key in seen_exact:
+            continue
+        seen_exact.add(key)
+        region_deduped.append(f)
+    all_features = region_deduped
+    print(f"After removing regional-overlap repeats: {len(all_features)}")
 
     # Remove duplicates: VIIRS and MODIS may detect the same fire
     # Simple deduplication: keep VIIRS when coordinates are within ~0.01 degrees
@@ -294,10 +331,11 @@ def main():
 
     if len(deduped) == 0:
         print("\n" + "=" * 70)
-        print("ERROR: 0 hotspots for a GLOBAL query. This is almost never correct —")
-        print("there are essentially always active fires detected somewhere on Earth.")
-        print("Most likely cause: FIRMS_MAP_KEY is invalid/expired, or its usage quota")
-        print("was exceeded. Check: https://firms.modaps.eosdis.nasa.gov/usage/")
+        print("ERROR: 0 hotspots across ALL 6 regions and 4 sources. This is almost")
+        print("never correct — there are essentially always active fires detected")
+        print("somewhere on Earth. Possible causes: FIRMS_MAP_KEY invalid/expired or")
+        print("over quota (check https://firms.modaps.eosdis.nasa.gov/usage/), or a")
+        print("NASA-side outage affecting the area/csv endpoint entirely.")
         print("Refusing to overwrite the existing data/hotspots.geojson with an empty")
         print("result — leaving last-known-good data in place instead.")
         print("=" * 70)
