@@ -20,7 +20,6 @@ import json
 import requests
 import csv
 import io
-import time
 from datetime import datetime, timezone
 from manifest import update_manifest, stabilize_generated_at
 
@@ -28,27 +27,9 @@ from manifest import update_manifest, stabilize_generated_at
 
 FIRMS_API_KEY = os.environ.get("FIRMS_MAP_KEY", "")
 
-# Global bounding box — kept for reference, but NOT used for requests
-# anymore: NASA's area/csv endpoint silently returns a header with zero
-# data rows for the full-world extent (-180,-90,180,90) AND for the
-# literal 'world' keyword, confirmed by testing directly in a browser with
-# a known-good MAP_KEY (their own South America example URL worked fine,
-# ruling out the key/account). Splitting into continental regions below
-# works around this undocumented quirk/limit on their end.
+# Global bounding box — covers the entire world
+# Format: west,south,east,north
 WORLD_BBOX = "-180,-90,180,90"
-
-# Continental regions covering the whole world, used instead of one
-# world-spanning request. Slight overlap at the edges is fine — dedup
-# happens later by rounded coordinates regardless of which region a
-# detection came from.
-REGIONS = [
-    ("North America",      "-170,5,-50,75"),
-    ("South America",      "-85,-57,-32,14"),
-    ("Europe",             "-25,34,45,72"),
-    ("Africa",             "-20,-38,55,38"),
-    ("Asia",               "45,-12,180,78"),
-    ("Oceania",            "110,-50,180,0"),
-]
 
 # Days to look back (1 = last 24 hours, max 10)
 DAYS = 1
@@ -99,53 +80,24 @@ def classify_intensity(frp):
         return "extreme"
 
 
-def fetch_firms_csv(source_name, bbox, max_retries=3):
+def fetch_firms_csv(source_name):
     """
-    Fetch FIRMS data as CSV for a given source and region bbox.
+    Fetch FIRMS data as CSV for a given source.
     Returns list of dicts, one per hotspot.
-
-    Retries a few times with backoff before giving up on this
-    source+region -- transient network blips (DNS hiccups, GitHub Actions
-    runner routing issues, a momentary NASA-side outage) are common enough
-    at a 10-minute cadence that treating the very first failure as final
-    wastes a whole cycle's data for no reason. A run only reports this
-    source+region as failed after every attempt has failed.
     """
     url = (
         f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/"
-        f"{FIRMS_API_KEY}/{source_name}/{bbox}/{DAYS}"
+        f"{FIRMS_API_KEY}/{source_name}/{WORLD_BBOX}/{DAYS}"
     )
 
-    print(f"  Fetching {source_name} ({bbox}) from NASA FIRMS...")
+    print(f"  Fetching {source_name} from NASA FIRMS...")
 
-    # requests' default User-Agent ("python-requests/x.y") is a well-known
-    # automated-traffic signature that CDNs/WAFs in front of an API commonly
-    # filter or silently degrade, especially from cloud/CI IP ranges like
-    # GitHub Actions runners. This matches the exact pattern we're seeing:
-    # the identical query works from a home browser and returns nothing
-    # (but no error) from GitHub Actions. A normal browser User-Agent is
-    # the standard, low-risk fix to try first.
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-        )
-    }
-
-    response = None
-    for attempt in range(1, max_retries + 1):
-        try:
-            response = requests.get(url, timeout=60, headers=headers)
-            response.raise_for_status()
-            break
-        except requests.exceptions.RequestException as e:
-            if attempt < max_retries:
-                wait_s = 5 * attempt
-                print(f"  Attempt {attempt}/{max_retries} for {source_name} failed ({e}); retrying in {wait_s}s...")
-                time.sleep(wait_s)
-            else:
-                print(f"  ERROR fetching {source_name} after {max_retries} attempts: {e}")
-                return []
+    try:
+        response = requests.get(url, timeout=60)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"  ERROR fetching {source_name}: {e}")
+        return []
 
     # Parse CSV
     content = response.text
@@ -171,15 +123,6 @@ def fetch_firms_csv(source_name, bbox, max_retries=3):
     reader = csv.DictReader(io.StringIO(content))
     rows = list(reader)
     print(f"  Got {len(rows)} hotspots from {source_name}")
-    if len(rows) == 0:
-        # A well-formed CSV header with zero data rows is a different (and
-        # more specific) signal than an "Invalid MAP_KEY"-style plain-text
-        # error -- it usually means the key is valid but throttled/rate
-        # limited for this request, or (rarely) a genuine momentary gap in
-        # NASA's NRT feed. Printing the raw response lets a human tell
-        # those apart at a glance instead of guessing from "0 hotspots"
-        # alone -- check for anything past just the header line.
-        print(f"  (Header-only response, no data rows. Raw response: {stripped[:300]!r})")
     return rows
 
 
@@ -295,33 +238,14 @@ def main():
 
     all_features = []
 
-    for region_name, bbox in REGIONS:
-        print(f"\n--- {region_name} ---")
-        for source in SOURCES:
-            rows = fetch_firms_csv(source["name"], bbox)
-            for row in rows:
-                feature = row_to_feature(row, source["label"], source["resolution_m"])
-                if feature:
-                    all_features.append(feature)
+    for source in SOURCES:
+        rows = fetch_firms_csv(source["name"])
+        for row in rows:
+            feature = row_to_feature(row, source["label"], source["resolution_m"])
+            if feature:
+                all_features.append(feature)
 
-    print(f"\nTotal hotspots collected (incl. regional overlap): {len(all_features)}")
-
-    # Regions overlap slightly at their edges on purpose (Asia/Oceania,
-    # North America/Asia near the antimeridian) so no fire falls in a gap
-    # between them -- but that means the same detection can come back from
-    # two regional queries. Drop exact repeats (same source + coordinates
-    # + acquisition time) before the VIIRS/MODIS dedup pass below.
-    seen_exact = set()
-    region_deduped = []
-    for f in all_features:
-        p = f["properties"]
-        key = (p["source"], f["geometry"]["coordinates"][0], f["geometry"]["coordinates"][1], p["acq_datetime"])
-        if key in seen_exact:
-            continue
-        seen_exact.add(key)
-        region_deduped.append(f)
-    all_features = region_deduped
-    print(f"After removing regional-overlap repeats: {len(all_features)}")
+    print(f"\nTotal hotspots collected: {len(all_features)}")
 
     # Remove duplicates: VIIRS and MODIS may detect the same fire
     # Simple deduplication: keep VIIRS when coordinates are within ~0.01 degrees
@@ -345,11 +269,10 @@ def main():
 
     if len(deduped) == 0:
         print("\n" + "=" * 70)
-        print("ERROR: 0 hotspots across ALL 6 regions and 4 sources. This is almost")
-        print("never correct — there are essentially always active fires detected")
-        print("somewhere on Earth. Possible causes: FIRMS_MAP_KEY invalid/expired or")
-        print("over quota (check https://firms.modaps.eosdis.nasa.gov/usage/), or a")
-        print("NASA-side outage affecting the area/csv endpoint entirely.")
+        print("ERROR: 0 hotspots for a GLOBAL query. This is almost never correct —")
+        print("there are essentially always active fires detected somewhere on Earth.")
+        print("Most likely cause: FIRMS_MAP_KEY is invalid/expired, or its usage quota")
+        print("was exceeded. Check: https://firms.modaps.eosdis.nasa.gov/usage/")
         print("Refusing to overwrite the existing data/hotspots.geojson with an empty")
         print("result — leaving last-known-good data in place instead.")
         print("=" * 70)
