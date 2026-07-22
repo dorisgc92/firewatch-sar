@@ -10,11 +10,86 @@
  * region), the brief says so instead of guessing.
  */
 
-import { nearestFeatures } from "./spatial"
+import { nearestFeatures, bearingDeg, angleDiffDeg, distanceKm } from "./spatial"
 
 const HOSPITAL_TYPES = ["Hospital", "Clinic"]
 const FIRE_STATION_TYPES = ["Fire Station"]
 const POLICE_TYPES = ["Police Station"]
+const CRITICAL_THREAT_TYPES = [
+  "Hospital", "Clinic", "Fire Station", "Police Station", "School (shelter)",
+  "Power Substation", "Power Plant", "Airport/Airfield", "Water Reservoir",
+]
+
+// How far from a fire we still consider infrastructure "at risk" — beyond
+// this, even a direct downwind alignment isn't an imminent threat.
+const THREAT_RADIUS_KM = 15
+// How tightly the infrastructure has to line up with the wind direction to
+// count as "in the fire's path" rather than just "nearby but off to the side".
+const DOWNWIND_TOLERANCE_DEG = 50
+
+/**
+ * Flags critical infrastructure that a nearby fire's spread is actually
+ * being pushed toward — not just "closest by distance" (which the priority
+ * fire cards already show), but specifically downwind, using the nearest
+ * FWI grid point's wind direction as a proxy for local wind. This is what
+ * "about to be reached" means in practice: distance alone doesn't tell you
+ * which side of a fire is actually in danger.
+ *
+ * @returns Array of { infra, fire, distanceKm, bearingDeg, windAligned }
+ *          sorted by distance, nearest first.
+ */
+export function findThreatenedInfrastructure({ zoneHotspots, infraInZone, fwiPoints, maxDistanceKm = THREAT_RADIUS_KM }) {
+  if (!zoneHotspots?.length || !infraInZone?.length) return []
+
+  const critical = infraInZone.filter((i) => CRITICAL_THREAT_TYPES.includes(i.properties.type))
+  if (critical.length === 0) return []
+
+  const threats = []
+  const seenInfra = new Set()
+
+  // Look at the most intense fires first — if a facility is within range of
+  // several fires, it gets attributed to whichever is most severe.
+  const sortedFires = [...zoneHotspots].sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0))
+
+  for (const fire of sortedFires) {
+    const [flon, flat] = fire.geometry.coordinates
+    const nearestWind = fwiPoints?.length ? nearestFeatures(flat, flon, fwiPoints, 1)[0] : null
+    const windFromDeg = nearestWind?.feature?.properties?.wind_dir_deg
+    // Meteorological convention: wind_dir_deg is where the wind comes FROM.
+    // It blows TOWARD the opposite bearing.
+    const windTowardDeg = windFromDeg != null ? (windFromDeg + 180) % 360 : null
+
+    for (const infra of critical) {
+      const key = infra.properties.osm_id ?? `${infra.properties.name}-${infra.geometry.coordinates.join(",")}`
+      if (seenInfra.has(key)) continue
+
+      const [ilon, ilat] = infra.geometry.coordinates
+      const dist = distanceKm(flat, flon, ilat, ilon)
+      if (dist > maxDistanceKm) continue
+
+      const bearing = bearingDeg(flat, flon, ilat, ilon)
+      const windAligned = windTowardDeg != null && angleDiffDeg(bearing, windTowardDeg) <= DOWNWIND_TOLERANCE_DEG
+
+      // Only flag as a threat if it's either downwind, or close enough
+      // (< 3km) that direction barely matters — a fire that close is a
+      // risk to everything around it regardless of which way the wind blows.
+      if (!windAligned && dist > 3) continue
+
+      seenInfra.add(key)
+      threats.push({
+        infra,
+        fire,
+        distanceKm: dist,
+        bearingDeg: bearing,
+        windAligned,
+        windKmh: nearestWind?.feature?.properties?.wind_kmh ?? null,
+      })
+    }
+  }
+
+  threats.sort((a, b) => a.distanceKm - b.distanceKm)
+  return threats
+}
 
 const RESPONDER_ACTION = {
   bombero: "Priorizar despliegue de brigada hacia los focos de intensidad extrema listados abajo.",
@@ -26,7 +101,7 @@ const RESPONDER_ACTION = {
   ong: "Confirmar accesibilidad de rutas de suministro evitando las zonas de perímetro activo.",
 }
 
-function windDirLabel(deg) {
+export function windDirLabel(deg) {
   if (deg == null) return null
   const dirs = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"]
   return dirs[Math.round(deg / 45) % 8]

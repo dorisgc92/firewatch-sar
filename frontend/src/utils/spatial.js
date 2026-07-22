@@ -53,6 +53,30 @@ export function distanceKm(lat1, lon1, lat2, lon2) {
 }
 
 /**
+ * Compass bearing (0-360, 0=N, 90=E) from point 1 to point 2 — used to
+ * check whether a piece of infrastructure sits downwind of a fire (i.e.
+ * in the direction the fire's smoke/embers are actually being pushed),
+ * not just "nearby" regardless of wind direction.
+ */
+export function bearingDeg(lat1, lon1, lat2, lon2) {
+  const toRad = (d) => (d * Math.PI) / 180
+  const toDeg = (r) => (r * 180) / Math.PI
+  const dLon = toRad(lon2 - lon1)
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2))
+  const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+            Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon)
+  return (toDeg(Math.atan2(y, x)) + 360) % 360
+}
+
+/**
+ * Smallest angle (0-180) between two compass bearings.
+ */
+export function angleDiffDeg(a, b) {
+  const diff = Math.abs(a - b) % 360
+  return diff > 180 ? 360 - diff : diff
+}
+
+/**
  * Returns the n closest features to (fromLat, fromLon), each wrapped as
  * { feature, distanceKm }, sorted nearest-first.
  */

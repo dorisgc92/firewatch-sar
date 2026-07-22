@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { filterFeaturesByBbox } from "../utils/spatial"
 import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } from "../utils/countryBoundaries"
-import { buildCommandBrief } from "../utils/commandAnalysis"
+import { buildCommandBrief, findThreatenedInfrastructure, windDirLabel } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { theme } from "../utils/theme"
 import { INTENSITY_COLORS } from "../utils/fireColors"
@@ -158,6 +158,39 @@ function PriorityFireCard({ fire, index, t }) {
   )
 }
 
+const INFRA_ICON = {
+  "Hospital": "🏥", "Clinic": "🏥", "Fire Station": "🚒", "Police Station": "👮",
+  "School (shelter)": "🏫", "Power Substation": "⚡", "Power Plant": "⚡",
+  "Airport/Airfield": "✈️", "Water Reservoir": "💧",
+}
+
+function ThreatenedInfraCard({ threat, t, onSelectFire }) {
+  const { infra, fire, distanceKm, windAligned, windKmh } = threat
+  const dir = windDirLabel((threat.bearingDeg + 180) % 360) // direction FROM infra back toward the fire, for "wind coming from X" phrasing
+
+  return (
+    <div onClick={() => onSelectFire(fire)} style={{
+      background: "#fff", border: `1px solid ${theme.border}`,
+      borderLeft: `3px solid ${windAligned ? theme.danger : theme.orange}`,
+      borderRadius: "6px", padding: "8px 10px", marginBottom: "8px", cursor: "pointer",
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <span style={{ fontSize: "12.5px", fontWeight: "bold", color: theme.textPrimary }}>
+          {INFRA_ICON[infra.properties.type] || "📍"} {infra.properties.name || infra.properties.type}
+        </span>
+        <span style={{ fontSize: "11px", fontWeight: "bold", color: windAligned ? theme.danger : theme.orange }}>
+          {distanceKm.toFixed(1)} km
+        </span>
+      </div>
+      <div style={{ fontSize: "11px", color: theme.textMuted, marginTop: "2px", lineHeight: "1.5" }}>
+        {windAligned
+          ? t("windPushingToward", { dir, wind: windKmh != null ? windKmh.toFixed(0) : "?" })
+          : t("closeToFire")}
+      </div>
+    </div>
+  )
+}
+
 export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire }) {
   const { t } = useLanguage()
   const allDetections = layers.hotspots?.data?.features || []
@@ -213,6 +246,10 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
   const brief = useMemo(() => buildCommandBrief({
     zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints, responderType,
   }), [zoneHotspots, zoneInfrastructure, fwiPoints, responderType])
+
+  const threatenedInfra = useMemo(() => findThreatenedInfrastructure({
+    zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints,
+  }), [zoneHotspots, zoneInfrastructure, fwiPoints])
 
   const maxFWI = fwiPoints.reduce((max, f) =>
     (f.properties.fwi || 0) > (max?.properties?.fwi || 0) ? f : max, null)
@@ -300,6 +337,23 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
               </>
             )}
           </div>
+
+          {threatenedInfra.length > 0 && (
+            <>
+              <SectionTitle>{t("threatenedInfraTitle")}</SectionTitle>
+              <div style={{
+                background: "#fff", border: `1px solid ${theme.border}`,
+                borderRadius: "6px", padding: "10px", fontSize: "12px",
+              }}>
+                <div style={{ color: theme.textSecondary, marginBottom: "8px", lineHeight: "1.5" }}>
+                  {t("threatenedInfraCount", { count: threatenedInfra.length })}
+                </div>
+                {threatenedInfra.slice(0, 10).map((threat, i) => (
+                  <ThreatenedInfraCard key={i} threat={threat} t={t} onSelectFire={flyTo} />
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
 
