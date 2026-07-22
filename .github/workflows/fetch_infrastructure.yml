@@ -2,12 +2,18 @@
 
 on:
   schedule:
-    # Infrastructure (hospitals, fire stations, roads, etc.) barely changes
-    # month to month, unlike fires/weather — so this runs on the 1st of
-    # every month instead of daily to save Overpass API load. Trigger
-    # manually (workflow_dispatch) any time it needs an out-of-cycle refresh.
-    - cron: '0 6 1 * *'
+    # Once a year: crawls the whole world in small tiles, but compressed
+    # into the first 10 days of January instead of running forever. At
+    # every 20 minutes that's up to ~720 possible runs in the window --
+    # more than the ~500 tiles needed for one full pass, with margin for
+    # retries. Once a full pass completes, the script skips itself for
+    # the rest of the year (see last_lap_completed_year in fetch_infrastructure.py).
+    - cron: '*/20 * 1-10 1 *'
   workflow_dispatch:
+
+concurrency:
+  group: fetch-infrastructure
+  cancel-in-progress: false
 
 jobs:
   fetch-infrastructure:
@@ -27,15 +33,19 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
-      - name: Fetch infrastructure (Mexico + USA border region)
+      - name: Fetch next world tile
         run: python scripts/fetch_infrastructure.py
         env:
-          BBOX: "-118,14,-86,33"
+          # Manual runs (workflow_dispatch) always force a tile, ignoring
+          # the once-a-year gate -- lets you top up out-of-cycle on demand.
+          FORCE_CRAWL: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
 
       - name: Commit updated infrastructure data
         run: |
           git config user.name "FireWatch Bot"
           git config user.email "bot@firewatch-sar.github.io"
-          git add data/infrastructure.geojson data/manifest.json
-          git diff --staged --quiet || git commit -m "chore: update infrastructure $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git add data/infrastructure.geojson data/infra_progress.json data/manifest.json
+          git diff --staged --quiet && exit 0
+          git commit -m "chore: infrastructure world crawl tile $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase origin main
           git push

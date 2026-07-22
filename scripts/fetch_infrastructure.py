@@ -246,7 +246,7 @@ def load_progress():
                 return json.load(f)
         except json.JSONDecodeError:
             pass
-    return {"next_index": 0, "laps_completed": 0, "last_tile_bbox": None}
+    return {"next_index": 0, "laps_completed": 0, "last_tile_bbox": None, "last_lap_completed_year": None}
 
 
 def save_progress(progress):
@@ -297,6 +297,16 @@ def main():
         progress = load_progress()
         tile = WORLD_TILES[progress["next_index"] % len(WORLD_TILES)]
         bbox_str = ",".join(str(v) for v in tile)
+
+        current_year = datetime.now(timezone.utc).year
+        force = os.environ.get("FORCE_CRAWL") == "true"
+        if (progress["next_index"] == 0
+                and progress.get("last_lap_completed_year") == current_year
+                and not force):
+            print(f"World crawl already completed for {current_year} -- skipping "
+                  f"(runs once a year). Trigger manually with FORCE_CRAWL=true to override.")
+            return
+
         print(f"World crawl: tile {progress['next_index'] % len(WORLD_TILES)}/{len(WORLD_TILES)} "
               f"(lap {progress['laps_completed']}) -- bbox {bbox_str}")
 
@@ -393,6 +403,7 @@ def main():
         progress["last_tile_bbox"] = bbox_str
         if progress["next_index"] == 0:
             progress["laps_completed"] += 1
+            progress["last_lap_completed_year"] = datetime.now(timezone.utc).year
             print(f"World crawl completed lap {progress['laps_completed']} -- starting over from tile 0.")
         save_progress(progress)
 
