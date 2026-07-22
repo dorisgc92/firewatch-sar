@@ -20,6 +20,7 @@ import json
 import requests
 import csv
 import io
+import time
 from datetime import datetime, timezone
 from manifest import update_manifest, stabilize_generated_at
 
@@ -80,10 +81,17 @@ def classify_intensity(frp):
         return "extreme"
 
 
-def fetch_firms_csv(source_name):
+def fetch_firms_csv(source_name, max_retries=3):
     """
     Fetch FIRMS data as CSV for a given source.
     Returns list of dicts, one per hotspot.
+
+    Retries a few times with backoff before giving up on this source --
+    transient network blips (DNS hiccups, GitHub Actions runner routing
+    issues, a momentary NASA-side outage) are common enough at a 10-minute
+    cadence that treating the very first failure as final wastes a whole
+    cycle's data for no reason. A run only reports this source as failed
+    after every attempt has failed.
     """
     url = (
         f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/"
@@ -92,12 +100,20 @@ def fetch_firms_csv(source_name):
 
     print(f"  Fetching {source_name} from NASA FIRMS...")
 
-    try:
-        response = requests.get(url, timeout=60)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"  ERROR fetching {source_name}: {e}")
-        return []
+    response = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = requests.get(url, timeout=60)
+            response.raise_for_status()
+            break
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries:
+                wait_s = 5 * attempt
+                print(f"  Attempt {attempt}/{max_retries} for {source_name} failed ({e}); retrying in {wait_s}s...")
+                time.sleep(wait_s)
+            else:
+                print(f"  ERROR fetching {source_name} after {max_retries} attempts: {e}")
+                return []
 
     # Parse CSV
     content = response.text
@@ -123,6 +139,15 @@ def fetch_firms_csv(source_name):
     reader = csv.DictReader(io.StringIO(content))
     rows = list(reader)
     print(f"  Got {len(rows)} hotspots from {source_name}")
+    if len(rows) == 0:
+        # A well-formed CSV header with zero data rows is a different (and
+        # more specific) signal than an "Invalid MAP_KEY"-style plain-text
+        # error -- it usually means the key is valid but throttled/rate
+        # limited for this request, or (rarely) a genuine momentary gap in
+        # NASA's NRT feed. Printing the raw response lets a human tell
+        # those apart at a glance instead of guessing from "0 hotspots"
+        # alone -- check for anything past just the header line.
+        print(f"  (Header-only response, no data rows. Raw response: {stripped[:300]!r})")
     return rows
 
 
