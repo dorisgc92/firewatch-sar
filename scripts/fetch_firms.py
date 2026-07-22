@@ -118,10 +118,24 @@ def fetch_firms_csv(source_name, bbox, max_retries=3):
 
     print(f"  Fetching {source_name} ({bbox}) from NASA FIRMS...")
 
+    # requests' default User-Agent ("python-requests/x.y") is a well-known
+    # automated-traffic signature that CDNs/WAFs in front of an API commonly
+    # filter or silently degrade, especially from cloud/CI IP ranges like
+    # GitHub Actions runners. This matches the exact pattern we're seeing:
+    # the identical query works from a home browser and returns nothing
+    # (but no error) from GitHub Actions. A normal browser User-Agent is
+    # the standard, low-risk fix to try first.
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        )
+    }
+
     response = None
     for attempt in range(1, max_retries + 1):
         try:
-            response = requests.get(url, timeout=60)
+            response = requests.get(url, timeout=60, headers=headers)
             response.raise_for_status()
             break
         except requests.exceptions.RequestException as e:
