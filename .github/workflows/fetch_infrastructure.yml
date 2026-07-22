@@ -2,13 +2,13 @@
 
 on:
   schedule:
-    # Once a year: crawls the whole world in small tiles, but compressed
-    # into the first 10 days of January instead of running forever. At
-    # every 20 minutes that's up to ~720 possible runs in the window --
-    # more than the ~500 tiles needed for one full pass, with margin for
-    # retries. Once a full pass completes, the script skips itself for
-    # the rest of the year (see last_lap_completed_year in fetch_infrastructure.py).
-    - cron: '*/20 * 1-10 1 *'
+    # ── TEMPORARY: initial full-world crawl ──────────────────────────
+    # Running every 20 minutes with no date restriction to complete the
+    # FIRST full pass over all ~500 tiles quickly (~5-7 days). Once
+    # infra_progress.json shows laps_completed >= 1 (next_index back at
+    # 0), switch this back to the once-a-year January-only schedule:
+    #   - cron: '*/20 * 1-10 1 *'
+    - cron: '*/20 * * * *'
   workflow_dispatch:
 
 concurrency:
@@ -36,9 +36,7 @@ jobs:
       - name: Fetch next world tile
         run: python scripts/fetch_infrastructure.py
         env:
-          # Manual runs (workflow_dispatch) always force a tile, ignoring
-          # the once-a-year gate -- lets you top up out-of-cycle on demand.
-          FORCE_CRAWL: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+          FORCE_CRAWL: "true"
 
       - name: Commit updated infrastructure data
         run: |
