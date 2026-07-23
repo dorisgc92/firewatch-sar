@@ -401,7 +401,15 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         // don't land on stale content mid-transition.
         pointerEvents: zoneLoading ? "none" : "auto",
       }}>
-      <MapContainer center={center} zoom={9}
+      {/* preferCanvas: at world/country zoom this map can have 1000s of
+          CircleMarkers + footprint Circles + perimeter polygons on screen
+          at once. Leaflet's default SVG renderer gives each one its own DOM
+          node, which is what actually freezes the tab on pan/zoom — not the
+          JS-side filtering (already capped/memoized above). Canvas draws
+          everything to a single <canvas> element instead, which is far
+          cheaper to update at this scale. Trade-off: canvas shapes can't be
+          styled/selected via CSS, but nothing here relies on that. */}
+      <MapContainer center={center} zoom={9} preferCanvas={true}
         style={{ width: "100%", height: "100%", background: "#e8ebee" }}
         zoomControl={true}>
 
