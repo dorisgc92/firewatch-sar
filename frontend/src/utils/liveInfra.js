@@ -30,6 +30,12 @@ const INFRA_TYPES = [
   ["amenity", "fuel", "Fuel Station", "#AA66FF"],
   ["man_made", "tower", "Tower", "#666666"],
   ["amenity", "school", "School (shelter)", "#22AA88"],
+  ["landuse", "industrial", "Industrial Zone", "#996633"],
+  ["man_made", "works", "Industrial Zone", "#996633"],
+  ["landuse", "quarry", "Quarry/Landfill", "#996633"],
+  ["landuse", "landfill", "Quarry/Landfill", "#996633"],
+  ["place", "city", "Urban Area", "#888888"],
+  ["place", "town", "Urban Area", "#888888"],
 ]
 
 function bboxKey(bbox) {

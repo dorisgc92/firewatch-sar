@@ -119,17 +119,38 @@ function pointInPolygonGeometry(lat, lon, geom) {
 }
 
 // True if a hotspot sits within `maxDistanceKm` of a mapped industrial site
-// (cement plants, factories, refineries...). These run hot around the
-// clock and are a well-known source of satellite thermal-anomaly false
-// positives — NASA's own `type` classification field (which would flag
-// this directly) isn't available on the NRT CSV endpoint FireWatch SAR
-// uses, so this cross-reference against OSM industrial landuse is the
-// practical stand-in.
+// (cement plants, factories, refineries...) or a quarry/landfill. These all
+// run hot around the clock or generate their own heat (blasting, gas
+// flares, decomposition) and are well-known sources of satellite
+// thermal-anomaly false positives — NASA's own `type` classification field
+// (which would flag this directly) isn't available on the NRT CSV endpoint
+// FireWatch SAR uses, so this cross-reference against OSM land-use tags is
+// the practical stand-in.
+const EXCLUDED_SITE_TYPES = ["Industrial Zone", "Quarry/Landfill"]
+
 export function isNearIndustrialSite(fireFeature, infrastructureFeatures, maxDistanceKm = 0.3) {
   if (!infrastructureFeatures?.length) return false
   const [lon, lat] = fireFeature.geometry.coordinates
   return infrastructureFeatures.some((f) => {
-    if (f.properties?.type !== "Industrial Zone") return false
+    if (!EXCLUDED_SITE_TYPES.includes(f.properties?.type)) return false
+    const c = featureCentroid(f)
+    if (!c) return false
+    return distanceKm(lat, lon, c[0], c[1]) <= maxDistanceKm
+  })
+}
+
+// True if a hotspot sits within `maxDistanceKm` of an OSM city/town center
+// node ("Urban Area" in our infrastructure data). A thermal detection right
+// on top of a populated place is far more likely to be a rooftop, vehicle,
+// urban heat source, or industrial fire than a wildfire — same
+// false-positive logic as isNearIndustrialSite, applied to cities/towns.
+// The threshold is deliberately generous (2km) since a place node marks
+// only an approximate city-center point, not the true urban footprint edge.
+export function isNearUrbanArea(fireFeature, infrastructureFeatures, maxDistanceKm = 2) {
+  if (!infrastructureFeatures?.length) return false
+  const [lon, lat] = fireFeature.geometry.coordinates
+  return infrastructureFeatures.some((f) => {
+    if (f.properties?.type !== "Urban Area") return false
     const c = featureCentroid(f)
     if (!c) return false
     return distanceKm(lat, lon, c[0], c[1]) <= maxDistanceKm
