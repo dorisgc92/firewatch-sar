@@ -17,6 +17,78 @@ import { reverseCountryLookup } from "./countryBoundaries"
 const PHOTON_URL = "https://photon.komoot.io/api/"
 const REVERSE_URL = "https://photon.komoot.io/reverse"
 
+// Fallback used when Photon is unreachable (it's a single free demo server
+// with no SLA — see PHOTON_TIMEOUT_MS below — and has genuine full outages,
+// not just slow responses). Routed through our own /api/nominatim Vercel
+// function rather than called directly: browsers can't set a custom
+// User-Agent header, which Nominatim's usage policy requires, and this
+// also sidesteps CORS the same way /api/overpass already does elsewhere.
+const NOMINATIM_PROXY_URL = "/api/nominatim"
+const NOMINATIM_TIMEOUT_MS = 6000
+
+// Converts a Nominatim (format=jsonv2) result into the same shape Photon
+// features use elsewhere in this file (properties.name/city/state/country/
+// extent) so zoneInfoFromPhotonFeature and everything downstream of it
+// doesn't need to know or care which provider actually answered.
+function nominatimToPhotonFeature(item) {
+  if (!item) return null
+  const lat = parseFloat(item.lat)
+  const lon = parseFloat(item.lon)
+  if (Number.isNaN(lat) || Number.isNaN(lon)) return null
+  const addr = item.address || {}
+  const name = item.name || addr.city || addr.town || addr.village
+    || item.display_name?.split(",")[0] || null
+  // Nominatim's boundingbox is [south, north, west, east] as strings;
+  // Photon's extent is [minLon, maxLat, maxLon, minLat] — reorder + parse.
+  const bb = Array.isArray(item.boundingbox) ? item.boundingbox.map(Number) : null
+  const extent = bb && bb.length === 4 && bb.every((n) => !Number.isNaN(n))
+    ? [bb[2], bb[1], bb[3], bb[0]]
+    : undefined
+  return {
+    type: "Feature",
+    geometry: { type: "Point", coordinates: [lon, lat] },
+    properties: {
+      name,
+      city: addr.city || addr.town || addr.village || addr.municipality || name,
+      state: addr.state || addr.region || null,
+      country: addr.country || null,
+      extent,
+    },
+  }
+}
+
+async function nominatimSearchOnce(query, limit = 1) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), NOMINATIM_TIMEOUT_MS)
+  try {
+    const url = `${NOMINATIM_PROXY_URL}?mode=search&limit=${limit}&q=${encodeURIComponent(query)}`
+    const r = await fetch(url, { signal: controller.signal })
+    if (!r.ok) return []
+    const data = await r.json()
+    return Array.isArray(data) ? data.map(nominatimToPhotonFeature).filter(Boolean) : []
+  } catch {
+    return []
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+async function nominatimReverseOnce(lat, lon) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), NOMINATIM_TIMEOUT_MS)
+  try {
+    const url = `${NOMINATIM_PROXY_URL}?mode=reverse&lat=${lat}&lon=${lon}`
+    const r = await fetch(url, { signal: controller.signal })
+    if (!r.ok) return null
+    const data = await r.json()
+    return nominatimToPhotonFeature(data)
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 // Some countries (USA with Alaska/Hawaii/Guam, Russia, France with overseas
 // territories...) have a Photon "extent" so spread out that a naive min/max
 // bounding box ends up covering most of the globe's longitude range — which
@@ -71,12 +143,16 @@ async function photonSearchOnce(query, limit = 1) {
 // Photon (run by Komoot, free, no SLA) has genuine intermittent outages —
 // one quick retry means a single transient hiccup doesn't block someone
 // from ever entering the app over a place name that would resolve fine a
-// few seconds later.
+// few seconds later. If Photon is still empty after that, fall back to
+// Nominatim entirely rather than leaving the search dead.
 async function photonSearch(query) {
   const first = (await photonSearchOnce(query, 1))[0]
   if (first) return first
   await new Promise((resolve) => setTimeout(resolve, 1500))
-  return (await photonSearchOnce(query, 1))[0] || null
+  const second = (await photonSearchOnce(query, 1))[0]
+  if (second) return second
+  const fallback = (await nominatimSearchOnce(query, 1))[0]
+  return fallback || null
 }
 
 // How long to wait after the user stops typing before firing a Photon
@@ -89,14 +165,17 @@ export const SEARCH_DEBOUNCE_MS = 350
 
 /**
  * Multi-result place search for the navbar autocomplete dropdown — same
- * timeout + one-retry resilience as photonSearch/zoneInfoFromPhotonFeature,
- * just returns the raw candidate list instead of picking the top result.
+ * timeout + one-retry resilience as photonSearch/zoneInfoFromPhotonFeature.
+ * Falls back to Nominatim if Photon is still empty after its own retry
+ * (covers a full Photon outage, not just a single slow/dropped request).
  */
 export async function searchPlaces(query, limit = 5) {
   const first = await photonSearchOnce(query, limit)
   if (first.length > 0) return first
   await new Promise((resolve) => setTimeout(resolve, 1500))
-  return photonSearchOnce(query, limit)
+  const second = await photonSearchOnce(query, limit)
+  if (second.length > 0) return second
+  return nominatimSearchOnce(query, limit)
 }
 
 /**
@@ -204,19 +283,20 @@ export async function reverseGeocodeFeature(lat, lon) {
   if (reverseFeatureCache.has(key)) return reverseFeatureCache.get(key)
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), PHOTON_TIMEOUT_MS)
+  let feature = null
   try {
     const r = await fetch(`${REVERSE_URL}?lon=${lon}&lat=${lat}`, { signal: controller.signal })
     if (!r.ok) throw new Error("HTTP " + r.status)
     const data = await r.json()
-    const feature = data.features?.[0] || null
-    reverseFeatureCache.set(key, feature)
-    return feature
+    feature = data.features?.[0] || null
   } catch {
-    reverseFeatureCache.set(key, null)
-    return null
+    feature = null
   } finally {
     clearTimeout(timeout)
   }
+  if (!feature) feature = await nominatimReverseOnce(lat, lon)
+  reverseFeatureCache.set(key, feature)
+  return feature
 }
 
 /**
@@ -230,20 +310,22 @@ export async function reverseGeocodePlace(lat, lon) {
   if (reverseCache.has(key)) return reverseCache.get(key)
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), PHOTON_TIMEOUT_MS)
+  let props = null
   try {
     const r = await fetch(`${REVERSE_URL}?lon=${lon}&lat=${lat}`, { signal: controller.signal })
     if (!r.ok) throw new Error("HTTP " + r.status)
     const data = await r.json()
-    const props = data.features?.[0]?.properties
-    const place = props
-      ? [props.name, props.city, props.state].filter(Boolean).join(", ")
-      : null
-    reverseCache.set(key, place)
-    return place
+    props = data.features?.[0]?.properties || null
   } catch {
-    reverseCache.set(key, null)
-    return null
+    props = null
   } finally {
     clearTimeout(timeout)
   }
+  if (!props) {
+    const fallback = await nominatimReverseOnce(lat, lon)
+    props = fallback?.properties || null
+  }
+  const place = props ? [props.name, props.city, props.state].filter(Boolean).join(", ") : null
+  reverseCache.set(key, place)
+  return place
 }
