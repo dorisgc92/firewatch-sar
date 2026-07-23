@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, Circle, GeoJSON, Popup, Tooltip, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
-import { filterFeaturesByBbox, linkedPerimeterForFire, isNearIndustrialSite, perimeterHasActiveHotspot } from "../utils/spatial"
+import { filterFeaturesByBbox, linkedPerimeterForFire, isNearIndustrialSite, isNearUrbanArea, perimeterHasActiveHotspot } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
@@ -22,7 +22,7 @@ const MAX_LABELED_POINTS = 40
 // browser tab. Past this cap, only the highest-FRP (most severe) fires are
 // drawn — a responder zoomed out that far needs "where's it worst", not
 // every single low-confidence pixel.
-const MAX_RENDERED_MARKERS = 4000
+const MAX_RENDERED_MARKERS = 1500
 
 // Leaflet CircleMarker radius is a fixed pixel size regardless of zoom, which
 // makes a dot calibrated for a city-level view look enormous once you zoom
@@ -112,6 +112,7 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
   const fireTypeDisplay = {
     volcano: t("fireTypeVolcano") || "active volcano",
     static_land_source: t("fireTypeStatic") || "industrial/static heat source",
+    urban_area: t("fireTypeUrban") || "urban/populated area",
     offshore: t("fireTypeOffshore") || "offshore detection",
     unknown: t("fireTypeUnknown") || "unclassified source",
   }[fireTypeLabel]
@@ -330,6 +331,22 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
   const zoneInfrastructure = bundledZoneInfrastructure.length > 0 ? bundledZoneInfrastructure : liveInfra.features
 
+  // isNearIndustrialSite/isNearUrbanArea only care about a couple of the
+  // infrastructure types, but zoneInfrastructure also carries hospitals,
+  // schools, etc. Filtering down to just the relevant subsets ONCE here
+  // (instead of re-scanning the whole array inside every hotspot's check,
+  // up to MAX_RENDERED_MARKERS times per render) was a meaningful chunk of
+  // the map-freezing cost when zoomed out over a large, infrastructure-rich
+  // area.
+  const nonWildfireSiteInfra = useMemo(
+    () => zoneInfrastructure.filter((f) => f.properties?.type === "Industrial Zone" || f.properties?.type === "Quarry/Landfill"),
+    [zoneInfrastructure]
+  )
+  const urbanAreaInfra = useMemo(
+    () => zoneInfrastructure.filter((f) => f.properties?.type === "Urban Area"),
+    [zoneInfrastructure]
+  )
+
   const visibleViewportHotspots = useMemo(() => {
     const filtered = viewportHotspots.filter(f => visibleIntensities[f.properties.intensity] !== false)
     if (filtered.length <= MAX_RENDERED_MARKERS) return filtered
@@ -397,7 +414,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             see the note on the main marker below. */}
         {activeModule === 2 && visibleLayers.hotspots && visibleViewportHotspots.length > 0 && visibleViewportHotspots.length <= 800 &&
           visibleViewportHotspots
-            .filter((feat) => (feat.properties.fire_type == null || feat.properties.fire_type === 0) && !isNearIndustrialSite(feat, zoneInfrastructure))
+            .filter((feat) => (feat.properties.fire_type == null || feat.properties.fire_type === 0) && !isNearIndustrialSite(feat, nonWildfireSiteInfra) && !isNearUrbanArea(feat, urbanAreaInfra))
             .map((feat, i) => {
               const { frp, intensity, resolution_m } = feat.properties
               const [lon, lat] = feat.geometry.coordinates
@@ -423,13 +440,14 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               // static/industrial source (gas flares, plants — this is the
               // "not actually a wildfire" case), 3 = offshore. That field
               // isn't available on the NRT endpoint we use though, so it's
-              // combined with a proximity check against mapped industrial
-              // sites (cement plants, factories...) — either signal is
+              // combined with proximity checks against mapped industrial
+              // sites and city/town centers — any of these signals is
               // enough to style this as a muted, dashed grey marker
               // instead of a normal intensity color, so it doesn't read as
               // a confirmed wildfire on the map.
-              const nearIndustrial = isNearIndustrialSite(feat, zoneInfrastructure)
-              const isNonVegetation = (fire_type != null && fire_type !== 0) || nearIndustrial
+              const nearIndustrial = isNearIndustrialSite(feat, nonWildfireSiteInfra)
+              const nearUrban = isNearUrbanArea(feat, urbanAreaInfra)
+              const isNonVegetation = (fire_type != null && fire_type !== 0) || nearIndustrial || nearUrban
               const color = isNonVegetation ? "#888888" : (INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown)
               const stroke = isNonVegetation ? "#555555" : (INTENSITY_STROKE[intensity] || INTENSITY_STROKE.unknown)
               const r = hotspotRadius(frp, mapZoom)
@@ -438,7 +456,12 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               // whole command center sidebar. That only happens if the
               // responder explicitly presses "Zoom to location" below,
               // matching the two-step flow: browse -> confirm -> drill in.
-              const linkedPerimeter = linkedPerimeterForFire(feat, layers.perimeters?.data?.features || [])
+              // Uses viewportPerimeters (already bbox-scoped, typically a
+              // handful of features) instead of the full global perimeters
+              // list — checking every one of up to MAX_RENDERED_MARKERS
+              // fires against the entire world's perimeter polygons was
+              // the main cause of the map freezing when zoomed out.
+              const linkedPerimeter = linkedPerimeterForFire(feat, viewportPerimeters)
               return (
                 <CircleMarker key={i} center={[lat, lon]} radius={r}
                   pathOptions={isNonVegetation
@@ -452,7 +475,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                   <Popup>
                     <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                       acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
-                      fireTypeLabel={isNonVegetation ? (fire_type_label || (nearIndustrial ? "static_land_source" : "unknown")) : null}
+                      fireTypeLabel={isNonVegetation ? (fire_type_label || (nearIndustrial ? "static_land_source" : nearUrban ? "urban_area" : "unknown")) : null}
                       onZoomToLocation={() => onFireClick?.(feat)} />
                   </Popup>
                 </CircleMarker>
@@ -465,8 +488,9 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
           const r = hotspotRadius(frp, mapZoom) + 6
           const linkedPerimeter = linkedPerimeterForFire(selectedFire, layers.perimeters?.data?.features || [])
-          const nearIndustrial = isNearIndustrialSite(selectedFire, zoneInfrastructure)
-          const isNonVegetation = (fire_type != null && fire_type !== 0) || nearIndustrial
+          const nearIndustrial = isNearIndustrialSite(selectedFire, nonWildfireSiteInfra)
+          const nearUrban = isNearUrbanArea(selectedFire, urbanAreaInfra)
+          const isNonVegetation = (fire_type != null && fire_type !== 0) || nearIndustrial || nearUrban
 
           return (
             <>
@@ -493,7 +517,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                 <Popup>
                   <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                     acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
-                    fireTypeLabel={isNonVegetation ? (fire_type_label || (nearIndustrial ? "static_land_source" : "unknown")) : null}
+                    fireTypeLabel={isNonVegetation ? (fire_type_label || (nearIndustrial ? "static_land_source" : nearUrban ? "urban_area" : "unknown")) : null}
                     onZoomToLocation={() => onFireClick?.(selectedFire)} />
                 </Popup>
               </CircleMarker>
