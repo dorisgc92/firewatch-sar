@@ -1,13 +1,2387 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "generated_at": "2026-07-20T08:39:07.519523+00:00",
+    "generated_at": "2026-07-23T18:43:20.179570+00:00",
     "source": "OpenStreetMap via Overpass API",
     "license": "ODbL \u00e2\u20ac\u201d \u00c2\u00a9 OpenStreetMap contributors",
     "bbox": "world (crawled tile by tile)",
     "description": "Critical infrastructure relevant to wildfire emergency response. Includes hospitals, fire stations, police, power infrastructure, water resources, and industrial zones (used to flag likely non-wildfire thermal detections). Used for vulnerability assessment.",
-    "total": 0,
-    "by_type": {}
+    "total": 91,
+    "by_type": {
+      "Police Station": 33,
+      "Fire Station": 17,
+      "Airport/Airfield": 10,
+      "Hospital": 17,
+      "Power Plant": 5,
+      "Power Substation": 9
+    }
   },
-  "features": []
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9914962,
+          -53.4041355
+        ]
+      },
+      "properties": {
+        "name": "Reten Agua Fresca",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 436126430,
+        "osm_type": "node",
+        "address": "RUTA 9 SUR KM 30",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/436126430",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9057027,
+          -53.1526642
+        ]
+      },
+      "properties": {
+        "name": "7ma Compa\u00f1ia",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 460258957,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/460258957",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2581173,
+          -50.3389375
+        ]
+      },
+      "properties": {
+        "name": "Fire Station",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 974267191,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/974267191",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.7498981,
+          -52.8803031
+        ]
+      },
+      "properties": {
+        "name": "Aer\u00f3dromo Marco Davison Bascur",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 1042061915,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/1042061915",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3374543,
+          -51.2600739
+        ]
+      },
+      "properties": {
+        "name": "Aer\u00f3dromo Cerro Castillo",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 1042062602,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/1042062602",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8969924,
+          -53.1420034
+        ]
+      },
+      "properties": {
+        "name": "5\u00ba Compa\u00f1ia \"Pompe France\"",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 1659903083,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/1659903083",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9378904,
+          -53.2022015
+        ]
+      },
+      "properties": {
+        "name": "Subcomisaria I.A.T. Punta Arenas",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 1802245775,
+        "osm_type": "node",
+        "address": "Ruta 9 S: Punta Arenas - Fuerte Bulnes - San Juan - R\u00edo San Pedro",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/1802245775",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.907303,
+          -53.1635052
+        ]
+      },
+      "properties": {
+        "name": "1\u00aa Compa\u00f1ia \"Bomba Magallanes\"",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 1848607220,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/1848607220",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.4958677,
+          -51.735694
+        ]
+      },
+      "properties": {
+        "name": "1a Compa\u00f1\u00eda de Bomberos de Natales",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 2143440968,
+        "osm_type": "node",
+        "address": "Avenida Santiago Bueras",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/2143440968",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2701636,
+          -50.3403266
+        ]
+      },
+      "properties": {
+        "name": "CIC Formenti",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 2341469852,
+        "osm_type": "node",
+        "address": "Julio Argentino Roca",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "yes",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/2341469852",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3428438,
+          -51.5298312
+        ]
+      },
+      "properties": {
+        "name": "CIC Padre Mujica",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 2699438591,
+        "osm_type": "node",
+        "address": "Avenida Gendarmer\u00eda Nacional",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/2699438591",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2586536,
+          -50.3502466
+        ]
+      },
+      "properties": {
+        "name": "CIC Cerro Calafate",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 2783294030,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/2783294030",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.506319,
+          -51.7274301
+        ]
+      },
+      "properties": {
+        "name": "2 Comisar\u00eda Puerto Natales",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 3069624266,
+        "osm_type": "node",
+        "address": "Tom\u00e1s Rogers",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3069624266",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.5058928,
+          -51.7274693
+        ]
+      },
+      "properties": {
+        "name": "Fire Station",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 3069624267,
+        "osm_type": "node",
+        "address": "Manuel Bulnes",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3069624267",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9086461,
+          -53.1597987
+        ]
+      },
+      "properties": {
+        "name": "Cuartel General",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 3226765334,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3226765334",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9030903,
+          -53.1632246
+        ]
+      },
+      "properties": {
+        "name": "4\u00ba Compa\u00f1ia \"Bomba Croata\"",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 3226769367,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3226769367",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.644769,
+          -51.892744
+        ]
+      },
+      "properties": {
+        "name": "Aer\u00f3dromo Bella Vista",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 3393337235,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3393337235",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3461101,
+          -51.259262
+        ]
+      },
+      "properties": {
+        "name": "Ret\u00e9n Torres del Paine",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 3395565266,
+        "osm_type": "node",
+        "address": "Ruta 9 N: Punta Arenas - Puerto Natales - R\u00edo Baguales",
+        "phone": "",
+        "operator": "Carabineros de Chile",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3395565266",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.344989,
+          -51.2557504
+        ]
+      },
+      "properties": {
+        "name": "Bomberos de Cerro Castillo",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 3395565268,
+        "osm_type": "node",
+        "address": "El Pasajero",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3395565268",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2192434,
+          -51.5930486
+        ]
+      },
+      "properties": {
+        "name": "CIC 28 de Noviembre",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 3466724284,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3466724284",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.4868045,
+          -51.7298038
+        ]
+      },
+      "properties": {
+        "name": "2a Compa\u00f1\u00eda de Bomberos de Natales",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 3537331825,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3537331825",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.9429781,
+          -50.2423322
+        ]
+      },
+      "properties": {
+        "name": "La Diana",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 3578627540,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3578627540",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3286211,
+          -51.699437
+        ]
+      },
+      "properties": {
+        "name": "Subcomisar\u00eda Casas Viejas (F)",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 3701382232,
+        "osm_type": "node",
+        "address": "Ruta 9 Norte",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/3701382232",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2688888,
+          -50.3492837
+        ]
+      },
+      "properties": {
+        "name": "Comisaria Seccional Segunda",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 4402116591,
+        "osm_type": "node",
+        "address": "Avenida 17 de Octubre",
+        "phone": "02902496871",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/4402116591",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.7776433,
+          -51.0293872
+        ]
+      },
+      "properties": {
+        "name": "Subcomisar\u00eda Esperanza",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 4404605870,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/4404605870",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3339768,
+          -51.6044163
+        ]
+      },
+      "properties": {
+        "name": "Reten Dorotea",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 4675426000,
+        "osm_type": "node",
+        "address": "RUTA CH-250 KM 11",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/4675426000",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.7350216,
+          -52.0255672
+        ]
+      },
+      "properties": {
+        "name": "Ret\u00e9n Teniente Hernan Merino Correa (F)",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 4681153639,
+        "osm_type": "node",
+        "address": "Ruta Y-455 Km 70",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/4681153639",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3033471,
+          -50.3366429
+        ]
+      },
+      "properties": {
+        "name": "Divisi\u00f3n Criminalistica El Calafate",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 5098002223,
+        "osm_type": "node",
+        "address": "Avenida del Libertador General San Mart\u00edn",
+        "phone": "02902489130",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/5098002223",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.1759402,
+          -50.3180852
+        ]
+      },
+      "properties": {
+        "name": "Gendarmer\u00eda Nacional",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 5287412621,
+        "osm_type": "node",
+        "address": "Ruta Provincial 11",
+        "phone": "",
+        "operator": "Gendarmer\u00eda Nacional Argentina - Patrulla de Caminos",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/5287412621",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.7520577,
+          -50.4265626
+        ]
+      },
+      "properties": {
+        "name": "Entrada Parque de los Glaciares",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 6086884088,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/6086884088",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9321196,
+          -53.1595427
+        ]
+      },
+      "properties": {
+        "name": "8a. Compa\u00f1\u00eda de Bomberos",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 6284975171,
+        "osm_type": "node",
+        "address": "Avenida Jos\u00e9 Mart\u00ednez de Aldunate",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/6284975171",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2720995,
+          -50.3403418
+        ]
+      },
+      "properties": {
+        "name": "Gendarmer\u00eda Nacional",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 7936092684,
+        "osm_type": "node",
+        "address": "Julio Argentino Roca",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/7936092684",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.175882,
+          -50.3181649
+        ]
+      },
+      "properties": {
+        "name": "Polic\u00eda de Santa Cruz",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 8388111694,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "Polic\u00eda de Santa Cruz",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/8388111694",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2172448,
+          -51.5791889
+        ]
+      },
+      "properties": {
+        "name": "Consultorio Externo",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 10126933100,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/10126933100",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.0400711,
+          -51.027176
+        ]
+      },
+      "properties": {
+        "name": "Ranger office building",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 10557762744,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/10557762744",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.7995896,
+          -50.2994336
+        ]
+      },
+      "properties": {
+        "name": "Entradas parque nacional",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 10575486143,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/10575486143",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2588967,
+          -50.3387063
+        ]
+      },
+      "properties": {
+        "name": "Comisar\u00eda 1\u00b0 Lago Argentino",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 10893663170,
+        "osm_type": "node",
+        "address": "Avenida del Libertador",
+        "phone": "",
+        "operator": "Unidad Regional Sudoeste - Polic\u00eda de Santa Cruz",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/10893663170",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.0906812,
+          -51.6798618
+        ]
+      },
+      "properties": {
+        "name": "Destacamento Gobernador Mayer",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 11258073293,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "Policia de la provincia de Santa Cruz",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/11258073293",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2357592,
+          -51.5478613
+        ]
+      },
+      "properties": {
+        "name": "Polic\u00eda",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 11258129730,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/11258129730",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.0537833,
+          -50.2840499
+        ]
+      },
+      "properties": {
+        "name": "Polic\u00eda De Seguridad Aeroportuaria",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 13606498436,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/13606498436",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8963282,
+          -53.1221178
+        ]
+      },
+      "properties": {
+        "name": "Hospital Clinico de Magallanes Doctor Lautaro Navarro",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 122274744,
+        "osm_type": "way",
+        "address": "Los Flamencos",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "yes",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/122274744",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8874697,
+          -53.1375498
+        ]
+      },
+      "properties": {
+        "name": "Cl\u00ednica RedSalud Magallanes",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 134120503,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/134120503",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9305066,
+          -53.164752
+        ]
+      },
+      "properties": {
+        "name": "1 Comisar\u00eda Punta Arenas",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 168381726,
+        "osm_type": "way",
+        "address": "Mateo de Toro y Zambrano",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/168381726",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2310743,
+          -51.5468779
+        ]
+      },
+      "properties": {
+        "name": "Central t\u00e9rmica 14 Mineros del 14-004",
+        "type": "Power Plant",
+        "color": "#FF8800",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 172351287,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "Yacimientos Carbon\u00edferos R\u00edo Turbio",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/172351287",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9002039,
+          -53.1617699
+        ]
+      },
+      "properties": {
+        "name": "Cruz Roja",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 172470671,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "Cruz Roja",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/172470671",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2199391,
+          -51.605111
+        ]
+      },
+      "properties": {
+        "name": "Aeropuerto El Turbio/28 de Noviembre",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 308500530,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/308500530",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.7158713,
+          -51.0434318
+        ]
+      },
+      "properties": {
+        "name": "Estaci\u00f3n Transformadora La Esperanza",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 314176103,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/314176103",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.1912471,
+          -50.3260555
+        ]
+      },
+      "properties": {
+        "name": "Estaci\u00f3n Transformadora El Calafate",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 325909467,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/325909467",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.5273891,
+          -51.6702987
+        ]
+      },
+      "properties": {
+        "name": "Aeropuerto Teniente Julio Gallardo",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 345649189,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/345649189",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.5065668,
+          -51.7303833
+        ]
+      },
+      "properties": {
+        "name": "Hospital Doctor Augusto Essmann Burgos",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 345663137,
+        "osm_type": "way",
+        "address": "Ignacio Carrera Pinto",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/345663137",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.476403,
+          -53.6090626
+        ]
+      },
+      "properties": {
+        "name": "Aeropuerto Almirante Schroeders",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 407183357,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/407183357",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3372692,
+          -51.5376565
+        ]
+      },
+      "properties": {
+        "name": "Comisar\u00eda R\u00edo Turbio",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 435842166,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/435842166",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3377413,
+          -51.537805
+        ]
+      },
+      "properties": {
+        "name": "Estaci\u00f3n de Bomberos R\u00edo Turbio",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 435842167,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/435842167",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3266396,
+          -51.5361518
+        ]
+      },
+      "properties": {
+        "name": "Hospital Cuenca Carbonifera",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 439250373,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/439250373",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4285872,
+          -52.0552779
+        ]
+      },
+      "properties": {
+        "name": "Ret\u00e9n Morro Chico",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 445034804,
+        "osm_type": "way",
+        "address": "Ruta 9 Norte",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/445034804",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9037969,
+          -52.9162115
+        ]
+      },
+      "properties": {
+        "name": "Puesto de Control Carretero Kon Aiken",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 451480777,
+        "osm_type": "way",
+        "address": "Ruta 9 N: Punta Arenas - Puerto Natales - R\u00edo Baguales",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/451480777",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.4601887,
+          -50.9444584
+        ]
+      },
+      "properties": {
+        "name": "Ret\u00e9n Cerro Guido (F)",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 474097935,
+        "osm_type": "way",
+        "address": "Ruta 9 Norte Km 350",
+        "phone": "",
+        "operator": "Carabineros de Chile",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/474097935",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.0164847,
+          -52.9682393
+        ]
+      },
+      "properties": {
+        "name": "Aer\u00f3dromo Iv\u00e1n Mart\u00ednez",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 494287465,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/494287465",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2129745,
+          -51.578773
+        ]
+      },
+      "properties": {
+        "name": "Unidad de Bomberos",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 517478589,
+        "osm_type": "way",
+        "address": "Avenida Per\u00f3n",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/517478589",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2164711,
+          -51.5832527
+        ]
+      },
+      "properties": {
+        "name": "Hospital Distrital San Lucas",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 517478591,
+        "osm_type": "way",
+        "address": "9 de Julio",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/517478591",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.3180482,
+          -53.252674
+        ]
+      },
+      "properties": {
+        "name": "Aer\u00f3dromo Capit\u00e1n Fuentes Mart\u00ednez",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 529095949,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/529095949",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8610467,
+          -53.0553123
+        ]
+      },
+      "properties": {
+        "name": "Subcomisar\u00eda R\u00edo Seco",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 539476723,
+        "osm_type": "way",
+        "address": "Ruta 9 N: Punta Arenas - Puerto Natales - R\u00edo Baguales",
+        "phone": "",
+        "operator": "Carabineros de Chile",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/539476723",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8482487,
+          -53.0032034
+        ]
+      },
+      "properties": {
+        "name": "Servicio de Seguridad, Salvamento y Extinci\u00f3n de Incendios en aeronaves (SSEI)",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 539476726,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "DGAC",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/539476726",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8484548,
+          -53.0034383
+        ]
+      },
+      "properties": {
+        "name": "Fire Station",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 539476727,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/539476727",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.4803072,
+          -51.7286328
+        ]
+      },
+      "properties": {
+        "name": "Hospital Augusto Esmann Burgos",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 542166080,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/542166080",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9092289,
+          -53.161783
+        ]
+      },
+      "properties": {
+        "name": "Prefectura Magallanes N\u00b028",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 547241369,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "Carabineros de Chile",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/547241369",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8982757,
+          -53.1493791
+        ]
+      },
+      "properties": {
+        "name": "Hospital de las Fuerzas Armadas Cirujano Cornelio Guzm\u00e1n",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 657313661,
+        "osm_type": "way",
+        "address": "Avenida Presidente Manuel Bulnes",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/657313661",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2326925,
+          -51.5442951
+        ]
+      },
+      "properties": {
+        "name": "Estaci\u00f3n Transformadora R\u00edo Turbio",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 671549459,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/671549459",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.0518594,
+          -50.2804761
+        ]
+      },
+      "properties": {
+        "name": "Aeropuerto Internacional Comandante Armando Tola",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 695872562,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "London Supply Group",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/695872562",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9090477,
+          -53.132724
+        ]
+      },
+      "properties": {
+        "name": "3\u00ba Compa\u00f1\u00eda \"Bomba Alemana\"",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 700962426,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/700962426",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8971669,
+          -53.1014359
+        ]
+      },
+      "properties": {
+        "name": "Central Tres Puentes",
+        "type": "Power Plant",
+        "color": "#FF8800",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 712409514,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "EDELMAG",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/712409514",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9073168,
+          -53.1547676
+        ]
+      },
+      "properties": {
+        "name": "Subestaci\u00f3n Punta Arenas",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 712520629,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "EDELMAG",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/712520629",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8974469,
+          -53.1018426
+        ]
+      },
+      "properties": {
+        "name": "Subestaci\u00f3n Tres Puentes",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 712520630,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "EDELMAG",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/712520630",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.3801882,
+          -53.2915242
+        ]
+      },
+      "properties": {
+        "name": "Subestacion Porvenir",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 712520631,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "EDELMAG",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/712520631",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.3767864,
+          -53.2962716
+        ]
+      },
+      "properties": {
+        "name": "3 Comisar\u00eda Porvenir",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 736605537,
+        "osm_type": "way",
+        "address": "Chilo\u00e9",
+        "phone": "",
+        "operator": "Carabineros de Chile",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/736605537",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.3581428,
+          -53.2984129
+        ]
+      },
+      "properties": {
+        "name": "Hospital de Porvenir",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 741392284,
+        "osm_type": "way",
+        "address": "Carlos Wood",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/741392284",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4165554,
+          -52.42695
+        ]
+      },
+      "properties": {
+        "name": "Novena Compa\u00f1\u00eda de Bomberos Laguna Blanca",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 761313663,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/761313663",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4158775,
+          -52.4278226
+        ]
+      },
+      "properties": {
+        "name": "Ret\u00e9n Villa Tehuelches",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 761313678,
+        "osm_type": "way",
+        "address": "RUTA 9 NORTE KM 100",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/761313678",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.8049017,
+          -51.0566367
+        ]
+      },
+      "properties": {
+        "name": "Police Station",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 765689346,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/765689346",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2705622,
+          -51.5384714
+        ]
+      },
+      "properties": {
+        "name": "Usina 21MW YCRT",
+        "type": "Power Plant",
+        "color": "#FF8800",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 773102786,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/773102786",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2589962,
+          -51.5406148
+        ]
+      },
+      "properties": {
+        "name": "Power Substation",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 773107922,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/773107922",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2629824,
+          -51.5404492
+        ]
+      },
+      "properties": {
+        "name": "Power Substation",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 773108180,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/773108180",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9093994,
+          -53.1616904
+        ]
+      },
+      "properties": {
+        "name": "Prefectura de Carabineros de Punta Arenas",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 881484701,
+        "osm_type": "way",
+        "address": "Juez Waldo Seguel",
+        "phone": "",
+        "operator": "Carabineros de Chile",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/881484701",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9260757,
+          -53.1528209
+        ]
+      },
+      "properties": {
+        "name": "Carabineros de Chile",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 905990770,
+        "osm_type": "way",
+        "address": "Capit\u00e1n Ignacio Carrera Pinto",
+        "phone": "",
+        "operator": "Carabineros de Chile",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/905990770",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2388436,
+          -50.3340531
+        ]
+      },
+      "properties": {
+        "name": "Hospital Gobernador Cepernic - Presidente Kirchner",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 910581474,
+        "osm_type": "way",
+        "address": "Avenida Jorge Newbery",
+        "phone": "",
+        "operator": "Ministerio de Salud y Ambiente - Gobierno de Santa Cruz",
+        "capacity": "",
+        "emergency": "yes",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/910581474",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.8972375,
+          -53.1584855
+        ]
+      },
+      "properties": {
+        "name": "Cl\u00ednica Croacia",
+        "type": "Hospital",
+        "color": "#FF4444",
+        "icon": "\u00f0\u0178\u008f\u00a5",
+        "osm_id": 990145202,
+        "osm_type": "way",
+        "address": "Pedro Sarmiento de Gamboa",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/990145202",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.72416,
+          -52.5251678
+        ]
+      },
+      "properties": {
+        "name": "Aer\u00f3dromo Tres Chorrillos",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 1363480618,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/1363480618",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.4549203,
+          -50.939261
+        ]
+      },
+      "properties": {
+        "name": "Power Plant",
+        "type": "Power Plant",
+        "color": "#FF8800",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 1415057150,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/1415057150",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -70.9223876,
+          -53.1543307
+        ]
+      },
+      "properties": {
+        "name": "Primera Comisar\u00eda de Punta Arenas",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 1444034126,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "Carabineros de Chile",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/1444034126",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.1053955,
+          -50.8386815
+        ]
+      },
+      "properties": {
+        "name": "Power Plant",
+        "type": "Power Plant",
+        "color": "#FF8800",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 1452762831,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/1452762831",
+        "_tile": "-80,-60,-70,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.2715802,
+          -51.5396773
+        ]
+      },
+      "properties": {
+        "name": "Power Substation",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 1487764989,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/1487764989",
+        "_tile": "-80,-60,-70,-50"
+      }
+    }
+  ]
 }
