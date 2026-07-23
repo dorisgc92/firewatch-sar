@@ -136,6 +136,26 @@ export function isNearIndustrialSite(fireFeature, infrastructureFeatures, maxDis
   })
 }
 
+// True if at least one CURRENT hotspot detection falls inside (or very near)
+// a perimeter polygon. Perimeter data (especially CWFIS's season-to-date
+// burned-area estimate for Canada) can represent a fire that was active at
+// some point THIS SEASON but has since gone quiet — no hot pixels in the
+// last 24h. Showing that shaded zone with zero current hotspots inside it
+// reads as a bug ("why is this shaded with nothing burning there?"), so
+// perimeters are only drawn when there's still live detection activity to
+// back them up.
+export function perimeterHasActiveHotspot(perimeterFeature, hotspotFeatures, maxDistanceKm = 5) {
+  if (!hotspotFeatures?.length) return false
+  const centroid = featureCentroid(perimeterFeature)
+
+  return hotspotFeatures.some((h) => {
+    const [hlon, hlat] = h.geometry.coordinates
+    if (pointInPolygonGeometry(hlat, hlon, perimeterFeature.geometry)) return true
+    if (!centroid) return false
+    return distanceKm(hlat, hlon, centroid[0], centroid[1]) <= maxDistanceKm
+  })
+}
+
 // Links a hotspot detection (a single point) to the burned-area polygon it
 // belongs to, when the app has one — this is where SAR-derived / official
 // perimeter data upgrades a fire from "a dot" to "the actual shape of the

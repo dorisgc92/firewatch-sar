@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, Circle, GeoJSON, Popup, Tooltip, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
-import { filterFeaturesByBbox, linkedPerimeterForFire, isNearIndustrialSite } from "../utils/spatial"
+import { filterFeaturesByBbox, linkedPerimeterForFire, isNearIndustrialSite, perimeterHasActiveHotspot } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
@@ -280,8 +280,13 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     const feats = layers.perimeters?.data?.features
     const bbox = viewportBbox || zoneInfo?.zoneBbox
     if (!feats || !bbox) return []
-    return filterFeaturesByBbox(feats, bbox)
-  }, [layers.perimeters?.data, viewportBbox, zoneInfo])
+    const inView = filterFeaturesByBbox(feats, bbox)
+    // Perimeter data can outlive the fire's current activity (see
+    // perimeterHasActiveHotspot's comment in spatial.js) — only shade
+    // zones that still have a hotspot backing them up right now.
+    const currentHotspots = layers.hotspots?.data?.features || []
+    return inView.filter((p) => perimeterHasActiveHotspot(p, currentHotspots))
+  }, [layers.perimeters?.data, layers.hotspots?.data, viewportBbox, zoneInfo])
 
   // Bundled infrastructure.geojson currently only covers Jalisco (manually
   // refreshed). If the selected zone falls inside that coverage, use it —
