@@ -37,6 +37,7 @@ import json
 import sys
 import os
 import argparse
+import time
 import requests
 from datetime import datetime, timezone
 from manifest import update_manifest, stabilize_generated_at
@@ -44,6 +45,15 @@ from manifest import update_manifest, stabilize_generated_at
 OUTPUT_PATH = "data/infrastructure.geojson"
 PROGRESS_PATH = "data/infra_progress.json"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+
+# The main public instance times out under load fairly often. Kumi Systems
+# runs a well-provisioned public mirror of the same data and explicitly
+# welcomes use "for any project" (wiki.openstreetmap.org/wiki/Overpass_API).
+# Tried in order; falls through to the next only if the previous one fails.
+OVERPASS_URLS = [
+    OVERPASS_URL,
+    "https://overpass.kumi.systems/api/interpreter",
+]
 
 # Default bbox â€” covers Mexico + US border region (used only for manual
 # --bbox one-off runs; the scheduled crawl uses WORLD_TILES instead).
@@ -161,30 +171,38 @@ def classify_element(tags, types):
     return "Other", "#888888", "ðŸ“"
 
 
-def fetch_overpass(bbox, types, label):
+def fetch_overpass(bbox, types, label, max_retries_per_server=2):
     """
     Runs one Overpass query for a given set of tag types. Returns the parsed
-    feature list, or None if the request failed outright (network error,
-    HTTP error) or the response looked like a silent timeout. None signals
-    "don't trust this, don't overwrite good data with it" to the caller.
+    feature list, or None if every server/attempt failed outright (network
+    error, HTTP error) or the response looked like a silent timeout. None
+    signals "don't trust this, don't overwrite good data with it" to the
+    caller.
+
+    The main public instance (overpass-api.de) has been timing out (504)
+    frequently under load. Rather than just retrying the same overloaded
+    server, this tries each configured mirror in turn, with a couple of
+    quick attempts per server, before giving up entirely.
     """
     query = build_overpass_query(bbox, types)
-    try:
-        r = requests.post(
-            OVERPASS_URL,
-            data={"data": query},
-            timeout=90,
-            headers={"User-Agent": "FireWatchSAR/1.0 (IEEE Response Quest 2026; contact: dorisgc92@github.com)"}
-        )
-        r.raise_for_status()
-        resp_data = r.json()
-    except Exception as e:
-        print(f"  ERROR fetching {label} from Overpass API: {e}")
-        return None
+    headers = {"User-Agent": "FireWatchSAR/1.0 (IEEE Response Quest 2026; contact: dorisgc92@github.com)"}
 
-    features = parse_overpass_response(resp_data, types)
-    print(f"  Got {len(features)} {label} elements")
-    return features
+    for server_url in OVERPASS_URLS:
+        for attempt in range(1, max_retries_per_server + 1):
+            try:
+                r = requests.post(server_url, data={"data": query}, timeout=90, headers=headers)
+                r.raise_for_status()
+                resp_data = r.json()
+                features = parse_overpass_response(resp_data, types)
+                print(f"  Got {len(features)} {label} elements (via {server_url})")
+                return features
+            except Exception as e:
+                print(f"  {label} attempt {attempt}/{max_retries_per_server} on {server_url} failed: {e}")
+                if attempt < max_retries_per_server:
+                    time.sleep(5)
+
+    print(f"  ERROR: all Overpass mirrors failed for {label}.")
+    return None
 
 
 def parse_overpass_response(data, types):

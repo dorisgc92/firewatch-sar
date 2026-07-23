@@ -146,13 +146,26 @@ export function isNearIndustrialSite(fireFeature, infrastructureFeatures, maxDis
 // back them up.
 export function perimeterHasActiveHotspot(perimeterFeature, hotspotFeatures, maxDistanceKm = 5) {
   if (!hotspotFeatures?.length) return false
-  const centroid = featureCentroid(perimeterFeature)
+  const geom = perimeterFeature.geometry
+  // CWFIS-style perimeters are often elongated or multi-lobed (a hotspot
+  // cluster's buffered outline) — checking distance to the geometric
+  // centroid can be wildly wrong for that shape (the centroid can sit far
+  // from every part of the actual outline). Checking distance to the
+  // nearest VERTEX instead approximates "distance to the boundary" well
+  // enough at typical perimeter vertex density, and correctly handles
+  // shapes where the centroid is misleading.
+  const rings = geom?.type === "Polygon"
+    ? [geom.coordinates[0]]
+    : geom?.type === "MultiPolygon"
+    ? geom.coordinates.map((poly) => poly[0])
+    : []
 
   return hotspotFeatures.some((h) => {
     const [hlon, hlat] = h.geometry.coordinates
-    if (pointInPolygonGeometry(hlat, hlon, perimeterFeature.geometry)) return true
-    if (!centroid) return false
-    return distanceKm(hlat, hlon, centroid[0], centroid[1]) <= maxDistanceKm
+    if (pointInPolygonGeometry(hlat, hlon, geom)) return true
+    return rings.some((ring) =>
+      ring.some(([vlon, vlat]) => distanceKm(hlat, hlon, vlat, vlon) <= maxDistanceKm)
+    )
   })
 }
 
