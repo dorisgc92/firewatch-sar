@@ -49,7 +49,7 @@ function paddedBbox(lat, lon, degrees) {
 // 6s is generous for a single lookup but still bounded.
 const PHOTON_TIMEOUT_MS = 6000
 
-async function photonSearch(query) {
+async function photonSearchOnce(query) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), PHOTON_TIMEOUT_MS)
   try {
@@ -66,6 +66,17 @@ async function photonSearch(query) {
   } finally {
     clearTimeout(timeout)
   }
+}
+
+// Photon (run by Komoot, free, no SLA) has genuine intermittent outages —
+// one quick retry means a single transient hiccup doesn't block someone
+// from ever entering the app over a place name that would resolve fine a
+// few seconds later.
+async function photonSearch(query) {
+  const first = await photonSearchOnce(query)
+  if (first) return first
+  await new Promise((resolve) => setTimeout(resolve, 1500))
+  return photonSearchOnce(query)
 }
 
 /**
