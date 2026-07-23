@@ -54,9 +54,15 @@ async function photonSearch(query) {
   const timeout = setTimeout(() => controller.abort(), PHOTON_TIMEOUT_MS)
   try {
     const r = await fetch(PHOTON_URL + "?q=" + encodeURIComponent(query) + "&limit=1", { signal: controller.signal })
-    if (!r.ok) throw new Error("HTTP " + r.status)
+    if (!r.ok) return null
     const data = await r.json()
     return data.features?.[0] || null
+  } catch {
+    // Covers both a network failure and our own timeout abort (which
+    // otherwise surfaces as a raw, user-unfriendly "signal is aborted
+    // without reason" DOMException) — either way, the caller should just
+    // treat this the same as "nothing found", not crash the search flow.
+    return null
   } finally {
     clearTimeout(timeout)
   }
@@ -110,9 +116,11 @@ export async function zoneInfoFromPhotonFeature(feature, fallbackQuery) {
 export async function geocodeZone(query) {
   const feature = await photonSearch(query)
   if (!feature) {
-    throw new Error(
-      "No se encontró esa zona. Intenta con un nombre más específico, por ejemplo: 'Zapopan, Jalisco, México'."
-    )
+    // No hardcoded message here on purpose — StartScreen's catch block
+    // falls back to the translated t("zoneNotFound") whenever err.message
+    // is empty, so this works correctly in all 6 supported languages
+    // instead of always showing Spanish regardless of the app's language.
+    throw new Error("")
   }
   return zoneInfoFromPhotonFeature(feature, query)
 }
