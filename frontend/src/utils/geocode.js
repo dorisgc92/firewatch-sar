@@ -49,20 +49,20 @@ function paddedBbox(lat, lon, degrees) {
 // 6s is generous for a single lookup but still bounded.
 const PHOTON_TIMEOUT_MS = 6000
 
-async function photonSearchOnce(query) {
+async function photonSearchOnce(query, limit = 1) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), PHOTON_TIMEOUT_MS)
   try {
-    const r = await fetch(PHOTON_URL + "?q=" + encodeURIComponent(query) + "&limit=1", { signal: controller.signal })
-    if (!r.ok) return null
+    const r = await fetch(PHOTON_URL + "?q=" + encodeURIComponent(query) + "&limit=" + limit, { signal: controller.signal })
+    if (!r.ok) return []
     const data = await r.json()
-    return data.features?.[0] || null
+    return data.features || []
   } catch {
     // Covers both a network failure and our own timeout abort (which
     // otherwise surfaces as a raw, user-unfriendly "signal is aborted
     // without reason" DOMException) — either way, the caller should just
     // treat this the same as "nothing found", not crash the search flow.
-    return null
+    return []
   } finally {
     clearTimeout(timeout)
   }
@@ -73,10 +73,30 @@ async function photonSearchOnce(query) {
 // from ever entering the app over a place name that would resolve fine a
 // few seconds later.
 async function photonSearch(query) {
-  const first = await photonSearchOnce(query)
+  const first = (await photonSearchOnce(query, 1))[0]
   if (first) return first
   await new Promise((resolve) => setTimeout(resolve, 1500))
-  return photonSearchOnce(query)
+  return (await photonSearchOnce(query, 1))[0] || null
+}
+
+// How long to wait after the user stops typing before firing a Photon
+// request. Without this, a 10-letter place name fires ~8 requests (one per
+// keystroke) — Photon's own terms say extensive/rapid usage gets throttled,
+// and hammering it that hard is exactly what can make the search bar (and
+// any of Photon's other callers, since it's one shared IP-level limit)
+// silently stop returning anything for a while.
+export const SEARCH_DEBOUNCE_MS = 350
+
+/**
+ * Multi-result place search for the navbar autocomplete dropdown — same
+ * timeout + one-retry resilience as photonSearch/zoneInfoFromPhotonFeature,
+ * just returns the raw candidate list instead of picking the top result.
+ */
+export async function searchPlaces(query, limit = 5) {
+  const first = await photonSearchOnce(query, limit)
+  if (first.length > 0) return first
+  await new Promise((resolve) => setTimeout(resolve, 1500))
+  return photonSearchOnce(query, limit)
 }
 
 /**

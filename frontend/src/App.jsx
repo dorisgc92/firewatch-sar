@@ -7,7 +7,7 @@ import StartScreen from "./components/StartScreen"
 import { theme } from "./utils/theme"
 import { LanguageProvider, useLanguage } from "./context/LanguageContext"
 import { LANG_LABELS } from "./utils/i18n"
-import { zoneInfoFromPhotonFeature, reverseGeocodeFeature, zoneInfoFromCoordinates } from "./utils/geocode"
+import { zoneInfoFromPhotonFeature, reverseGeocodeFeature, zoneInfoFromCoordinates, searchPlaces, SEARCH_DEBOUNCE_MS } from "./utils/geocode"
 
 function LanguageToggle() {
   const { lang, setLang, detected } = useLanguage()
@@ -52,14 +52,24 @@ function AppInner() {
   // exactly the "wrong municipio/estado stuck on screen" symptom reported.
   const zoneRequestId = useRef(0)
 
-  const handleSearch = async (q) => {
+  // Debounced + race-guarded so typing a full place name doesn't fire one
+  // Photon request per keystroke (was ~8 requests for "Guadalajara" with no
+  // wait at all — enough rapid-fire traffic to trip Photon's own throttling
+  // and leave the search bar silently returning nothing). searchDebounceTimer
+  // holds the pending fire; searchRequestId discards a response if a newer
+  // keystroke has already superseded it by the time it comes back.
+  const searchDebounceTimer = useRef(null)
+  const searchRequestId = useRef(0)
+
+  const handleSearch = (q) => {
     setSearchQuery(q)
+    if (searchDebounceTimer.current) clearTimeout(searchDebounceTimer.current)
     if (q.length < 3) { setSearchResults([]); return }
-    try {
-      const r = await fetch("https://photon.komoot.io/api/?q=" + encodeURIComponent(q) + "&limit=5")
-      const data = await r.json()
-      setSearchResults(data.features || [])
-    } catch { setSearchResults([]) }
+    searchDebounceTimer.current = setTimeout(async () => {
+      const requestId = ++searchRequestId.current
+      const features = await searchPlaces(q)
+      if (requestId === searchRequestId.current) setSearchResults(features)
+    }, SEARCH_DEBOUNCE_MS)
   }
 
   const goTo = async (place) => {
