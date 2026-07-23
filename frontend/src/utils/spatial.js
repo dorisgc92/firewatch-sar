@@ -165,6 +165,39 @@ export function isNearUrbanArea(fireFeature, infrastructureFeatures, maxDistance
 // reads as a bug ("why is this shaded with nothing burning there?"), so
 // perimeters are only drawn when there's still live detection activity to
 // back them up.
+// Bounding box of one or more rings — used to cheaply reject hotspots that
+// can't possibly be near a given perimeter before doing any expensive
+// point-in-polygon or per-vertex work.
+function ringsBbox(rings) {
+  let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity
+  for (const ring of rings) {
+    for (const [lon, lat] of ring) {
+      if (lat < minLat) minLat = lat
+      if (lat > maxLat) maxLat = lat
+      if (lon < minLon) minLon = lon
+      if (lon > maxLon) maxLon = lon
+    }
+  }
+  return { minLat, maxLat, minLon, maxLon }
+}
+
+// Some CWFIS-derived perimeters (a hotspot cluster's buffered outline) have
+// 10,000+ vertices — checking every one against every candidate hotspot was
+// measured taking 10-20+ seconds for a single call on a province-wide view
+// (Canada, active season). The vertex-distance check below is already an
+// approximation (see comment below), so sampling a ring down to this many
+// evenly-spaced points keeps that approximation just as good in practice
+// while bounding the cost regardless of how detailed the source polygon is.
+const MAX_VERTICES_FOR_DISTANCE_CHECK = 150
+
+function sampledRing(ring) {
+  if (ring.length <= MAX_VERTICES_FOR_DISTANCE_CHECK) return ring
+  const step = ring.length / MAX_VERTICES_FOR_DISTANCE_CHECK
+  const sampled = []
+  for (let i = 0; i < MAX_VERTICES_FOR_DISTANCE_CHECK; i++) sampled.push(ring[Math.floor(i * step)])
+  return sampled
+}
+
 export function perimeterHasActiveHotspot(perimeterFeature, hotspotFeatures, maxDistanceKm = 5) {
   if (!hotspotFeatures?.length) return false
   const geom = perimeterFeature.geometry
@@ -180,11 +213,22 @@ export function perimeterHasActiveHotspot(perimeterFeature, hotspotFeatures, max
     : geom?.type === "MultiPolygon"
     ? geom.coordinates.map((poly) => poly[0])
     : []
+  if (rings.length === 0) return false
+
+  // Cheap reject computed ONCE per perimeter (not per hotspot): a hotspot
+  // outside this perimeter's bounding box (padded by maxDistanceKm) can't
+  // be "active" for it, so skip the expensive checks below entirely for it.
+  const bbox = ringsBbox(rings)
+  const padDeg = maxDistanceKm / 111
+  const minLat = bbox.minLat - padDeg, maxLat = bbox.maxLat + padDeg
+  const minLon = bbox.minLon - padDeg, maxLon = bbox.maxLon + padDeg
+  const sampledRings = rings.map(sampledRing)
 
   return hotspotFeatures.some((h) => {
     const [hlon, hlat] = h.geometry.coordinates
+    if (hlat < minLat || hlat > maxLat || hlon < minLon || hlon > maxLon) return false
     if (pointInPolygonGeometry(hlat, hlon, geom)) return true
-    return rings.some((ring) =>
+    return sampledRings.some((ring) =>
       ring.some(([vlon, vlat]) => distanceKm(hlat, hlon, vlat, vlon) <= maxDistanceKm)
     )
   })
