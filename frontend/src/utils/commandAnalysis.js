@@ -48,8 +48,17 @@ export function findThreatenedInfrastructure({ zoneHotspots, infraInZone, fwiPoi
   const seenInfra = new Set()
 
   // Look at the most intense fires first — if a facility is within range of
-  // several fires, it gets attributed to whichever is most severe.
-  const sortedFires = [...zoneHotspots].sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0))
+  // several fires, it gets attributed to whichever is most severe. Capped
+  // to the top MAX_FIRES_TO_CHECK: a zone like all of Canada can have
+  // 20,000+ detections, and checking every single one against every
+  // critical facility (with a trig-heavy bearing calc per pair) was
+  // freezing the tab. The most severe fires are what actually matter for
+  // "what's about to be reached" anyway — the long tail of small/duplicate
+  // detections doesn't change the answer.
+  const MAX_FIRES_TO_CHECK = 300
+  const sortedFires = [...zoneHotspots]
+    .sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0))
+    .slice(0, MAX_FIRES_TO_CHECK)
 
   for (const fire of sortedFires) {
     const [flon, flat] = fire.geometry.coordinates
