@@ -56,19 +56,34 @@ function AppInner() {
   // Photon request per keystroke (was ~8 requests for "Guadalajara" with no
   // wait at all — enough rapid-fire traffic to trip Photon's own throttling
   // and leave the search bar silently returning nothing). searchDebounceTimer
-  // holds the pending fire; searchRequestId discards a response if a newer
-  // keystroke has already superseded it by the time it comes back.
+  // holds the pending fire; searchRequestId discards a stale response;
+  // searchAbortController cancels the PREVIOUS search's still-in-flight
+  // network requests outright when a newer keystroke supersedes it — without
+  // this, an outage-triggered Photon-then-Nominatim chain from an earlier
+  // keystroke keeps running in the background and can make the whole thing
+  // feel like it's hung for a minute-plus if you typed more than once while
+  // waiting. isSearching drives a "Buscando…" indicator so it's visibly
+  // doing something instead of looking frozen during that window.
   const searchDebounceTimer = useRef(null)
   const searchRequestId = useRef(0)
+  const searchAbortController = useRef(null)
+  const [isSearching, setIsSearching] = useState(false)
 
   const handleSearch = (q) => {
     setSearchQuery(q)
     if (searchDebounceTimer.current) clearTimeout(searchDebounceTimer.current)
-    if (q.length < 3) { setSearchResults([]); return }
+    searchAbortController.current?.abort()
+    if (q.length < 3) { setSearchResults([]); setIsSearching(false); return }
     searchDebounceTimer.current = setTimeout(async () => {
       const requestId = ++searchRequestId.current
-      const features = await searchPlaces(q)
-      if (requestId === searchRequestId.current) setSearchResults(features)
+      const controller = new AbortController()
+      searchAbortController.current = controller
+      setIsSearching(true)
+      const features = await searchPlaces(q, 5, controller.signal)
+      if (requestId === searchRequestId.current) {
+        setSearchResults(features)
+        setIsSearching(false)
+      }
     }, SEARCH_DEBOUNCE_MS)
   }
 
@@ -167,6 +182,11 @@ function AppInner() {
             style={{ width: "100%", padding: "6px 12px", borderRadius: "6px",
               border: `1px solid ${theme.border}`, background: "#fff",
               color: theme.textPrimary, fontSize: "13px", outline: "none", boxSizing: "border-box" }} />
+          {isSearching && searchResults.length === 0 && (
+            <div style={{ position: "absolute", top: "100%", left: 0, marginTop: "4px", fontSize: "11px", color: theme.textMuted }}>
+              {t("searching") || "Buscando..."}
+            </div>
+          )}
           {searchResults.length > 0 && (
             <div style={{ position: "absolute", top: "100%", left: 0, right: 0,
               background: theme.panelBg, border: `1px solid ${theme.border}`,

@@ -57,9 +57,11 @@ function nominatimToPhotonFeature(item) {
   }
 }
 
-async function nominatimSearchOnce(query, limit = 1) {
+async function nominatimSearchOnce(query, limit = 1, externalSignal) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), NOMINATIM_TIMEOUT_MS)
+  const onExternalAbort = () => controller.abort()
+  externalSignal?.addEventListener("abort", onExternalAbort)
   try {
     const url = `${NOMINATIM_PROXY_URL}?mode=search&limit=${limit}&q=${encodeURIComponent(query)}`
     const r = await fetch(url, { signal: controller.signal })
@@ -70,6 +72,7 @@ async function nominatimSearchOnce(query, limit = 1) {
     return []
   } finally {
     clearTimeout(timeout)
+    externalSignal?.removeEventListener("abort", onExternalAbort)
   }
 }
 
@@ -121,22 +124,24 @@ function paddedBbox(lat, lon, degrees) {
 // 6s is generous for a single lookup but still bounded.
 const PHOTON_TIMEOUT_MS = 6000
 
-async function photonSearchOnce(query, limit = 1) {
+async function photonSearchOnce(query, limit = 1, externalSignal) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), PHOTON_TIMEOUT_MS)
+  const onExternalAbort = () => controller.abort()
+  externalSignal?.addEventListener("abort", onExternalAbort)
   try {
     const r = await fetch(PHOTON_URL + "?q=" + encodeURIComponent(query) + "&limit=" + limit, { signal: controller.signal })
     if (!r.ok) return []
     const data = await r.json()
     return data.features || []
   } catch {
-    // Covers both a network failure and our own timeout abort (which
-    // otherwise surfaces as a raw, user-unfriendly "signal is aborted
-    // without reason" DOMException) — either way, the caller should just
-    // treat this the same as "nothing found", not crash the search flow.
+    // Covers a network failure, our own timeout abort, or the caller
+    // cancelling this because a newer search superseded it — either way,
+    // the caller should just treat this the same as "nothing found".
     return []
   } finally {
     clearTimeout(timeout)
+    externalSignal?.removeEventListener("abort", onExternalAbort)
   }
 }
 
@@ -164,18 +169,17 @@ async function photonSearch(query) {
 export const SEARCH_DEBOUNCE_MS = 350
 
 /**
- * Multi-result place search for the navbar autocomplete dropdown — same
- * timeout + one-retry resilience as photonSearch/zoneInfoFromPhotonFeature.
- * Falls back to Nominatim if Photon is still empty after its own retry
- * (covers a full Photon outage, not just a single slow/dropped request).
+ * Multi-result place search for the navbar autocomplete dropdown. This one
+ * is on the interactive typing path, so unlike photonSearch it does NOT
+ * do Photon's usual retry-after-1.5s dance — one Photon attempt, and if
+ * that comes back empty, straight to Nominatim. Worst case is ~6s instead
+ * of ~13.5s, and an in-flight call can be cancelled via `signal` when a
+ * newer keystroke supersedes it (see App.jsx).
  */
-export async function searchPlaces(query, limit = 5) {
-  const first = await photonSearchOnce(query, limit)
+export async function searchPlaces(query, limit = 5, signal) {
+  const first = await photonSearchOnce(query, limit, signal)
   if (first.length > 0) return first
-  await new Promise((resolve) => setTimeout(resolve, 1500))
-  const second = await photonSearchOnce(query, limit)
-  if (second.length > 0) return second
-  return nominatimSearchOnce(query, limit)
+  return nominatimSearchOnce(query, limit, signal)
 }
 
 /**
