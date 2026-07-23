@@ -24,6 +24,18 @@ const MAX_LABELED_POINTS = 40
 // every single low-confidence pixel.
 const MAX_RENDERED_MARKERS = 1500
 
+// perimeterHasActiveHotspot cross-checks every in-view perimeter against
+// every in-view hotspot (point-in-polygon + per-vertex distance checks).
+// "In-view" was assumed to mean "small" when this was written, but at
+// country/continent zoom the viewport can itself hold tens of thousands of
+// hotspots (e.g. 20k+ for all of Canada during an active season) — at that
+// size the cross-check alone freezes the tab, even though marker rendering
+// downstream is already capped by MAX_RENDERED_MARKERS. Capping the
+// hotspot side of this specific check to the most severe detections keeps
+// the cost bounded regardless of how zoomed out the map is, the same way
+// MAX_RENDERED_MARKERS already bounds rendering.
+const MAX_HOTSPOTS_FOR_PERIMETER_CHECK = 2000
+
 // Leaflet CircleMarker radius is a fixed pixel size regardless of zoom, which
 // makes a dot calibrated for a city-level view look enormous once you zoom
 // out to see the whole world. Scale it against zoom level (anchored at 9,
@@ -285,6 +297,22 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     return filterFeaturesByBbox(feats, bbox)
   }, [layers.hotspots?.data, viewportBbox, zoneInfo])
 
+  // Bbox-scoping viewportHotspots isn't enough on its own to keep this
+  // check cheap: zoomed out to a country/continent, the viewport itself can
+  // hold tens of thousands of points (20k+ for all of Canada in an active
+  // season). Cross-referencing every in-view perimeter against every one of
+  // those points is what actually freezes the tab — so, same as marker
+  // rendering below, cap it to the most severe detections. A perimeter is
+  // large-area by nature, so checking it against the top N most intense
+  // fires (rather than an arbitrary/random N) doesn't meaningfully change
+  // which perimeters end up flagged as active.
+  const hotspotsForPerimeterCheck = useMemo(() => {
+    if (viewportHotspots.length <= MAX_HOTSPOTS_FOR_PERIMETER_CHECK) return viewportHotspots
+    return [...viewportHotspots]
+      .sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0))
+      .slice(0, MAX_HOTSPOTS_FOR_PERIMETER_CHECK)
+  }, [viewportHotspots])
+
   const viewportPerimeters = useMemo(() => {
     const feats = layers.perimeters?.data?.features
     const bbox = viewportBbox || zoneInfo?.zoneBbox
@@ -293,12 +321,13 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     // Perimeter data can outlive the fire's current activity (see
     // perimeterHasActiveHotspot's comment in spatial.js) — only shade
     // zones that still have a hotspot backing them up right now.
-    // Uses viewportHotspots (already bbox-scoped) rather than the full
-    // global hotspot dataset — checking every perimeter against all
-    // ~165k worldwide detections was the main cause of the map freezing
-    // when zoomed out far enough to have many perimeters in view.
-    return inView.filter((p) => perimeterHasActiveHotspot(p, viewportHotspots))
-  }, [layers.perimeters?.data, viewportHotspots, viewportBbox, zoneInfo])
+    // Uses hotspotsForPerimeterCheck (bbox-scoped AND capped) rather than
+    // the full global hotspot dataset or even the full viewport — checking
+    // every perimeter against an uncapped viewport was still the main cause
+    // of the map freezing when zoomed out far enough to have many
+    // perimeters AND many thousands of hotspots in view at once.
+    return inView.filter((p) => perimeterHasActiveHotspot(p, hotspotsForPerimeterCheck))
+  }, [layers.perimeters?.data, hotspotsForPerimeterCheck, viewportBbox, zoneInfo])
 
   // Bundled infrastructure.geojson currently only covers Jalisco (manually
   // refreshed). If the selected zone falls inside that coverage, use it —
