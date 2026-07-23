@@ -15,6 +15,14 @@ const FWI_COLORS = { low: "#38A800", moderate: "#FFFF00", high: "#FFAA00", very_
 // view — reverse-geocoding every single fire point would hammer the public
 // Photon API and slow the map down. Click popups always work regardless.
 const MAX_LABELED_POINTS = 40
+// Hard cap on individually-rendered hotspot markers. At world zoom, the
+// viewport can contain the entire global dataset (100k+ points once FIRMS
+// is fetching successfully) — rendering that many Leaflet CircleMarkers
+// (each with its own DOM/SVG element, event handlers, tooltip) freezes the
+// browser tab. Past this cap, only the highest-FRP (most severe) fires are
+// drawn — a responder zoomed out that far needs "where's it worst", not
+// every single low-confidence pixel.
+const MAX_RENDERED_MARKERS = 4000
 
 // Leaflet CircleMarker radius is a fixed pixel size regardless of zoom, which
 // makes a dot calibrated for a city-level view look enormous once you zoom
@@ -284,9 +292,12 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     // Perimeter data can outlive the fire's current activity (see
     // perimeterHasActiveHotspot's comment in spatial.js) — only shade
     // zones that still have a hotspot backing them up right now.
-    const currentHotspots = layers.hotspots?.data?.features || []
-    return inView.filter((p) => perimeterHasActiveHotspot(p, currentHotspots))
-  }, [layers.perimeters?.data, layers.hotspots?.data, viewportBbox, zoneInfo])
+    // Uses viewportHotspots (already bbox-scoped) rather than the full
+    // global hotspot dataset — checking every perimeter against all
+    // ~165k worldwide detections was the main cause of the map freezing
+    // when zoomed out far enough to have many perimeters in view.
+    return inView.filter((p) => perimeterHasActiveHotspot(p, viewportHotspots))
+  }, [layers.perimeters?.data, viewportHotspots, viewportBbox, zoneInfo])
 
   // Bundled infrastructure.geojson currently only covers Jalisco (manually
   // refreshed). If the selected zone falls inside that coverage, use it —
@@ -319,10 +330,17 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
   const zoneInfrastructure = bundledZoneInfrastructure.length > 0 ? bundledZoneInfrastructure : liveInfra.features
 
-  const visibleViewportHotspots = useMemo(
-    () => viewportHotspots.filter(f => visibleIntensities[f.properties.intensity] !== false),
-    [viewportHotspots, visibleIntensities]
-  )
+  const visibleViewportHotspots = useMemo(() => {
+    const filtered = viewportHotspots.filter(f => visibleIntensities[f.properties.intensity] !== false)
+    if (filtered.length <= MAX_RENDERED_MARKERS) return filtered
+    // Too many to render safely — keep the most severe fires (by FRP),
+    // dropping the long tail of low-intensity detections rather than
+    // freezing the tab trying to draw all of them.
+    return [...filtered]
+      .sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0))
+      .slice(0, MAX_RENDERED_MARKERS)
+  }, [viewportHotspots, visibleIntensities])
+  const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
   const showLabels = visibleViewportHotspots.length <= MAX_LABELED_POINTS
 
   const center = zoneInfo?.center || [23, -102]
@@ -565,6 +583,16 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         activeModule={activeModule} intensities={visibleIntensities}
         infraFilter={infraFilter} onInfraFilter={onInfraFilter} mapZoom={mapZoom}
         infraLoading={liveInfra.loading} />
+
+      {isMarkerCapped && (
+        <div style={{ position: "absolute", top: "12px", left: "50%", transform: "translateX(-50%)",
+          zIndex: 1000, background: theme.panelBgSoft, color: theme.textSecondary,
+          padding: "6px 14px", borderRadius: "20px", fontSize: "11.5px", border: `1px solid ${theme.border}`,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+          {t("markersCapped", { shown: MAX_RENDERED_MARKERS.toLocaleString(), total: viewportHotspots.length.toLocaleString() })
+            || `Showing the ${MAX_RENDERED_MARKERS.toLocaleString()} most severe fires of ${viewportHotspots.length.toLocaleString()} — zoom in to see all.`}
+        </div>
+      )}
 
       {liveInfra.loading && (
         <div style={{ position: "absolute", bottom: "16px", left: "50%", transform: "translateX(-50%)",
