@@ -7,7 +7,7 @@ Focuses on facilities relevant to wildfire emergency response.
 Outputs: data/infrastructure.geojson
 Progress state: data/infra_progress.json
 
-OpenStreetMap data: Â© OpenStreetMap contributors, ODbL license
+OpenStreetMap data: © OpenStreetMap contributors, ODbL license
 Overpass API: https://overpass-api.de/
 
 WORLD COVERAGE, ONE TILE AT A TIME
@@ -55,7 +55,7 @@ OVERPASS_URLS = [
     "https://overpass.kumi.systems/api/interpreter",
 ]
 
-# Default bbox â€” covers Mexico + US border region (used only for manual
+# Default bbox — covers Mexico + US border region (used only for manual
 # --bbox one-off runs; the scheduled crawl uses WORLD_TILES instead).
 DEFAULT_BBOX = "-118,14,-86,33"
 
@@ -396,7 +396,7 @@ def main():
         "metadata": {
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "source": "OpenStreetMap via Overpass API",
-            "license": "ODbL â€” Â© OpenStreetMap contributors",
+            "license": "ODbL — © OpenStreetMap contributors",
             "bbox": bbox_str if manual_run else "world (crawled tile by tile)",
             "description": (
                 "Critical infrastructure relevant to wildfire emergency response. "
