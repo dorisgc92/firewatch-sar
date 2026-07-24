@@ -222,6 +222,25 @@ def main():
     can_features = fetch_cwfis()
 
     all_features = usa_features + mex_features + can_features
+
+    # Same protection fetch_firms.py has: 0 perimeters across all three
+    # sources at once is far more likely a transient failure (WFIGS/CONAFOR/
+    # CWFIS all down or rate-limited in the same run) than genuinely zero
+    # fire perimeters anywhere in the USA, Mexico, and Canada simultaneously.
+    # Refuse to commit that over good existing data — fail the workflow
+    # loudly instead so it's investigated rather than silently wiping every
+    # current fire perimeter.
+    if len(all_features) == 0:
+        print("\n" + "=" * 70)
+        print("ERROR: 0 perimeters across all 3 sources (WFIGS/CONAFOR/CWFIS).")
+        print("This is almost never correct. Treating this as a fetch failure")
+        print("rather than 'no active fire perimeters anywhere right now'.")
+        print("=" * 70)
+        if os.path.exists(OUTPUT_PATH):
+            raise SystemExit(1)  # fail the workflow loudly; keep old file untouched
+        # No pre-existing file (first-ever run) — fall through and write an
+        # empty-but-valid file so the frontend doesn't crash on a missing file.
+
     total_hectares = sum(
         f["properties"].get("hectares", 0) or 0
         for f in all_features

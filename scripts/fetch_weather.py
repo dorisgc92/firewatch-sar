@@ -311,6 +311,23 @@ def main():
 
     now_str = datetime.now(timezone.utc).isoformat()
 
+    # Unlike fetch_perimeters.py (three independent sources, so "all zero"
+    # is a strong failure signal), a handful of Open-Meteo errors here and
+    # there is normal — errors is already tracked and reported per-run.
+    # What's NOT normal is EVERY point failing at once (all-or-nothing
+    # outage on Open-Meteo's side, or a bad API change) — that's the case
+    # this guards against, same principle as fetch_firms.py/fetch_perimeters.py:
+    # refuse to replace good existing data with nothing.
+    if errors == len(grid_points) and len(grid_points) > 0:
+        print("\n" + "=" * 70)
+        print(f"ERROR: all {len(grid_points)} grid points failed. Treating this as")
+        print("an Open-Meteo outage/API-change rather than 'no weather anywhere'.")
+        print("=" * 70)
+        if os.path.exists(OUTPUT_WEATHER) or os.path.exists(OUTPUT_FWI):
+            raise SystemExit(1)  # fail the workflow loudly; keep old files untouched
+        # No pre-existing files (first-ever run) — fall through and write
+        # empty-but-valid files so the frontend doesn't crash on a missing file.
+
     # Save weather.geojson
     weather_geojson = {
         "type": "FeatureCollection",
