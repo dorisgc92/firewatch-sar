@@ -173,7 +173,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   return (
     <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 1000,
       background: theme.panelBgSoft, borderRadius: "8px", padding: "10px",
-      minWidth: "195px", maxWidth: "215px", maxHeight: "calc(100% - 20px)", overflowY: "auto",
+      minWidth: "195px", maxHeight: "calc(100% - 20px)", overflowY: "auto",
       border: `1px solid ${theme.border}`, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
       <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold", marginBottom: "8px", letterSpacing: "0.04em" }}>{t("layersTitle")}</div>
       {active.map(({ key, label, color }) => (
@@ -207,17 +207,6 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
               </span>
             </label>
           ))}
-
-          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer",
-            marginTop: "8px", paddingTop: "8px", borderTop: `1px solid ${theme.border}` }}>
-            <input type="checkbox" checked={layers.hideNonVegetation === true}
-              onChange={e => onChange("hideNonVegetation", e.target.checked)}
-              style={{ width: "14px", height: "14px" }} />
-            <span style={{ color: theme.textPrimary, fontSize: "12px" }}>{t("hideNonVegetationLabel")}</span>
-          </label>
-          <div style={{ color: theme.textMuted, fontSize: "10px", marginTop: "3px", marginBottom: "8px", fontStyle: "italic" }}>
-            {t("hideNonVegetationNote")}
-          </div>
 
           <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold",
             marginTop: "12px", marginBottom: "6px", borderTop: `1px solid ${theme.border}`, paddingTop: "8px", letterSpacing: "0.04em" }}>
@@ -258,9 +247,9 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading }) {
   const { t } = useLanguage()
-  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: false })
+  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
   const [liveInfra, setLiveInfra] = useState({ features: [], loading: false, error: null, zoneKey: null })
 
@@ -270,7 +259,6 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
       setVisibleIntensities(prev => ({ ...prev, [k]: value }))
     } else {
       setVisibleLayers(prev => ({ ...prev, [key]: value }))
-      if (key === "hideNonVegetation") onHideNonVegetationChange?.(value)
     }
   }
 
@@ -369,25 +357,8 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     [zoneInfrastructure]
   )
 
-  // Classification is the expensive part (isNearIndustrialSite/
-  // isNearUrbanArea per hotspot) — computed here ONCE whenever the
-  // viewport's hotspots or infra actually change, deliberately NOT
-  // depending on visibleLayers.hideNonVegetation. That way flipping the
-  // checkbox never re-runs this; it only ever picks between two arrays
-  // that are already sitting in memory (see visibleViewportHotspots below).
-  const vegetationOnlyViewportHotspots = useMemo(() => {
-    return viewportHotspots.filter((f) => {
-      const { fire_type } = f.properties
-      const isNonVegetation = (fire_type != null && fire_type !== 0)
-        || isNearIndustrialSite(f, nonWildfireSiteInfra)
-        || isNearUrbanArea(f, urbanAreaInfra)
-      return !isNonVegetation
-    })
-  }, [viewportHotspots, nonWildfireSiteInfra, urbanAreaInfra])
-
   const visibleViewportHotspots = useMemo(() => {
-    const base = visibleLayers.hideNonVegetation ? vegetationOnlyViewportHotspots : viewportHotspots
-    const filtered = base.filter(f => visibleIntensities[f.properties.intensity] !== false)
+    const filtered = viewportHotspots.filter(f => visibleIntensities[f.properties.intensity] !== false)
     if (filtered.length <= MAX_RENDERED_MARKERS) return filtered
     // Too many to render safely — keep the most severe fires (by FRP),
     // dropping the long tail of low-intensity detections rather than
@@ -395,7 +366,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     return [...filtered]
       .sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0))
       .slice(0, MAX_RENDERED_MARKERS)
-  }, [viewportHotspots, vegetationOnlyViewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation])
+  }, [viewportHotspots, visibleIntensities])
   const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
 
   const center = zoneInfo?.center || [23, -102]

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { filterFeaturesByBbox, isNearIndustrialSite, isNearUrbanArea } from "../utils/spatial"
+import { filterFeaturesByBbox } from "../utils/spatial"
 import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } from "../utils/countryBoundaries"
 import { buildCommandBrief, findThreatenedInfrastructure, windDirLabel } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
@@ -191,44 +191,10 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire }) {
   const { t } = useLanguage()
-  const rawDetections = layers.hotspots?.data?.features || []
+  const allDetections = layers.hotspots?.data?.features || []
   const fwiPoints = layers.fwi?.data?.features || []
-
-  // Mirrors the "Solo focos forestales" toggle in the map's layer panel
-  // (FireMap.jsx) — kept in sync via the hideNonVegetation prop from
-  // App.jsx so the sidebar's counts never disagree with what's actually
-  // shown on the map. Uses layers.infrastructure directly (the global
-  // bundled crawl) rather than FireMap's per-zone bundled+live merge,
-  // since that's what's available at this scope — a reasonable
-  // approximation, not the exact same infra set FireMap checks against
-  // for a specific zone.
-  const nonVegInfra = layers.infrastructure?.data?.features || []
-  const nonVegIndustrial = useMemo(
-    () => nonVegInfra.filter((f) => f.properties?.type === "Industrial Zone" || f.properties?.type === "Quarry/Landfill"),
-    [nonVegInfra]
-  )
-  const nonVegUrban = useMemo(
-    () => nonVegInfra.filter((f) => f.properties?.type === "Urban Area"),
-    [nonVegInfra]
-  )
-  // The expensive part (isNearIndustrialSite/isNearUrbanArea against all
-  // ~200k+ global detections) — deliberately NOT dependent on
-  // hideNonVegetation, so it only re-runs when FIRMS or infrastructure
-  // data actually changes (roughly hourly), not every time the checkbox
-  // is flipped. Flipping the toggle below then just switches between this
-  // and rawDetections — an instant reference swap, not a recompute.
-  const vegetationOnlyDetections = useMemo(() => {
-    return rawDetections.filter((f) => {
-      const { fire_type } = f.properties
-      const isNonVegetation = (fire_type != null && fire_type !== 0)
-        || isNearIndustrialSite(f, nonVegIndustrial)
-        || isNearUrbanArea(f, nonVegUrban)
-      return !isNonVegetation
-    })
-  }, [rawDetections, nonVegIndustrial, nonVegUrban])
-  const allDetections = hideNonVegetation ? vegetationOnlyDetections : rawDetections
 
   const zoneHotspots = useMemo(
     () => filterFeaturesByBbox(allDetections, zoneInfo?.zoneBbox),
