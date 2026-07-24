@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { MapContainer, TileLayer, CircleMarker, Circle, GeoJSON, Popup, Tooltip, useMap, Marker } from "react-leaflet"
+import { MapContainer, TileLayer, CircleMarker, Circle, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, isNearIndustrialSite, isNearUrbanArea, perimeterHasActiveHotspot } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
@@ -11,10 +11,7 @@ import { useLanguage } from "../context/LanguageContext"
 const FWI_COLORS = { low: "#38A800", moderate: "#FFFF00", high: "#FFAA00", very_high: "#FF0000", extreme: "#7A0000", unknown: "#888888" }
 
 
-// Only render permanent on-map labels when there aren't too many points in
-// view — reverse-geocoding every single fire point would hammer the public
-// Photon API and slow the map down. Click popups always work regardless.
-const MAX_LABELED_POINTS = 40
+
 // Hard cap on individually-rendered hotspot markers. At world zoom, the
 // viewport can contain the entire global dataset (100k+ points once FIRMS
 // is fetching successfully) — rendering that many Leaflet CircleMarkers
@@ -87,23 +84,6 @@ function MapController({ mapRef, onZoom, onMove }) {
   return null
 }
 
-// Small permanent label (site name once resolved, coordinates immediately)
-// shown above each fire point so responders see "which forest is on fire"
-// without needing to click — matches the original ask.
-function FireLabel({ lat, lon }) {
-  const { t } = useLanguage()
-  const [place, setPlace] = useState(null)
-  useEffect(() => {
-    let cancelled = false
-    reverseGeocodePlace(lat, lon).then((p) => { if (!cancelled) setPlace(p) })
-    return () => { cancelled = true }
-  }, [lat, lon])
-  return (
-    <span style={{ fontSize: "11px", fontWeight: 600 }}>
-      {place || `${lat.toFixed(3)}, ${lon.toFixed(3)}`}
-    </span>
-  )
-}
 
 function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, linkedPerimeter, fireTypeLabel, onZoomToLocation }) {
   const { t } = useLanguage()
@@ -387,7 +367,6 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
       .slice(0, MAX_RENDERED_MARKERS)
   }, [viewportHotspots, visibleIntensities])
   const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
-  const showLabels = visibleViewportHotspots.length <= MAX_LABELED_POINTS
 
   const center = zoneInfo?.center || [23, -102]
 
@@ -414,9 +393,9 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         zoomControl={true}>
 
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-          maxZoom={19} />
+          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+          attribution='Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+          maxZoom={19} maxNativeZoom={17} />
 
         <MapController mapRef={mapRef} onZoom={setMapZoom} onMove={handleMove} />
 
@@ -504,11 +483,6 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                   pathOptions={isNonVegetation
                     ? { color: stroke, fillColor: color, fillOpacity: 0.75, weight: 2, dashArray: "3 2" }
                     : { color: stroke, fillColor: color, fillOpacity: 0.92, weight: 2 }}>
-                  {showLabels && (
-                    <Tooltip permanent direction="top" offset={[0, -r]} opacity={0.92}>
-                      <FireLabel lat={lat} lon={lon} />
-                    </Tooltip>
-                  )}
                   <Popup>
                     <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                       acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
@@ -548,9 +522,6 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               )}
               <CircleMarker center={[lat, lon]} radius={r}
                 pathOptions={{ color: theme.navy, fillColor: color, fillOpacity: 0.9, weight: 3, dashArray: "3 3" }}>
-                <Tooltip permanent direction="top" offset={[0, -r]} opacity={0.95}>
-                  <FireLabel lat={lat} lon={lon} />
-                </Tooltip>
                 <Popup>
                   <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                     acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
