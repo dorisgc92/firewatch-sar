@@ -173,7 +173,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   return (
     <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 1000,
       background: theme.panelBgSoft, borderRadius: "8px", padding: "10px",
-      minWidth: "195px", maxHeight: "calc(100% - 20px)", overflowY: "auto",
+      minWidth: "195px", maxWidth: "215px", maxHeight: "calc(100% - 20px)", overflowY: "auto",
       border: `1px solid ${theme.border}`, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
       <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold", marginBottom: "8px", letterSpacing: "0.04em" }}>{t("layersTitle")}</div>
       {active.map(({ key, label, color }) => (
@@ -258,7 +258,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange }) {
   const { t } = useLanguage()
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
@@ -270,6 +270,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
       setVisibleIntensities(prev => ({ ...prev, [k]: value }))
     } else {
       setVisibleLayers(prev => ({ ...prev, [key]: value }))
+      if (key === "hideNonVegetation") onHideNonVegetationChange?.(value)
     }
   }
 

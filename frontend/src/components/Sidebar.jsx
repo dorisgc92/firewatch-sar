@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { filterFeaturesByBbox } from "../utils/spatial"
+import { filterFeaturesByBbox, isNearIndustrialSite, isNearUrbanArea } from "../utils/spatial"
 import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } from "../utils/countryBoundaries"
 import { buildCommandBrief, findThreatenedInfrastructure, windDirLabel } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
@@ -191,10 +191,38 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation }) {
   const { t } = useLanguage()
-  const allDetections = layers.hotspots?.data?.features || []
+  const rawDetections = layers.hotspots?.data?.features || []
   const fwiPoints = layers.fwi?.data?.features || []
+
+  // Mirrors the "Solo focos forestales" toggle in the map's layer panel
+  // (FireMap.jsx) — kept in sync via the hideNonVegetation prop from
+  // App.jsx so the sidebar's counts never disagree with what's actually
+  // shown on the map. Uses layers.infrastructure directly (the global
+  // bundled crawl) rather than FireMap's per-zone bundled+live merge,
+  // since that's what's available at this scope — a reasonable
+  // approximation, not the exact same infra set FireMap checks against
+  // for a specific zone.
+  const nonVegInfra = layers.infrastructure?.data?.features || []
+  const nonVegIndustrial = useMemo(
+    () => nonVegInfra.filter((f) => f.properties?.type === "Industrial Zone" || f.properties?.type === "Quarry/Landfill"),
+    [nonVegInfra]
+  )
+  const nonVegUrban = useMemo(
+    () => nonVegInfra.filter((f) => f.properties?.type === "Urban Area"),
+    [nonVegInfra]
+  )
+  const allDetections = useMemo(() => {
+    if (!hideNonVegetation) return rawDetections
+    return rawDetections.filter((f) => {
+      const { fire_type } = f.properties
+      const isNonVegetation = (fire_type != null && fire_type !== 0)
+        || isNearIndustrialSite(f, nonVegIndustrial)
+        || isNearUrbanArea(f, nonVegUrban)
+      return !isNonVegetation
+    })
+  }, [rawDetections, hideNonVegetation, nonVegIndustrial, nonVegUrban])
 
   const zoneHotspots = useMemo(
     () => filterFeaturesByBbox(allDetections, zoneInfo?.zoneBbox),
