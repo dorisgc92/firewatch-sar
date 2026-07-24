@@ -393,9 +393,9 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         zoomControl={true}>
 
         <TileLayer
-          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-          attribution='Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
-          maxZoom={19} maxNativeZoom={17} />
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+          attribution='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), swisstopo, and the GIS User Community'
+          maxZoom={19} maxNativeZoom={19} />
 
         <MapController mapRef={mapRef} onZoom={setMapZoom} onMove={handleMove} />
 
