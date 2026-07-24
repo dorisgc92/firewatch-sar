@@ -3,9 +3,11 @@
  * Fetches critical infrastructure for a zone on demand, via the existing
  * /api/overpass Vercel function (same one used previously for the
  * moveend-driven fetch). Used as a FALLBACK: if the bundled
- * infrastructure.geojson (currently Jalisco-only, refreshed manually) already
- * covers the selected zone, that data is used directly and this is never
- * called — it's only for zones outside that bundled coverage.
+ * infrastructure.geojson (built incrementally by fetch_infrastructure.py's
+ * world-tile crawl, ~1 tile/run) already covers the selected zone, that
+ * data is used directly and this is never called — it's only for zones
+ * outside that bundled coverage (which, until the crawl completes its
+ * first full pass, is most of the world).
  *
  * Caching: results are cached in sessionStorage, keyed by a rounded bbox, so
  * re-opening the same zone in the same browser tab/session is instant and

@@ -309,10 +309,11 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     return inView.filter((p) => perimeterHasActiveHotspot(p, hotspotsForPerimeterCheck))
   }, [layers.perimeters?.data, hotspotsForPerimeterCheck, viewportBbox, zoneInfo])
 
-  // Bundled infrastructure.geojson currently only covers Jalisco (manually
-  // refreshed). If the selected zone falls inside that coverage, use it —
-  // instant, no network call. Otherwise fetch live from Overpass for this
-  // zone specifically (see utils/liveInfra.js), cached per browser session.
+  // Bundled infrastructure.geojson grows incrementally from
+  // fetch_infrastructure.py's world-tile crawl (~1 tile/run). If the
+  // selected zone already falls inside crawled coverage, use it — instant,
+  // no network call. Otherwise fetch live from Overpass for this zone
+  // specifically (see utils/liveInfra.js), cached per browser session.
   const bundledZoneInfrastructure = useMemo(() => {
     const feats = layers.infrastructure?.data?.features
     if (!feats || !zoneInfo?.zoneBbox) return []
@@ -466,7 +467,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           const { frp, intensity, source, acq_datetime, fire_type, fire_type_label } = selectedFire.properties
           const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
           const r = hotspotRadius(frp, mapZoom) + 6
-          const linkedPerimeter = linkedPerimeterForFire(selectedFire, layers.perimeters?.data?.features || [])
+          const linkedPerimeter = linkedPerimeterForFire(selectedFire, viewportPerimeters)
           const nearIndustrial = isNearIndustrialSite(selectedFire, nonWildfireSiteInfra)
           const nearUrban = isNearUrbanArea(selectedFire, urbanAreaInfra)
           const isNonVegetation = (fire_type != null && fire_type !== 0) || nearIndustrial || nearUrban
