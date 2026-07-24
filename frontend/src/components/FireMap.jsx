@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { MapContainer, TileLayer, CircleMarker, Circle, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
+import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, isNearIndustrialSite, isNearUrbanArea, perimeterHasActiveHotspot } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
@@ -414,38 +414,6 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             </CircleMarker>
           )
         })}
-
-        {/* Real-world-sized footprint under each hotspot dot — sized to
-            roughly the sensor's pixel footprint (VIIRS ~375m, MODIS ~1km),
-            using geographic Circle (meters) rather than the fixed-pixel
-            CircleMarker used for the clickable dot on top. This is
-            deliberately simpler than computing a cluster hull: when fires
-            sit close together, their footprints overlap and naturally
-            blend into a continuous shaded zone (no geometry/hull math, and
-            no risk of a fire being left "outside" its own zone); isolated
-            fires just show their own small true-sized footprint. Each
-            footprint keeps its own point's real intensity color, so a
-            blended zone still visibly shows where within it burns hotter.
-            Skipped for likely non-wildfire detections (fire_type != 0) —
-            see the note on the main marker below. */}
-        {activeModule === 2 && visibleLayers.hotspots && visibleViewportHotspots.length > 0 && visibleViewportHotspots.length <= 800 &&
-          visibleViewportHotspots
-            .filter((feat) => (feat.properties.fire_type == null || feat.properties.fire_type === 0) && !isNearIndustrialSite(feat, nonWildfireSiteInfra) && !isNearUrbanArea(feat, urbanAreaInfra))
-            .map((feat, i) => {
-              const { frp, intensity, resolution_m } = feat.properties
-              const [lon, lat] = feat.geometry.coordinates
-              const fillColor = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
-              // Base radius from the sensor's own pixel size, nudged up for
-              // higher-FRP detections (larger/more active fires tend to
-              // scorch a wider area than a single pixel).
-              const base = (resolution_m || 375) / 2
-              const frpBoost = frp ? Math.min(300, Math.sqrt(frp) * 12) : 0
-              const radiusM = base + frpBoost
-              return (
-                <Circle key={"footprint-" + i} center={[lat, lon]} radius={radiusM}
-                  pathOptions={{ stroke: false, fillColor, fillOpacity: 0.28 }} />
-              )
-            })}
 
         {activeModule === 2 && visibleLayers.hotspots &&
           visibleViewportHotspots.map((feat, i) => {

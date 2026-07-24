@@ -119,6 +119,27 @@ function paddedBbox(lat, lon, degrees) {
   }
 }
 
+// Photon's/Nominatim's "extent" for a place describes THAT place's own
+// geometry — for a city this safely encloses whatever point you searched
+// (you're inside the city). But reverse-geocoding a fire point can resolve
+// to a narrow feature like a street ("Paseo del Norte"), whose extent is
+// the street's own bounding box and is NOT guaranteed to contain the exact
+// fire coordinate that triggered the lookup — a fire just off one end of a
+// long road can end up outside its own zone's bbox entirely, which is what
+// caused some fires to show "0 detections" in their own sidebar stats.
+// Unioning with a small pad around the actual point guarantees the fire
+// that generated this zone is always inside its own zoneBbox.
+function unionBbox(a, b) {
+  if (!a) return b
+  if (!b) return a
+  return {
+    minLon: Math.min(a.minLon, b.minLon),
+    maxLon: Math.max(a.maxLon, b.maxLon),
+    minLat: Math.min(a.minLat, b.minLat),
+    maxLat: Math.max(a.maxLat, b.maxLat),
+  }
+}
+
 // Photon is a free public API with no SLA — without a timeout, a slow
 // response can hang zone resolution (and the loading overlay) indefinitely.
 // 6s is generous for a single lookup but still bounded.
@@ -195,7 +216,7 @@ export async function zoneInfoFromPhotonFeature(feature, fallbackQuery) {
   const state = props.state || null
   const country = props.country || null
 
-  const zoneBbox = extentToBbox(props.extent, 8) || paddedBbox(lat, lon, 0.35)
+  const zoneBbox = unionBbox(extentToBbox(props.extent, 8), paddedBbox(lat, lon, 0.15))
 
   // State and country lookups are independent of each other — run them in
   // parallel instead of one-after-the-other. This alone roughly halves the
