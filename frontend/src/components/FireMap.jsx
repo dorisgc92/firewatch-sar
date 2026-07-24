@@ -369,18 +369,25 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     [zoneInfrastructure]
   )
 
-  const visibleViewportHotspots = useMemo(() => {
-    const filtered = viewportHotspots.filter(f => {
-      if (visibleIntensities[f.properties.intensity] === false) return false
-      if (visibleLayers.hideNonVegetation) {
-        const { fire_type } = f.properties
-        const isNonVegetation = (fire_type != null && fire_type !== 0)
-          || isNearIndustrialSite(f, nonWildfireSiteInfra)
-          || isNearUrbanArea(f, urbanAreaInfra)
-        if (isNonVegetation) return false
-      }
-      return true
+  // Classification is the expensive part (isNearIndustrialSite/
+  // isNearUrbanArea per hotspot) — computed here ONCE whenever the
+  // viewport's hotspots or infra actually change, deliberately NOT
+  // depending on visibleLayers.hideNonVegetation. That way flipping the
+  // checkbox never re-runs this; it only ever picks between two arrays
+  // that are already sitting in memory (see visibleViewportHotspots below).
+  const vegetationOnlyViewportHotspots = useMemo(() => {
+    return viewportHotspots.filter((f) => {
+      const { fire_type } = f.properties
+      const isNonVegetation = (fire_type != null && fire_type !== 0)
+        || isNearIndustrialSite(f, nonWildfireSiteInfra)
+        || isNearUrbanArea(f, urbanAreaInfra)
+      return !isNonVegetation
     })
+  }, [viewportHotspots, nonWildfireSiteInfra, urbanAreaInfra])
+
+  const visibleViewportHotspots = useMemo(() => {
+    const base = visibleLayers.hideNonVegetation ? vegetationOnlyViewportHotspots : viewportHotspots
+    const filtered = base.filter(f => visibleIntensities[f.properties.intensity] !== false)
     if (filtered.length <= MAX_RENDERED_MARKERS) return filtered
     // Too many to render safely — keep the most severe fires (by FRP),
     // dropping the long tail of low-intensity detections rather than
@@ -388,7 +395,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     return [...filtered]
       .sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0))
       .slice(0, MAX_RENDERED_MARKERS)
-  }, [viewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation, nonWildfireSiteInfra, urbanAreaInfra])
+  }, [viewportHotspots, vegetationOnlyViewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation])
   const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
 
   const center = zoneInfo?.center || [23, -102]

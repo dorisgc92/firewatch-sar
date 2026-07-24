@@ -213,8 +213,13 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     () => nonVegInfra.filter((f) => f.properties?.type === "Urban Area"),
     [nonVegInfra]
   )
-  const allDetections = useMemo(() => {
-    if (!hideNonVegetation) return rawDetections
+  // The expensive part (isNearIndustrialSite/isNearUrbanArea against all
+  // ~200k+ global detections) — deliberately NOT dependent on
+  // hideNonVegetation, so it only re-runs when FIRMS or infrastructure
+  // data actually changes (roughly hourly), not every time the checkbox
+  // is flipped. Flipping the toggle below then just switches between this
+  // and rawDetections — an instant reference swap, not a recompute.
+  const vegetationOnlyDetections = useMemo(() => {
     return rawDetections.filter((f) => {
       const { fire_type } = f.properties
       const isNonVegetation = (fire_type != null && fire_type !== 0)
@@ -222,7 +227,8 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
         || isNearUrbanArea(f, nonVegUrban)
       return !isNonVegetation
     })
-  }, [rawDetections, hideNonVegetation, nonVegIndustrial, nonVegUrban])
+  }, [rawDetections, nonVegIndustrial, nonVegUrban])
+  const allDetections = hideNonVegetation ? vegetationOnlyDetections : rawDetections
 
   const zoneHotspots = useMemo(
     () => filterFeaturesByBbox(allDetections, zoneInfo?.zoneBbox),

@@ -94,7 +94,7 @@ const en = {
   "layer.fwi": "FWI Risk",
   "layer.weather": "Weather",
   "intensityFilterTitle": "INTENSITY FILTER",
-  "hideNonVegetationLabel": "Only vegetation fires",
+  "hideNonVegetationLabel": "Wildfires only",
   "hideNonVegetationNote": "Heuristic — may miss real fires.",
   "intensity.extreme": "Extreme (>200 MW)",
   "intensity.high": "High (50-200 MW)",
