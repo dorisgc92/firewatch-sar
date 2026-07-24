@@ -19,6 +19,7 @@ How to run manually:
 
 import json
 import math
+import time
 import requests
 from datetime import datetime, timezone
 from manifest import update_manifest, stabilize_generated_at
@@ -26,12 +27,26 @@ from manifest import update_manifest, stabilize_generated_at
 OUTPUT_WEATHER = "data/weather.geojson"
 OUTPUT_FWI = "data/fwi_grid.geojson"
 
+# Reuses the same simplified world-countries polygon file the frontend
+# already bundles for reverseCountryLookup (frontend/src/utils/
+# countryBoundaries.js) as a lightweight land mask — no new dependency,
+# no separate dataset to keep in sync. Grid points that don't fall inside
+# any country polygon (open ocean) are skipped: wildfires don't happen at
+# sea, and skipping them keeps fwi_grid.geojson from being ~70% empty-ocean
+# points once the grid covers the whole world instead of just Mexico/US.
+LAND_MASK_PATH = "frontend/public/geo/countries.geo.json"
+
 # ── Grid configuration ─────────────────────────────────────────────────────────
-# We sample weather at a coarse global grid (every 5 degrees)
-# For a specific region of interest, reduce the step for higher resolution
+# Previously hardcoded to (14,33)/(-118,-86) — Mexico/US border only — even
+# though the output metadata claimed "global grid points". Now actually
+# global: -60 to 75 latitude covers all inhabited land (skips Antarctica
+# and the high Arctic, where wildfire risk isn't meaningful), full
+# longitude range. Land-mask filtering below is what keeps this from
+# turning into ~650 Open-Meteo calls; batching (fetch_weather_batch) is
+# what keeps even the land points from becoming ~200 separate HTTP requests.
 GRID_STEP_DEG = 10.0   # degrees between grid points
-LAT_RANGE = (14, 33)
-LON_RANGE = (-118, -86)
+LAT_RANGE = (-60, 75)
+LON_RANGE = (-180, 180)
 
 # ── FWI Classification ─────────────────────────────────────────────────────────
 FWI_CLASSES = [
@@ -155,52 +170,129 @@ def fwi_from_weather(temp_c, rh_pct, wind_kmh, rain_mm):
 
 # ── Open-Meteo API ─────────────────────────────────────────────────────────────
 
-def fetch_weather_for_point(lat, lon):
+_land_polygons_cache = None
+
+def _load_land_polygons():
+    """Loads and caches the bundled countries GeoJSON as a flat list of
+    (rings) per feature, ready for point-in-polygon testing. Missing file
+    or bad JSON degrades to "no land mask" (keep every grid point) rather
+    than crashing the whole fetch — a coarser-than-intended grid is a much
+    smaller problem than the workflow failing outright."""
+    global _land_polygons_cache
+    if _land_polygons_cache is not None:
+        return _land_polygons_cache
+    try:
+        with open(LAND_MASK_PATH) as f:
+            data = json.load(f)
+        polygons = []
+        for feat in data.get("features", []):
+            geom = feat.get("geometry") or {}
+            if geom.get("type") == "Polygon":
+                polygons.append(geom["coordinates"])
+            elif geom.get("type") == "MultiPolygon":
+                polygons.extend(geom["coordinates"])
+        _land_polygons_cache = polygons
+    except Exception as e:
+        print(f"  WARNING: couldn't load land mask ({LAND_MASK_PATH}): {e}")
+        print("  Proceeding without land filtering — grid will include ocean points.")
+        _land_polygons_cache = None
+    return _land_polygons_cache
+
+
+def _point_in_ring(lon, lat, ring):
+    """Standard ray-casting point-in-polygon test over a single [lon,lat] ring."""
+    inside = False
+    j = len(ring) - 1
+    for i in range(len(ring)):
+        xi, yi = ring[i]
+        xj, yj = ring[j]
+        if (yi > lat) != (yj > lat) and lon < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+            inside = not inside
+        j = i
+    return inside
+
+
+def is_on_land(lat, lon):
+    """True if (lat, lon) falls inside any country polygon (outer ring
+    only — holes/enclaves aren't worth the extra complexity for a coarse
+    weather grid). Returns True (keep the point) if the land mask failed
+    to load, so a missing file degrades gracefully instead of silently
+    dropping the entire grid."""
+    polygons = _load_land_polygons()
+    if polygons is None:
+        return True
+    for rings in polygons:
+        if rings and _point_in_ring(lon, lat, rings[0]):
+            return True
+    return False
+
+
+def fetch_weather_batch(points, batch_size=50):
     """
-    Fetch current weather + 5-day hourly forecast for a single lat/lon point.
-    Returns dict with weather variables, or None on error.
-    Open-Meteo docs: https://open-meteo.com/en/docs
+    Fetches current weather + 5-day forecast for many points in as few
+    HTTP requests as possible, instead of one request per grid point.
+    Open-Meteo's /forecast endpoint accepts comma-separated latitude/
+    longitude lists and returns a JSON array in the same order (or a plain
+    object if the batch has exactly one point — normalized to a list
+    below either way). batch_size keeps each request's URL length and
+    response size reasonable; it's not a hard API limit, just a sane chunk
+    size for a few hundred global grid points.
+
+    Returns {(lat, lon): data_or_None} for every point requested — None
+    for any point whose batch failed, so the caller's existing per-point
+    error counting keeps working unchanged.
     """
     url = "https://api.open-meteo.com/v1/forecast"
-    params = {
-        "latitude": lat,
-        "longitude": lon,
-        "current": [
-            "temperature_2m",
-            "relative_humidity_2m",
-            "wind_speed_10m",
-            "wind_direction_10m",
-            "precipitation",
-            "weather_code",
-        ],
-        "daily": [
-            "temperature_2m_max",
-            "relative_humidity_2m_min",
-            "wind_speed_10m_max",
-            "precipitation_sum",
-            "weather_code",
-        ],
-        "forecast_days": 5,
-        "timezone": "auto",
-        "wind_speed_unit": "kmh",
-    }
-
-    try:
-        r = requests.get(url, params=params, timeout=30)
-        r.raise_for_status()
-        return r.json()
-    except Exception as e:
-        return None
+    results = {}
+    for i in range(0, len(points), batch_size):
+        chunk = points[i:i + batch_size]
+        params = {
+            "latitude": ",".join(str(lat) for lat, lon in chunk),
+            "longitude": ",".join(str(lon) for lat, lon in chunk),
+            "current": [
+                "temperature_2m", "relative_humidity_2m", "wind_speed_10m",
+                "wind_direction_10m", "precipitation", "weather_code",
+            ],
+            "daily": [
+                "temperature_2m_max", "relative_humidity_2m_min",
+                "wind_speed_10m_max", "precipitation_sum", "weather_code",
+            ],
+            "forecast_days": 5,
+            "timezone": "auto",
+            "wind_speed_unit": "kmh",
+        }
+        try:
+            r = requests.get(url, params=params, timeout=60)
+            r.raise_for_status()
+            data = r.json()
+            # A single-point request gets back one object, not a list of
+            # one — normalize so the zip below always lines up correctly.
+            if isinstance(data, dict):
+                data = [data]
+            for (lat, lon), point_data in zip(chunk, data):
+                results[(lat, lon)] = point_data
+        except Exception as e:
+            print(f"  Batch {i}-{i + len(chunk)} of {len(points)} failed: {e}")
+            for lat, lon in chunk:
+                results[(lat, lon)] = None
+        # Brief pause between batches — polite to Open-Meteo's free tier,
+        # and irrelevant to total runtime at this scale (a handful of
+        # batches, not hundreds of individual requests).
+        time.sleep(0.5)
+    return results
 
 
 def build_grid_points():
-    """Generate lat/lon grid points."""
+    """Generate lat/lon grid points, skipping open-ocean cells (see
+    is_on_land) — a global grid without this filter is roughly 70% empty
+    ocean at this resolution, wasted work and wasted rows in the output."""
     points = []
     lat = LAT_RANGE[0]
     while lat <= LAT_RANGE[1]:
         lon = LON_RANGE[0]
         while lon <= LON_RANGE[1]:
-            points.append((round(lat, 1), round(lon, 1)))
+            if is_on_land(lat, lon):
+                points.append((round(lat, 1), round(lon, 1)))
             lon += GRID_STEP_DEG
         lat += GRID_STEP_DEG
     return points
@@ -211,19 +303,19 @@ def main():
     os.makedirs("data", exist_ok=True)
 
     grid_points = build_grid_points()
-    print(f"Computing FWI for {len(grid_points)} grid points...")
+    print(f"Computing FWI for {len(grid_points)} grid points (land-filtered, batched fetch)...")
 
     weather_features = []
     fwi_features = []
     errors = 0
 
-    # For the global grid we batch requests carefully
-    # In production, consider caching and rate limiting
+    weather_by_point = fetch_weather_batch(grid_points)
+
     for i, (lat, lon) in enumerate(grid_points):
         if i % 50 == 0:
             print(f"  Progress: {i}/{len(grid_points)}")
 
-        data = fetch_weather_for_point(lat, lon)
+        data = weather_by_point.get((lat, lon))
         if not data or "current" not in data:
             errors += 1
             continue
