@@ -1,20 +1,20 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "generated_at": "2026-07-23T23:13:14.520547+00:00",
+    "generated_at": "2026-07-25T14:39:54.670478+00:00",
     "source": "OpenStreetMap via Overpass API",
     "license": "ODbL \u2014 \u00a9 OpenStreetMap contributors",
     "bbox": "world (crawled tile by tile)",
     "description": "Critical infrastructure relevant to wildfire emergency response. Includes hospitals, fire stations, police, power infrastructure, water resources, and industrial zones (used to flag likely non-wildfire thermal detections). Used for vulnerability assessment.",
-    "total": 2967,
+    "total": 2984,
     "by_type": {
-      "Police Station": 101,
-      "Fire Station": 34,
-      "Airport/Airfield": 68,
+      "Police Station": 102,
+      "Fire Station": 35,
+      "Airport/Airfield": 69,
       "Hospital": 40,
-      "Power Plant": 12,
-      "Power Substation": 15,
-      "Industrial Zone": 2697
+      "Power Plant": 13,
+      "Power Substation": 16,
+      "Industrial Zone": 2709
     }
   },
   "features": [
@@ -77158,6 +77158,448 @@
         "source": "OpenStreetMap",
         "osm_url": "https://www.openstreetmap.org/way/993359123",
         "_tile": "-40,-60,-30,-50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.4899673,
+          -43.9729374
+        ]
+      },
+      "properties": {
+        "name": "Power Substation",
+        "type": "Power Substation",
+        "color": "#FFAA00",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 738221486,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/738221486",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5560996,
+          -43.9535571
+        ]
+      },
+      "properties": {
+        "name": "Chatham Islands Fire Station",
+        "type": "Fire Station",
+        "color": "#FF6600",
+        "icon": "\u00f0\u0178\u0161\u2019",
+        "osm_id": 738222007,
+        "osm_type": "node",
+        "address": "Waitangi Wharf Owenga Road",
+        "phone": "+64 3 305 0064",
+        "operator": "Fire and Emergency New Zealand",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/738222007",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5609074,
+          -43.9515854
+        ]
+      },
+      "properties": {
+        "name": "Police Station",
+        "type": "Police Station",
+        "color": "#0044FF",
+        "icon": "\u00f0\u0178\u2018\u00ae",
+        "osm_id": 5316984922,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/5316984922",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.4649154,
+          -43.8138222
+        ]
+      },
+      "properties": {
+        "name": "Inia William Tuuta Memorial Airport",
+        "type": "Airport/Airfield",
+        "color": "#44AAFF",
+        "icon": "\u00e2\u0153\u02c6\u00ef\u00b8\u008f",
+        "osm_id": 53791516,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "Chatham Islands Airport Limited",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/53791516",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.6747848,
+          -44.0099963
+        ]
+      },
+      "properties": {
+        "name": "Point Durham Wind Farm",
+        "type": "Power Plant",
+        "color": "#FF8800",
+        "icon": "\u00e2\u0161\u00a1",
+        "osm_id": 1456882011,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/1456882011",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5346291,
+          -43.9447985
+        ]
+      },
+      "properties": {
+        "name": "Industrial Zone",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 738221887,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/738221887",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5346507,
+          -43.9448162
+        ]
+      },
+      "properties": {
+        "name": "Factory",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 767087006,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/767087006",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.2680837,
+          -43.7319022
+        ]
+      },
+      "properties": {
+        "name": "Fish factory",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 767087050,
+        "osm_type": "node",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/node/767087050",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5622529,
+          -43.9501162
+        ]
+      },
+      "properties": {
+        "name": "Industrial Zone",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 86096741,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/86096741",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.268264,
+          -43.7318103
+        ]
+      },
+      "properties": {
+        "name": "Industrial Zone",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 86096742,
+        "osm_type": "way",
+        "address": "Kaingaroa Road",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/86096742",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5617605,
+          -43.9502357
+        ]
+      },
+      "properties": {
+        "name": "Industrial Zone",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 86096743,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/86096743",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5613038,
+          -43.950624
+        ]
+      },
+      "properties": {
+        "name": "Industrial Zone",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 104643738,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/104643738",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5606851,
+          -43.9458912
+        ]
+      },
+      "properties": {
+        "name": "Waitangi Wharf",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 418072046,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/418072046",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5619219,
+          -43.9503086
+        ]
+      },
+      "properties": {
+        "name": "Industrial Zone",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 923244411,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/923244411",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5566759,
+          -43.9533987
+        ]
+      },
+      "properties": {
+        "name": "Industrial Zone",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 923244414,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/923244414",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5565414,
+          -43.953763
+        ]
+      },
+      "properties": {
+        "name": "Industrial Zone",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 923244415,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/923244415",
+        "_tile": "-180,-50,-170,-40"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5276073,
+          -43.9307884
+        ]
+      },
+      "properties": {
+        "name": "Te One Base",
+        "type": "Industrial Zone",
+        "color": "#996633",
+        "icon": "factory",
+        "osm_id": 1326201487,
+        "osm_type": "way",
+        "address": "",
+        "phone": "",
+        "operator": "Department of Conservation",
+        "capacity": "",
+        "emergency": "",
+        "source": "OpenStreetMap",
+        "osm_url": "https://www.openstreetmap.org/way/1326201487",
+        "_tile": "-180,-50,-170,-40"
       }
     }
   ]
