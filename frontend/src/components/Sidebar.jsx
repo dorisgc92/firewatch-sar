@@ -191,9 +191,19 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation }) {
   const { t } = useLanguage()
-  const allDetections = layers.hotspots?.data?.features || []
+  const rawDetections = layers.hotspots?.data?.features || []
+  // Mirrors the "Wildfires only" toggle in the map's layer panel
+  // (FireMap.jsx), kept in sync via the hideNonVegetation prop from
+  // App.jsx. likely_vegetation is precomputed server-side by
+  // fetch_firms.py (industrial/urban proximity, computed once per FIRMS
+  // fetch) — this is just a property filter, not a distance calculation,
+  // so it's cheap even over the full global dataset and every toggle.
+  const allDetections = useMemo(() => {
+    if (!hideNonVegetation) return rawDetections
+    return rawDetections.filter((f) => f.properties.likely_vegetation !== false)
+  }, [rawDetections, hideNonVegetation])
   const fwiPoints = layers.fwi?.data?.features || []
 
   const zoneHotspots = useMemo(

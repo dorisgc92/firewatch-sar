@@ -41,6 +41,10 @@ function AppInner() {
   const mapRef = useRef(null)
   const layers = useFireData()
   const [infraFilter, setInfraFilter] = useState({ hospital: true, fire_station: true, police: true, power: true, school: true, fuel: true, tower: true, water: true, airport: true })
+  // Mirrors FireMap's internal "Wildfires only" toggle (FireMap owns the
+  // actual UI checkbox and its own visibleLayers state) — lifted here only
+  // so Sidebar's world/country/state/zone counts can react to it too.
+  const [hideNonVegetation, setHideNonVegetation] = useState(false)
   const [mapZoom, setMapZoom] = useState(9)
   const [selectedFire, setSelectedFire] = useState(null)
 
@@ -234,10 +238,12 @@ function AppInner() {
           <FireMap activeModule={activeModule} layers={layers} mapRef={mapRef}
             infraFilter={infraFilter} onInfraFilter={(key, val) => setInfraFilter(prev => ({...prev, [key]: val}))}
             mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire}
-            onFireClick={handleSelectFire} zoneLoading={zoneLoading} />
+            onFireClick={handleSelectFire} zoneLoading={zoneLoading}
+            onHideNonVegetationChange={setHideNonVegetation} />
         </div>
         <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
-          zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire} />
+          zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire}
+          hideNonVegetation={hideNonVegetation} />
       </div>
 
       <FreshnessPanel layers={layers} />

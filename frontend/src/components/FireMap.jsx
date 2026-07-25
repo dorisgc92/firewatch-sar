@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
-import { filterFeaturesByBbox, linkedPerimeterForFire, isNearIndustrialSite, isNearUrbanArea, perimeterHasActiveHotspot } from "../utils/spatial"
+import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
@@ -173,7 +173,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   return (
     <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 1000,
       background: theme.panelBgSoft, borderRadius: "8px", padding: "10px",
-      minWidth: "195px", maxHeight: "calc(100% - 20px)", overflowY: "auto",
+      minWidth: "195px", maxWidth: "215px", maxHeight: "calc(100% - 20px)", overflowY: "auto",
       border: `1px solid ${theme.border}`, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
       <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold", marginBottom: "8px", letterSpacing: "0.04em" }}>{t("layersTitle")}</div>
       {active.map(({ key, label, color }) => (
@@ -207,6 +207,17 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
               </span>
             </label>
           ))}
+
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer",
+            marginTop: "8px", paddingTop: "8px", borderTop: `1px solid ${theme.border}` }}>
+            <input type="checkbox" checked={layers.hideNonVegetation === true}
+              onChange={e => onChange("hideNonVegetation", e.target.checked)}
+              style={{ width: "14px", height: "14px" }} />
+            <span style={{ color: theme.textPrimary, fontSize: "12px" }}>{t("hideNonVegetationLabel")}</span>
+          </label>
+          <div style={{ color: theme.textMuted, fontSize: "10px", marginTop: "3px", marginBottom: "8px", fontStyle: "italic" }}>
+            {t("hideNonVegetationNote")}
+          </div>
 
           <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold",
             marginTop: "12px", marginBottom: "6px", borderTop: `1px solid ${theme.border}`, paddingTop: "8px", letterSpacing: "0.04em" }}>
@@ -247,9 +258,9 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange }) {
   const { t } = useLanguage()
-  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false })
+  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
   const [liveInfra, setLiveInfra] = useState({ features: [], loading: false, error: null, zoneKey: null })
 
@@ -259,6 +270,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
       setVisibleIntensities(prev => ({ ...prev, [k]: value }))
     } else {
       setVisibleLayers(prev => ({ ...prev, [key]: value }))
+      if (key === "hideNonVegetation") onHideNonVegetationChange?.(value)
     }
   }
 
@@ -341,24 +353,18 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
   const zoneInfrastructure = bundledZoneInfrastructure.length > 0 ? bundledZoneInfrastructure : liveInfra.features
 
-  // isNearIndustrialSite/isNearUrbanArea only care about a couple of the
-  // infrastructure types, but zoneInfrastructure also carries hospitals,
-  // schools, etc. Filtering down to just the relevant subsets ONCE here
-  // (instead of re-scanning the whole array inside every hotspot's check,
-  // up to MAX_RENDERED_MARKERS times per render) was a meaningful chunk of
-  // the map-freezing cost when zoomed out over a large, infrastructure-rich
-  // area.
-  const nonWildfireSiteInfra = useMemo(
-    () => zoneInfrastructure.filter((f) => f.properties?.type === "Industrial Zone" || f.properties?.type === "Quarry/Landfill"),
-    [zoneInfrastructure]
-  )
-  const urbanAreaInfra = useMemo(
-    () => zoneInfrastructure.filter((f) => f.properties?.type === "Urban Area"),
-    [zoneInfrastructure]
-  )
-
   const visibleViewportHotspots = useMemo(() => {
-    const filtered = viewportHotspots.filter(f => visibleIntensities[f.properties.intensity] !== false)
+    const filtered = viewportHotspots.filter(f => {
+      if (visibleIntensities[f.properties.intensity] === false) return false
+      // likely_vegetation is precomputed server-side (fetch_firms.py) —
+      // this is just a property read, not a distance calculation, so it's
+      // safe to run on every filter/toggle regardless of dataset size.
+      // Missing/undefined (older cached data, or a feature that predates
+      // this field) defaults to "keep it" — same fail-open safety
+      // principle as everywhere else this heuristic is used.
+      if (visibleLayers.hideNonVegetation && f.properties.likely_vegetation === false) return false
+      return true
+    })
     if (filtered.length <= MAX_RENDERED_MARKERS) return filtered
     // Too many to render safely — keep the most severe fires (by FRP),
     // dropping the long tail of low-intensity detections rather than
@@ -366,7 +372,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     return [...filtered]
       .sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0))
       .slice(0, MAX_RENDERED_MARKERS)
-  }, [viewportHotspots, visibleIntensities])
+  }, [viewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation])
   const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
 
   const center = zoneInfo?.center || [23, -102]
@@ -418,21 +424,20 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
         {activeModule === 2 && visibleLayers.hotspots &&
           visibleViewportHotspots.map((feat, i) => {
-              const { frp, intensity, source, acq_datetime, fire_type, fire_type_label } = feat.properties
+              const { frp, intensity, source, acq_datetime, fire_type, fire_type_label, likely_vegetation, non_vegetation_reason } = feat.properties
               const [lon, lat] = feat.geometry.coordinates
               // FIRMS classifies each thermal anomaly itself: 0 = presumed
               // vegetation fire (a real wildfire), 1 = volcano, 2 = other
               // static/industrial source (gas flares, plants — this is the
               // "not actually a wildfire" case), 3 = offshore. That field
-              // isn't available on the NRT endpoint we use though, so it's
-              // combined with proximity checks against mapped industrial
-              // sites and city/town centers — any of these signals is
-              // enough to style this as a muted, dashed grey marker
-              // instead of a normal intensity color, so it doesn't read as
-              // a confirmed wildfire on the map.
-              const nearIndustrial = isNearIndustrialSite(feat, nonWildfireSiteInfra)
-              const nearUrban = isNearUrbanArea(feat, urbanAreaInfra)
-              const isNonVegetation = (fire_type != null && fire_type !== 0) || nearIndustrial || nearUrban
+              // isn't available on the NRT endpoint we use though, so
+              // fetch_firms.py fills in likely_vegetation/
+              // non_vegetation_reason server-side (industrial/urban
+              // proximity, same heuristic this used to run live in the
+              // browser) — any of these signals is enough to style this as
+              // a muted, dashed grey marker instead of a normal intensity
+              // color, so it doesn't read as a confirmed wildfire on the map.
+              const isNonVegetation = (fire_type != null && fire_type !== 0) || likely_vegetation === false
               const color = isNonVegetation ? "#888888" : (INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown)
               const stroke = isNonVegetation ? "#555555" : (INTENSITY_STROKE[intensity] || INTENSITY_STROKE.unknown)
               const r = hotspotRadius(frp, mapZoom)
@@ -455,7 +460,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                   <Popup>
                     <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                       acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
-                      fireTypeLabel={isNonVegetation ? (fire_type_label || (nearIndustrial ? "static_land_source" : nearUrban ? "urban_area" : "unknown")) : null}
+                      fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
                       onZoomToLocation={() => onFireClick?.(feat)} />
                   </Popup>
                 </CircleMarker>
@@ -464,13 +469,11 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
         {activeModule === 2 && selectedFire && (() => {
           const [lon, lat] = selectedFire.geometry.coordinates
-          const { frp, intensity, source, acq_datetime, fire_type, fire_type_label } = selectedFire.properties
+          const { frp, intensity, source, acq_datetime, fire_type, fire_type_label, likely_vegetation, non_vegetation_reason } = selectedFire.properties
           const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
           const r = hotspotRadius(frp, mapZoom) + 6
           const linkedPerimeter = linkedPerimeterForFire(selectedFire, viewportPerimeters)
-          const nearIndustrial = isNearIndustrialSite(selectedFire, nonWildfireSiteInfra)
-          const nearUrban = isNearUrbanArea(selectedFire, urbanAreaInfra)
-          const isNonVegetation = (fire_type != null && fire_type !== 0) || nearIndustrial || nearUrban
+          const isNonVegetation = (fire_type != null && fire_type !== 0) || likely_vegetation === false
 
           return (
             <>
@@ -494,7 +497,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                 <Popup>
                   <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                     acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
-                    fireTypeLabel={isNonVegetation ? (fire_type_label || (nearIndustrial ? "static_land_source" : nearUrban ? "urban_area" : "unknown")) : null}
+                    fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
                     onZoomToLocation={() => onFireClick?.(selectedFire)} />
                 </Popup>
               </CircleMarker>

@@ -17,10 +17,12 @@ How to run manually:
 
 import os
 import json
+import math
 import requests
 import csv
 import io
 import time
+from collections import defaultdict
 from datetime import datetime, timezone
 from manifest import update_manifest, stabilize_generated_at
 
@@ -230,8 +232,12 @@ def row_to_feature(row, source_label, resolution_m):
         except ValueError:
             fire_type = None
 
-    # Build acquisition datetime string
-    acq_datetime = f"{acq_date} {acq_time[:2]}:{acq_time[2:]}Z" if acq_time else acq_date
+    # Build acquisition datetime string. acq_time from FIRMS isn't always
+    # zero-padded to 4 digits (e.g. "550" for 05:50, not "0550") — slicing
+    # an unpadded value produced garbage like "55:0Z" instead of "05:50Z".
+    # zfill(4) normalizes it before splitting into HH:MM.
+    acq_time_padded = acq_time.zfill(4) if acq_time else acq_time
+    acq_datetime = f"{acq_date} {acq_time_padded[:2]}:{acq_time_padded[2:]}Z" if acq_time_padded else acq_date
 
     return {
         "type": "Feature",
@@ -251,6 +257,126 @@ def row_to_feature(row, source_label, resolution_m):
             "fire_type_label": fire_type_label,
         }
     }
+
+
+INFRASTRUCTURE_PATH = "data/infrastructure.geojson"
+
+# Same thresholds as the frontend's isNearIndustrialSite/isNearUrbanArea
+# (frontend/src/utils/spatial.js) — kept identical so moving this
+# computation server-side doesn't change what counts as "likely not a
+# wildfire". 0.3km for industrial/quarry sites (tight — these are usually
+# small, precisely-mapped point features); 2km for urban areas (generous,
+# since an OSM place node marks only an approximate city-center point, not
+# the true built-up footprint edge).
+INDUSTRIAL_RADIUS_KM = 0.3
+URBAN_RADIUS_KM = 2.0
+INDUSTRIAL_TYPES = ("Industrial Zone", "Quarry/Landfill")
+
+# Grid cell size for the spatial index below. 0.05° is ~5.5km at the
+# equator; searching the 3x3 neighborhood around a point's own cell (below)
+# comfortably covers both the 0.3km and 2km thresholds even for a point
+# sitting right at a cell edge, without falling back to an O(hotspots x
+# infrastructure) brute-force comparison — the difference between this
+# running in seconds vs. the many minutes it took client-side over 200k+
+# hotspots against thousands of infrastructure points.
+GRID_CELL_DEG = 0.05
+
+
+def haversine_km(lat1, lon1, lat2, lon2):
+    R = 6371
+    d_lat = math.radians(lat2 - lat1)
+    d_lon = math.radians(lon2 - lon1)
+    a = (math.sin(d_lat / 2) ** 2
+         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(d_lon / 2) ** 2)
+    return 2 * R * math.asin(math.sqrt(a))
+
+
+def _grid_key(lat, lon, cell_deg=GRID_CELL_DEG):
+    return (math.floor(lat / cell_deg), math.floor(lon / cell_deg))
+
+
+def load_infrastructure_index():
+    """Loads data/infrastructure.geojson (built separately by
+    fetch_infrastructure.py's world-tile crawl) and buckets industrial/
+    quarry and urban-area points into a coarse lat/lon grid for fast
+    proximity lookups. Missing/unreadable file degrades to empty indexes
+    (every hotspot then classifies as likely-vegetation) rather than
+    failing the whole fetch — infrastructure coverage is still incomplete
+    globally (ongoing crawl), so this is already a best-effort signal, not
+    a hard dependency."""
+    industrial_grid = defaultdict(list)
+    urban_grid = defaultdict(list)
+    try:
+        with open(INFRASTRUCTURE_PATH) as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"  WARNING: couldn't load {INFRASTRUCTURE_PATH} for vegetation classification: {e}")
+        print("  Proceeding without it — every hotspot will classify as likely-vegetation.")
+        return industrial_grid, urban_grid
+
+    for feat in data.get("features", []):
+        props = feat.get("properties", {}) or {}
+        geom = feat.get("geometry", {}) or {}
+        if geom.get("type") != "Point":
+            continue
+        coords = geom.get("coordinates")
+        if not coords or len(coords) < 2:
+            continue
+        lon, lat = coords[0], coords[1]
+        ftype = props.get("type")
+        key = _grid_key(lat, lon)
+        if ftype in INDUSTRIAL_TYPES:
+            industrial_grid[key].append((lat, lon))
+        elif ftype == "Urban Area":
+            urban_grid[key].append((lat, lon))
+    return industrial_grid, urban_grid
+
+
+def _near_any_in_grid(lat, lon, grid, max_km):
+    if not grid:
+        return False
+    base_lat, base_lon = _grid_key(lat, lon)
+    for d_lat in (-1, 0, 1):
+        for d_lon in (-1, 0, 1):
+            for (plat, plon) in grid.get((base_lat + d_lat, base_lon + d_lon), ()):
+                if haversine_km(lat, lon, plat, plon) <= max_km:
+                    return True
+    return False
+
+
+def classify_vegetation_likelihood(features):
+    """Adds a `likely_vegetation` boolean to every feature's properties —
+    False when the detection sits within INDUSTRIAL_RADIUS_KM of a mapped
+    industrial/quarry site or within URBAN_RADIUS_KM of an OSM urban-area
+    node, True otherwise. This is the same heuristic the frontend used to
+    compute live in the browser (isNearIndustrialSite/isNearUrbanArea);
+    moving it here means the browser only ever reads a precomputed
+    property — no per-view/per-toggle distance math on the client at all.
+    NASA's own `type` field (fire_type/fire_type_label, when present) is
+    left untouched and still takes priority downstream — this only fills
+    in a signal for the far more common case where NASA doesn't provide one.
+    """
+    industrial_grid, urban_grid = load_infrastructure_index()
+    if not industrial_grid and not urban_grid:
+        for f in features:
+            f["properties"]["likely_vegetation"] = True
+            f["properties"]["non_vegetation_reason"] = None
+        return features
+
+    flagged = 0
+    for f in features:
+        lon, lat = f["geometry"]["coordinates"]
+        near_industrial = _near_any_in_grid(lat, lon, industrial_grid, INDUSTRIAL_RADIUS_KM)
+        near_urban = False if near_industrial else _near_any_in_grid(lat, lon, urban_grid, URBAN_RADIUS_KM)
+        likely_vegetation = not (near_industrial or near_urban)
+        f["properties"]["likely_vegetation"] = likely_vegetation
+        f["properties"]["non_vegetation_reason"] = (
+            "static_land_source" if near_industrial else "urban_area" if near_urban else None
+        )
+        if not likely_vegetation:
+            flagged += 1
+    print(f"  Vegetation classification: {flagged}/{len(features)} flagged as likely non-wildfire (industrial/urban proximity)")
+    return features
 
 
 def build_geojson(all_features):
@@ -364,6 +490,8 @@ def main():
             json.dump(empty, f, indent=2)
         update_manifest("hotspots", OUTPUT_PATH)
         raise SystemExit(1)
+
+    deduped = classify_vegetation_likelihood(deduped)
 
     geojson = build_geojson(deduped)
     geojson = stabilize_generated_at(geojson, OUTPUT_PATH)
