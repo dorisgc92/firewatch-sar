@@ -17,7 +17,7 @@ const KV_TOKEN = process.env.KV_REST_API_TOKEN
 const INCIDENTS_KEY = "incidents"
 
 const VALID_STATUSES = new Set(["unassigned", "assigned", "attending", "resolved"])
-const VALID_EVAC_STATUSES = new Set(["pending", "accepted", "rejected_exhausted"])
+const VALID_EVAC_STATUSES = new Set(["pending", "accepted", "attending", "resolved", "rejected_exhausted"])
 
 async function kvGet(key) {
   const r = await fetch(`${KV_URL}/get/${encodeURIComponent(key)}`, {

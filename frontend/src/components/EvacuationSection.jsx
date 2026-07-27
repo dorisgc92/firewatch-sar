@@ -56,8 +56,9 @@ export default function EvacuationSection({ fireKey, lat, lon, incident, infraFe
     )
   }
 
-  const statusLabel = evac.status === "accepted" ? t("evacStatusAccepted") : t("evacStatusPending")
-  const statusColor = evac.status === "accepted" ? theme.navy : theme.orange
+  const STATUS_COLOR = { pending: theme.orange, accepted: theme.navy, attending: theme.danger, resolved: theme.textMuted }
+  const statusLabel = t("evacStatus_" + evac.status)
+  const statusColor = STATUS_COLOR[evac.status] || theme.textMuted
   return (
     <div style={boxStyle}>
       🏥 {evac.targetHospitalName}

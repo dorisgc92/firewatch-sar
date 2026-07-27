@@ -14,6 +14,64 @@ const STATUS_COLOR = {
 }
 const MY_UNIT_STORAGE_KEY = "firewatch_my_unit"
 
+// One row in an expanded status group. Local state (assignInput) needs to
+// live per-row, so this can't just be inlined in a .map() callback.
+// Gives the EOC (or anyone) both visibility — unit assigned, evacuation
+// target hospital + its status — and direct control: typing a unit and
+// pressing Asignar/Reasignar works whether or not anyone has claimed this
+// fire yet, instead of only being able to release what a firefighter
+// already self-assigned.
+function IncidentRow({ feature, fireKey, incident, lat, lon, onSelectFire, setIncidentStatus, t }) {
+  const [assignInput, setAssignInput] = useState(incident?.unit || "")
+  const [busy, setBusy] = useState(false)
+
+  const assign = async () => {
+    setBusy(true)
+    await setIncidentStatus(fireKey, { status: incident?.status || "assigned", unit: assignInput.trim() || null })
+    setBusy(false)
+  }
+
+  const release = async () => {
+    setBusy(true)
+    await setIncidentStatus(fireKey, { status: "unassigned" })
+    setBusy(false)
+  }
+
+  return (
+    <div style={{ padding: "7px 10px", borderBottom: `1px solid ${theme.border}`, fontSize: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <button onClick={() => onSelectFire?.(feature)}
+          style={{ background: "none", border: "none", cursor: "pointer", color: theme.textPrimary, textAlign: "left", flex: 1, padding: 0 }}>
+          📍 {lat.toFixed(3)}, {lon.toFixed(3)}
+          {incident?.unit && <span style={{ color: theme.textMuted }}> — {incident.unit}</span>}
+        </button>
+        {incident && (
+          <button disabled={busy} onClick={release}
+            style={{ fontSize: "10.5px", padding: "2px 7px", borderRadius: "4px", cursor: "pointer",
+              border: `1px solid ${theme.border}`, background: "#fff", color: theme.textSecondary, marginLeft: "8px" }}>
+            {t("incidentRelease")}
+          </button>
+        )}
+      </div>
+      {incident?.evacuation && (
+        <div style={{ fontSize: "10.5px", color: theme.textSecondary, marginTop: "3px" }}>
+          🏥 {incident.evacuation.targetHospitalName} — {t("evacStatus_" + incident.evacuation.status)}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: "4px", marginTop: "4px", alignItems: "center" }}>
+        <input value={assignInput} onChange={(e) => setAssignInput(e.target.value)}
+          placeholder={t("incidentUnitPlaceholder")}
+          style={{ fontSize: "11px", flex: 1, minWidth: 0, padding: "3px 6px", borderRadius: "4px", border: `1px solid ${theme.border}` }} />
+        <button disabled={busy} onClick={assign}
+          style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
+            border: `1px solid ${theme.navy}`, background: "#fff", color: theme.navy, fontWeight: "bold", flexShrink: 0 }}>
+          {incident ? t("incidentReassign") : t("incidentAssign")}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function IncidentStatusBar({ activeModule, layers, zoneInfo, incidents, setIncidentStatus, onSelectFire }) {
   const { t } = useLanguage()
   const [countryFeature, setCountryFeature] = useState(null)
@@ -106,22 +164,8 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
             <div style={{ padding: "10px", fontSize: "12px", color: theme.textMuted }}>{t("incidentGroupEmpty")}</div>
           )}
           {displayedGroup.map(({ feature, fireKey, incident, lat, lon }) => (
-            <div key={fireKey}
-              style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "7px 10px", borderBottom: `1px solid ${theme.border}`, fontSize: "12px" }}>
-              <button onClick={() => onSelectFire?.(feature)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: theme.textPrimary, textAlign: "left", flex: 1, padding: 0 }}>
-                📍 {lat.toFixed(3)}, {lon.toFixed(3)}
-                {incident?.unit && <span style={{ color: theme.textMuted }}> — {incident.unit}</span>}
-              </button>
-              {incident && (
-                <button onClick={() => setIncidentStatus(fireKey, { status: "unassigned" })}
-                  style={{ fontSize: "10.5px", padding: "2px 7px", borderRadius: "4px", cursor: "pointer",
-                    border: `1px solid ${theme.border}`, background: "#fff", color: theme.textSecondary, marginLeft: "8px" }}>
-                  {t("incidentRelease")}
-                </button>
-              )}
-            </div>
+            <IncidentRow key={fireKey} feature={feature} fireKey={fireKey} incident={incident} lat={lat} lon={lon}
+              onSelectFire={onSelectFire} setIncidentStatus={setIncidentStatus} t={t} />
           ))}
         </div>
       )}

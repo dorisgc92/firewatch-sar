@@ -43,10 +43,14 @@ export default function HospitalRequestInbox({ activeModule, responderType, laye
     setSearch("")
   }
 
-  const pendingRequests = useMemo(() => {
+  const activeRequests = useMemo(() => {
     if (!myHospital) return []
     return Object.entries(incidents || {})
-      .filter(([, incident]) => incident.evacuation?.status === "pending" && incident.evacuation?.targetHospitalOsmId === myHospital.osmId)
+      .filter(([, incident]) => {
+        const s = incident.evacuation?.status
+        return (s === "pending" || s === "accepted" || s === "attending")
+          && incident.evacuation?.targetHospitalOsmId === myHospital.osmId
+      })
       .map(([fireKey, incident]) => {
         const [lat, lon] = fireKey.split(",").map(Number)
         return { fireKey, incident, lat, lon }
@@ -58,6 +62,18 @@ export default function HospitalRequestInbox({ activeModule, responderType, laye
   const accept = async (fireKey, incident) => {
     setBusyKey(fireKey)
     await setIncidentStatus(fireKey, { evacuation: { ...incident.evacuation, status: "accepted" } })
+    setBusyKey(null)
+  }
+
+  const markAttending = async (fireKey, incident) => {
+    setBusyKey(fireKey)
+    await setIncidentStatus(fireKey, { evacuation: { ...incident.evacuation, status: "attending" } })
+    setBusyKey(null)
+  }
+
+  const markResolved = async (fireKey, incident) => {
+    setBusyKey(fireKey)
+    await setIncidentStatus(fireKey, { evacuation: { ...incident.evacuation, status: "resolved" } })
     setBusyKey(null)
   }
 
@@ -109,32 +125,57 @@ export default function HospitalRequestInbox({ activeModule, responderType, laye
               {t("evacChangeHospital")}
             </button>
           </div>
-          {pendingRequests.length === 0 ? (
+          {activeRequests.length === 0 ? (
             <div style={{ fontSize: "11.5px", color: theme.textMuted }}>{t("evacNoRequests")}</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              {pendingRequests.map(({ fireKey, incident, lat, lon }) => (
-                <div key={fireKey} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "6px 10px", border: `1px solid ${theme.border}`, borderRadius: "6px", background: "#fff", fontSize: "12px" }}>
-                  <span>
-                    🔥 {lat.toFixed(3)}, {lon.toFixed(3)}
-                    {incident.evacuation.distanceKm != null && ` · ${incident.evacuation.distanceKm.toFixed(1)} km`}
-                    {incident.unit && <span style={{ color: theme.textMuted }}> — {incident.unit}</span>}
-                  </span>
-                  <span style={{ display: "flex", gap: "4px" }}>
-                    <button disabled={busyKey === fireKey} onClick={() => accept(fireKey, incident)}
-                      style={{ fontSize: "10.5px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
-                        border: `1px solid ${theme.navy}`, background: theme.navy, color: "#fff", fontWeight: "bold" }}>
-                      {t("evacAccept")}
-                    </button>
-                    <button disabled={busyKey === fireKey} onClick={() => reject(fireKey, incident, lat, lon)}
-                      style={{ fontSize: "10.5px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
-                        border: `1px solid ${theme.border}`, background: "#fff", color: theme.textSecondary }}>
-                      {t("evacReject")}
-                    </button>
-                  </span>
-                </div>
-              ))}
+              {activeRequests.map(({ fireKey, incident, lat, lon }) => {
+                const s = incident.evacuation.status
+                return (
+                  <div key={fireKey} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "6px 10px", border: `1px solid ${theme.border}`, borderRadius: "6px", background: "#fff", fontSize: "12px" }}>
+                    <span>
+                      🔥 {lat.toFixed(3)}, {lon.toFixed(3)}
+                      {incident.evacuation.distanceKm != null && ` · ${incident.evacuation.distanceKm.toFixed(1)} km`}
+                      {incident.unit && <span style={{ color: theme.textMuted }}> — {incident.unit}</span>}
+                      <span style={{ marginLeft: "6px", fontWeight: "bold",
+                        color: s === "pending" ? theme.orange : s === "accepted" ? theme.navy : theme.danger }}>
+                        ({t("evacStatus_" + s)})
+                      </span>
+                    </span>
+                    <span style={{ display: "flex", gap: "4px" }}>
+                      {s === "pending" && (
+                        <>
+                          <button disabled={busyKey === fireKey} onClick={() => accept(fireKey, incident)}
+                            style={{ fontSize: "10.5px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
+                              border: `1px solid ${theme.navy}`, background: theme.navy, color: "#fff", fontWeight: "bold" }}>
+                            {t("evacAccept")}
+                          </button>
+                          <button disabled={busyKey === fireKey} onClick={() => reject(fireKey, incident, lat, lon)}
+                            style={{ fontSize: "10.5px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
+                              border: `1px solid ${theme.border}`, background: "#fff", color: theme.textSecondary }}>
+                            {t("evacReject")}
+                          </button>
+                        </>
+                      )}
+                      {s === "accepted" && (
+                        <button disabled={busyKey === fireKey} onClick={() => markAttending(fireKey, incident)}
+                          style={{ fontSize: "10.5px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
+                            border: `1px solid ${theme.danger}`, background: theme.danger, color: "#fff", fontWeight: "bold" }}>
+                          {t("evacMarkAttending")}
+                        </button>
+                      )}
+                      {s === "attending" && (
+                        <button disabled={busyKey === fireKey} onClick={() => markResolved(fireKey, incident)}
+                          style={{ fontSize: "10.5px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
+                            border: `1px solid ${theme.border}`, background: "#fff", color: theme.textSecondary, fontWeight: "bold" }}>
+                          {t("evacMarkResolved")}
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
