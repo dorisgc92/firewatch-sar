@@ -177,7 +177,16 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
   }[fireTypeLabel]
 
   return (
-    <div style={{ fontSize: "12.5px", minWidth: "200px" }}>
+    <div
+      // Leaflet closes any open popup on a map click — and without this,
+      // a click on a button INSIDE the popup (Atender, Confirmar, etc.)
+      // bubbles through to the map's own click handler, which reads it as
+      // "clicked the map" and closes the popup almost instantly, right as
+      // the action fires. Stopping propagation here keeps every click
+      // inside this popup from ever reaching that handler.
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      style={{ fontSize: "12.5px", minWidth: "200px" }}>
       <strong style={{ fontSize: "13.5px" }}>{place || (resolved ? t("unnamedSite") : t("locatingSite"))}</strong><br />
       {t("coordinates")}: {lat.toFixed(4)}, {lon.toFixed(4)}<br />
       FRP: {frp ? frp + " MW" : "N/A"} · {t("intensity")}: {intensity}<br />
@@ -559,7 +568,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                   pathOptions={isNonVegetation
                     ? { color: stroke, fillColor: color, fillOpacity: 0.75, weight: 2, dashArray: "3 2" }
                     : { color: stroke, fillColor: color, fillOpacity: 0.92, weight: 2 }}>
-                  <Popup>
+                  <Popup autoClose={false}>
                     <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                       acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
                       fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
@@ -598,7 +607,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               )}
               <CircleMarker center={[lat, lon]} radius={r}
                 pathOptions={{ color: theme.navy, fillColor: color, fillOpacity: 0.9, weight: 3, dashArray: "3 3" }}>
-                <Popup>
+                <Popup autoClose={false}>
                   <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                     acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
                     fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
