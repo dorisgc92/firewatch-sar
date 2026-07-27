@@ -4,6 +4,7 @@ import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import EvacuationSection from "./EvacuationSection"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -150,7 +151,7 @@ function PopupIncidentControls({ fireKey, incident, setIncidentStatus, t }) {
   )
 }
 
-function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, linkedPerimeter, fireTypeLabel, onZoomToLocation, incidents, setIncidentStatus }) {
+function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, linkedPerimeter, fireTypeLabel, onZoomToLocation, incidents, setIncidentStatus, infraFeatures }) {
   const { t } = useLanguage()
   const [place, setPlace] = useState(null)
   const [resolved, setResolved] = useState(false)
@@ -211,9 +212,14 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
         </div>
       )}
       {setIncidentStatus && (
-        <PopupIncidentControls fireKey={fireKeyFromLatLon(lat, lon)}
-          incident={incidents?.[fireKeyFromLatLon(lat, lon)] || null}
-          setIncidentStatus={setIncidentStatus} t={t} />
+        <>
+          <PopupIncidentControls fireKey={fireKeyFromLatLon(lat, lon)}
+            incident={incidents?.[fireKeyFromLatLon(lat, lon)] || null}
+            setIncidentStatus={setIncidentStatus} t={t} />
+          <EvacuationSection fireKey={fireKeyFromLatLon(lat, lon)} lat={lat} lon={lon}
+            incident={incidents?.[fireKeyFromLatLon(lat, lon)] || null}
+            infraFeatures={infraFeatures} setIncidentStatus={setIncidentStatus} t={t} />
+        </>
       )}
       <button
         onClick={onZoomToLocation}
@@ -532,7 +538,8 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                       acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
                       fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
                       onZoomToLocation={() => onFireClick?.(feat)}
-                      incidents={incidents} setIncidentStatus={setIncidentStatus} />
+                      incidents={incidents} setIncidentStatus={setIncidentStatus}
+                      infraFeatures={layers.infrastructure?.data?.features} />
                   </Popup>
                 </CircleMarker>
               )
@@ -570,7 +577,8 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                     acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
                     fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
                     onZoomToLocation={() => onFireClick?.(selectedFire)}
-                    incidents={incidents} setIncidentStatus={setIncidentStatus} />
+                    incidents={incidents} setIncidentStatus={setIncidentStatus}
+                    infraFeatures={layers.infrastructure?.data?.features} />
                 </Popup>
               </CircleMarker>
             </>

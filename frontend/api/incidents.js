@@ -8,13 +8,16 @@ const KV_URL = process.env.KV_REST_API_URL
 const KV_TOKEN = process.env.KV_REST_API_TOKEN
 
 // Single key holding the whole incidents map as one JSON blob:
-// { [fireKey]: { status, unit, responderName, note, updatedAt } }.
+// { [fireKey]: { status, unit, responderName, note, updatedAt, evacuation? } }.
+// evacuation (added for Phase 2) is: { targetHospitalOsmId, targetHospitalName,
+// targetHospitalLat, targetHospitalLon, status, rejectedHospitalIds, requestedAt }.
 // Expected volume here is small (responders manually claiming specific
 // fires, not one record per FIRMS detection), so one blob is simpler and
 // cheap enough — no need for per-incident keys or a scan/index.
 const INCIDENTS_KEY = "incidents"
 
 const VALID_STATUSES = new Set(["unassigned", "assigned", "attending", "resolved"])
+const VALID_EVAC_STATUSES = new Set(["pending", "accepted", "rejected_exhausted"])
 
 async function kvGet(key) {
   const r = await fetch(`${KV_URL}/get/${encodeURIComponent(key)}`, {
@@ -52,10 +55,13 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST") {
-      const { fireKey, status, unit, responderName, note } = req.body || {}
+      const { fireKey, status, unit, responderName, note, evacuation } = req.body || {}
       if (!fireKey) return res.status(400).json({ error: "fireKey is required" })
       if (status && !VALID_STATUSES.has(status)) {
         return res.status(400).json({ error: `status must be one of: ${[...VALID_STATUSES].join(", ")}` })
+      }
+      if (evacuation && evacuation.status && !VALID_EVAC_STATUSES.has(evacuation.status)) {
+        return res.status(400).json({ error: `evacuation.status must be one of: ${[...VALID_EVAC_STATUSES].join(", ")}` })
       }
 
       // Read-modify-write. Last-write-wins on the whole blob — fine for
@@ -66,16 +72,26 @@ export default async function handler(req, res) {
       const raw = await kvGet(INCIDENTS_KEY)
       const map = raw ? JSON.parse(raw) : {}
 
-      if (status === "unassigned" || status === null) {
+      if (status === "unassigned") {
+        // Releasing a fire also drops any evacuation request tied to it —
+        // a released fire has no active response coordinating it.
         delete map[fireKey]
       } else {
-        map[fireKey] = {
-          status: status || "assigned",
-          unit: unit || null,
-          responderName: responderName || null,
-          note: note || null,
-          updatedAt: new Date().toISOString(),
-        }
+        // Merge into the existing record instead of replacing it — a
+        // request that only touches `evacuation` (e.g. a hospital
+        // accepting/rejecting) shouldn't wipe out `status`/`unit`, and
+        // vice versa.
+        const existing = map[fireKey] || {}
+        const next = { ...existing }
+        if (status) next.status = status
+        if (unit !== undefined) next.unit = unit
+        if (responderName !== undefined) next.responderName = responderName
+        if (note !== undefined) next.note = note
+        if (!next.status) next.status = "assigned" // first write with no explicit status
+        next.updatedAt = new Date().toISOString()
+        if (evacuation === null) delete next.evacuation
+        else if (evacuation) next.evacuation = evacuation
+        map[fireKey] = next
       }
 
       await kvSet(INCIDENTS_KEY, JSON.stringify(map))

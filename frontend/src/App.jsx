@@ -5,6 +5,7 @@ import FireMap from "./components/FireMap"
 import FreshnessPanel from "./components/FreshnessPanel"
 import Sidebar from "./components/Sidebar"
 import IncidentStatusBar from "./components/IncidentStatusBar"
+import HospitalRequestInbox from "./components/HospitalRequestInbox"
 import StartScreen from "./components/StartScreen"
 import { theme } from "./utils/theme"
 import { LanguageProvider, useLanguage } from "./context/LanguageContext"
@@ -238,6 +239,9 @@ function AppInner() {
 
       <IncidentStatusBar activeModule={activeModule} layers={layers} zoneInfo={zoneInfo}
         incidents={incidents} setIncidentStatus={setIncidentStatus} onSelectFire={handleSelectFire} />
+
+      <HospitalRequestInbox activeModule={activeModule} responderType={responderType} layers={layers}
+        incidents={incidents} setIncidentStatus={setIncidentStatus} />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>

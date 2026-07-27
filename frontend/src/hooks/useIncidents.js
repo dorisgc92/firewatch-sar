@@ -50,22 +50,37 @@ export default function useIncidents() {
     return () => clearInterval(pollRef.current)
   }, [refresh])
 
-  const setIncidentStatus = useCallback(async (fireKey, { status, unit, responderName, note }) => {
+  const setIncidentStatus = useCallback(async (fireKey, { status, unit, responderName, note, evacuation } = {}) => {
     // Optimistic update — reflect the change immediately instead of
     // waiting up to POLL_MS for it to come back around, then reconcile
     // with whatever the server actually stored (in case someone else's
-    // change landed in between).
+    // change landed in between). Merges into the existing record (same
+    // as the server does) so an evacuation-only update doesn't clobber
+    // status/unit, and vice versa.
     setIncidents((prev) => {
       const next = { ...prev }
-      if (status === "unassigned" || status == null) delete next[fireKey]
-      else next[fireKey] = { status, unit, responderName, note, updatedAt: new Date().toISOString() }
+      if (status === "unassigned") {
+        delete next[fireKey]
+      } else {
+        const existing = next[fireKey] || {}
+        const merged = { ...existing }
+        if (status) merged.status = status
+        if (unit !== undefined) merged.unit = unit
+        if (responderName !== undefined) merged.responderName = responderName
+        if (note !== undefined) merged.note = note
+        if (!merged.status) merged.status = "assigned"
+        merged.updatedAt = new Date().toISOString()
+        if (evacuation === null) delete merged.evacuation
+        else if (evacuation) merged.evacuation = evacuation
+        next[fireKey] = merged
+      }
       return next
     })
     try {
       const r = await fetch("/api/incidents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fireKey, status, unit, responderName, note }),
+        body: JSON.stringify({ fireKey, status, unit, responderName, note, evacuation }),
       })
       if (!r.ok) throw new Error(`HTTP ${r.status}`)
       const data = await r.json()

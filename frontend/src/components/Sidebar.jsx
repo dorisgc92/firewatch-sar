@@ -4,6 +4,7 @@ import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } fr
 import { buildCommandBrief, findThreatenedInfrastructure, windDirLabel } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import EvacuationSection from "./EvacuationSection"
 import { theme } from "../utils/theme"
 import { INTENSITY_COLORS } from "../utils/fireColors"
 import { useLanguage } from "../context/LanguageContext"
@@ -179,7 +180,7 @@ function IncidentControls({ fireKey, incident, setIncidentStatus, t }) {
   )
 }
 
-function PriorityFireCard({ fire, index, t, incidents, setIncidentStatus }) {
+function PriorityFireCard({ fire, index, t, incidents, setIncidentStatus, infraFeatures }) {
   const [place, setPlace] = useState(null)
   const fireKey = fireKeyFromLatLon(fire.lat, fire.lon)
   const incident = incidents?.[fireKey] || null
@@ -225,7 +226,11 @@ function PriorityFireCard({ fire, index, t, incidents, setIncidentStatus }) {
       </div>
 
       {setIncidentStatus && (
-        <IncidentControls fireKey={fireKey} incident={incident} setIncidentStatus={setIncidentStatus} t={t} />
+        <>
+          <IncidentControls fireKey={fireKey} incident={incident} setIncidentStatus={setIncidentStatus} t={t} />
+          <EvacuationSection fireKey={fireKey} lat={fire.lat} lon={fire.lon} incident={incident}
+            infraFeatures={infraFeatures} setIncidentStatus={setIncidentStatus} t={t} />
+        </>
       )}
     </div>
   )
@@ -407,7 +412,8 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
                   )}
                 </div>
                 {brief.priorityFires.map((fire, i) => (
-                  <PriorityFireCard key={i} fire={fire} index={i} t={t} incidents={incidents} setIncidentStatus={setIncidentStatus} />
+                  <PriorityFireCard key={i} fire={fire} index={i} t={t} incidents={incidents} setIncidentStatus={setIncidentStatus}
+                    infraFeatures={layers.infrastructure?.data?.features} />
                 ))}
                 {brief.actionLine && (
                   <div style={{
