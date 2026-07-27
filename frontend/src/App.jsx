@@ -1,6 +1,7 @@
 import { useState, useRef } from "react"
 import { useFireData } from "./hooks/useFireData"
 import useIncidents from "./hooks/useIncidents"
+import useIsNarrow from "./hooks/useIsNarrow"
 import FireMap from "./components/FireMap"
 import FreshnessPanel from "./components/FreshnessPanel"
 import Sidebar from "./components/Sidebar"
@@ -49,6 +50,8 @@ function AppInner() {
   // actual UI checkbox and its own visibleLayers state) — lifted here only
   // so Sidebar's world/country/state/zone counts can react to it too.
   const [hideNonVegetation, setHideNonVegetation] = useState(false)
+  const isNarrow = useIsNarrow(900)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mapZoom, setMapZoom] = useState(9)
   const [selectedFire, setSelectedFire] = useState(null)
 
@@ -217,6 +220,13 @@ function AppInner() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginLeft: "auto", flexShrink: 0 }}>
+          {isNarrow && (
+            <button onClick={() => setSidebarOpen((v) => !v)} title={t("togglePanel")} style={{
+              border: `1px solid ${theme.border}`, background: sidebarOpen ? theme.orangeSoft : "#fff",
+              color: theme.textPrimary, borderRadius: "6px", padding: "6px 10px", fontSize: "13px", cursor: "pointer" }}>
+              ☰ {t("togglePanel")}
+            </button>
+          )}
           <LanguageToggle />
           <div style={{ fontSize: "11px", color: theme.textMuted, textAlign: "right", lineHeight: 1.3 }}>
             <div>{t("responder." + responderType)}</div>
@@ -252,10 +262,23 @@ function AppInner() {
             onHideNonVegetationChange={setHideNonVegetation}
             incidents={incidents} setIncidentStatus={setIncidentStatus} />
         </div>
-        <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
-          zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire}
-          hideNonVegetation={hideNonVegetation}
-          incidents={incidents} setIncidentStatus={setIncidentStatus} />
+        {(!isNarrow || sidebarOpen) && (
+          <>
+            {isNarrow && (
+              <div onClick={() => setSidebarOpen(false)}
+                style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 1500 }} />
+            )}
+            <div style={isNarrow
+              ? { position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 1600, boxShadow: "-6px 0 20px rgba(0,0,0,0.2)" }
+              : undefined}>
+              <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
+                zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire}
+                hideNonVegetation={hideNonVegetation}
+                incidents={incidents} setIncidentStatus={setIncidentStatus}
+                onClose={isNarrow ? () => setSidebarOpen(false) : null} />
+            </div>
+          </>
+        )}
       </div>
 
       <FreshnessPanel layers={layers} />

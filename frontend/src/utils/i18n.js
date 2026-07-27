@@ -22,6 +22,7 @@ const en = {
   "module2": "Module 2: Active Fire",
   "searchPlaceholder": "Search any region, city or country...",
   "changeButton": "Change",
+  "togglePanel": "Panel",
   "worldwideDetections": "active fire detections — WORLDWIDE",
 
   "appTagline": "Near-real-time wildfire intelligence platform. Combines satellite fire detections (NASA FIRMS), active perimeters, critical infrastructure and Fire Weather Index to give response teams a command view of their zone.",
@@ -176,6 +177,7 @@ const es = {
   "module2": "Módulo 2: Incendio Activo",
   "searchPlaceholder": "Buscar región, ciudad o país...",
   "changeButton": "Cambiar",
+  "togglePanel": "Panel",
   "worldwideDetections": "detecciones activas — MUNDIAL",
 
   "appTagline": "Plataforma de inteligencia de incendios forestales en tiempo casi real. Combina detecciones satelitales (NASA FIRMS), perímetros activos, infraestructura crítica y Fire Weather Index para dar a los equipos de respuesta una vista de comando de su zona.",
@@ -330,6 +332,7 @@ const de = {
   "module2": "Modul 2: Aktiver Brand",
   "searchPlaceholder": "Region, Stadt oder Land suchen...",
   "changeButton": "Ändern",
+  "togglePanel": "Panel",
   "worldwideDetections": "aktive Brandmeldungen — WELTWEIT",
 
   "appTagline": "Nahezu-Echtzeit-Plattform für Waldbrand-Informationen. Kombiniert Satelliten-Branderkennung (NASA FIRMS), aktive Umrisse, kritische Infrastruktur und den Fire Weather Index für eine Lageübersicht der Einsatzzone.",
@@ -484,6 +487,7 @@ const fr = {
   "module2": "Module 2 : Incendie Actif",
   "searchPlaceholder": "Rechercher une région, ville ou pays...",
   "changeButton": "Changer",
+  "togglePanel": "Panneau",
   "worldwideDetections": "détections actives — MONDIAL",
 
   "appTagline": "Plateforme de renseignement sur les feux de forêt en quasi temps réel. Combine détections satellites (NASA FIRMS), périmètres actifs, infrastructures critiques et l'indice Fire Weather Index pour donner aux équipes une vue de commandement de leur zone.",
@@ -638,6 +642,7 @@ const pt = {
   "module2": "Módulo 2: Incêndio Ativo",
   "searchPlaceholder": "Buscar região, cidade ou país...",
   "changeButton": "Alterar",
+  "togglePanel": "Painel",
   "worldwideDetections": "detecções ativas — MUNDIAL",
 
   "appTagline": "Plataforma de inteligência sobre incêndios florestais quase em tempo real. Combina detecções via satélite (NASA FIRMS), perímetros ativos, infraestrutura crítica e o Fire Weather Index para dar às equipes de resposta uma visão de comando de sua zona.",
@@ -792,6 +797,7 @@ const it = {
   "module2": "Modulo 2: Incendio Attivo",
   "searchPlaceholder": "Cerca regione, città o paese...",
   "changeButton": "Cambia",
+  "togglePanel": "Pannello",
   "worldwideDetections": "rilevazioni attive — MONDIALE",
 
   "appTagline": "Piattaforma di intelligence sugli incendi boschivi quasi in tempo reale. Combina rilevazioni satellitari (NASA FIRMS), perimetri attivi, infrastrutture critiche e il Fire Weather Index per dare ai team di risposta una vista di comando della loro zona.",

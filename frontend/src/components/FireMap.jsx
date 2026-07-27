@@ -4,6 +4,7 @@ import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import useIsNarrow from "../hooks/useIsNarrow"
 import EvacuationSection from "./EvacuationSection"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
@@ -236,6 +237,12 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
 
 function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter, onInfraFilter, mapZoom, infraLoading }) {
   const { t } = useLanguage()
+  const isNarrow = useIsNarrow(900)
+  // Starts collapsed on narrow screens (this panel is an overlay ON TOP of
+  // the map, not a layout sibling — on a narrow viewport its ~215px width
+  // can eat most of what little map area is visible). Defaults open on
+  // wider screens, same as before this existed.
+  const [collapsed, setCollapsed] = useState(isNarrow)
   const m2 = [
     { key: "hotspots",       label: t("layer.hotspots"), color: "#FF4400" },
     { key: "perimeters",     label: t("layer.perimeters"), color: "#FF8800" },
@@ -246,12 +253,31 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
     { key: "weather", label: t("layer.weather"),  color: "#44AAFF" },
   ]
   const active = activeModule === 1 ? m1 : m2
+
+  if (collapsed) {
+    return (
+      <button onClick={() => setCollapsed(false)} style={{
+        position: "absolute", top: "10px", left: "10px", zIndex: 1000,
+        background: theme.panelBgSoft, border: `1px solid ${theme.border}`, borderRadius: "8px",
+        padding: "8px 12px", fontSize: "13px", color: theme.textPrimary, cursor: "pointer",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+        ☰ {t("layersTitle")}
+      </button>
+    )
+  }
+
   return (
     <div style={{ position: "absolute", top: "10px", left: "10px", zIndex: 1000,
       background: theme.panelBgSoft, borderRadius: "8px", padding: "10px",
       minWidth: "195px", maxWidth: "215px", maxHeight: "calc(100% - 20px)", overflowY: "auto",
       border: `1px solid ${theme.border}`, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-      <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold", marginBottom: "8px", letterSpacing: "0.04em" }}>{t("layersTitle")}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+        <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold", letterSpacing: "0.04em" }}>{t("layersTitle")}</div>
+        <button onClick={() => setCollapsed(true)} style={{
+          border: "none", background: "none", cursor: "pointer", fontSize: "14px", color: theme.textMuted, lineHeight: 1, padding: 0 }}>
+          ✕
+        </button>
+      </div>
       {active.map(({ key, label, color }) => (
         <label key={key} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", marginBottom: "6px" }}>
           <input type="checkbox" checked={layers[key] !== false}

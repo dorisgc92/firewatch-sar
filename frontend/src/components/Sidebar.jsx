@@ -269,7 +269,7 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, incidents, setIncidentStatus }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, incidents, setIncidentStatus, onClose }) {
   const { t } = useLanguage()
   const rawDetections = layers.hotspots?.data?.features || []
   // Mirrors the "Wildfires only" toggle in the map's layer panel
@@ -347,10 +347,18 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
 
   return (
     <div style={{
-      width: "270px", flexShrink: 0, background: theme.panelBg,
+      width: "270px", maxWidth: "90vw", height: "100%", flexShrink: 0, background: theme.panelBg,
       borderLeft: `1px solid ${theme.border}`, padding: "12px",
       overflowY: "auto", display: "flex", flexDirection: "column",
     }}>
+      {onClose && (
+        <button onClick={onClose} style={{
+          alignSelf: "flex-end", border: "none", background: "none", cursor: "pointer",
+          fontSize: "18px", color: theme.textMuted, padding: "0 0 8px 0", lineHeight: 1,
+        }}>
+          ✕
+        </button>
+      )}
       <div style={{
         background: activeModule === 1 ? theme.navySoft : theme.orangeSoft,
         border: `1px solid ${activeModule === 1 ? theme.navy : theme.orange}`,
