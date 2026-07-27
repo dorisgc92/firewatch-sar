@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap, Marker }
 import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
+import { fireKeyFromLatLon } from "../hooks/useIncidents"
 import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -85,7 +86,71 @@ function MapController({ mapRef, onZoom, onMove }) {
 }
 
 
-function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, linkedPerimeter, fireTypeLabel, onZoomToLocation }) {
+const INCIDENT_NEXT_STATUS = { assigned: "attending", attending: "resolved" }
+
+// Compact claim/advance/release controls for the map popup — same shared
+// incidents state as Sidebar.jsx's version (kept in sync via Vercel KV,
+// see useIncidents.js), just styled to fit inside a Leaflet popup instead
+// of a sidebar card.
+function PopupIncidentControls({ fireKey, incident, setIncidentStatus, t }) {
+  const [showForm, setShowForm] = useState(false)
+  const [unitInput, setUnitInput] = useState("")
+  const [busy, setBusy] = useState(false)
+
+  const run = async (status, extra = {}) => {
+    setBusy(true)
+    await setIncidentStatus(fireKey, { status, ...extra })
+    setBusy(false)
+  }
+
+  const btnStyle = {
+    fontSize: "10.5px", padding: "3px 7px", borderRadius: "4px", cursor: "pointer",
+    border: `1px solid ${theme.border}`, background: "#fff", color: theme.textPrimary,
+  }
+
+  if (!incident) {
+    if (!showForm) {
+      return (
+        <button onClick={() => setShowForm(true)}
+          style={{ ...btnStyle, marginTop: "6px", width: "100%", borderColor: theme.orange, color: theme.orange, fontWeight: "bold" }}>
+          {t("incidentAttend")}
+        </button>
+      )
+    }
+    return (
+      <div style={{ display: "flex", gap: "4px", marginTop: "6px" }}>
+        <input value={unitInput} onChange={(e) => setUnitInput(e.target.value)}
+          placeholder={t("incidentUnitPlaceholder")}
+          style={{ fontSize: "11px", padding: "3px 6px", borderRadius: "4px", border: `1px solid ${theme.border}`, flex: 1, minWidth: 0 }} />
+        <button disabled={busy} style={btnStyle}
+          onClick={async () => { await run("assigned", { unit: unitInput.trim() || null }); setShowForm(false); setUnitInput("") }}>
+          {t("incidentConfirm")}
+        </button>
+        <button disabled={busy} style={btnStyle} onClick={() => setShowForm(false)}>{t("incidentCancel")}</button>
+      </div>
+    )
+  }
+
+  const next = INCIDENT_NEXT_STATUS[incident.status]
+  return (
+    <div style={{ marginTop: "6px" }}>
+      <div style={{ fontSize: "11px", color: theme.textSecondary || "#777" }}>
+        {t("incidentStatus_" + incident.status)}{incident.unit ? ` — ${incident.unit}` : ""}
+      </div>
+      <div style={{ display: "flex", gap: "4px", marginTop: "3px" }}>
+        {next && (
+          <button disabled={busy} style={btnStyle}
+            onClick={() => run(next, { unit: incident.unit, responderName: incident.responderName })}>
+            {t(next === "attending" ? "incidentMarkAttending" : "incidentMarkResolved")}
+          </button>
+        )}
+        <button disabled={busy} style={btnStyle} onClick={() => run("unassigned")}>{t("incidentRelease")}</button>
+      </div>
+    </div>
+  )
+}
+
+function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, linkedPerimeter, fireTypeLabel, onZoomToLocation, incidents, setIncidentStatus }) {
   const { t } = useLanguage()
   const [place, setPlace] = useState(null)
   const [resolved, setResolved] = useState(false)
@@ -144,6 +209,11 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
             </div>
           )}
         </div>
+      )}
+      {setIncidentStatus && (
+        <PopupIncidentControls fireKey={fireKeyFromLatLon(lat, lon)}
+          incident={incidents?.[fireKeyFromLatLon(lat, lon)] || null}
+          setIncidentStatus={setIncidentStatus} t={t} />
       )}
       <button
         onClick={onZoomToLocation}
@@ -258,7 +328,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, setIncidentStatus }) {
   const { t } = useLanguage()
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
@@ -461,7 +531,8 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                     <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                       acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
                       fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
-                      onZoomToLocation={() => onFireClick?.(feat)} />
+                      onZoomToLocation={() => onFireClick?.(feat)}
+                      incidents={incidents} setIncidentStatus={setIncidentStatus} />
                   </Popup>
                 </CircleMarker>
               )
@@ -498,7 +569,8 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                   <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                     acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
                     fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
-                    onZoomToLocation={() => onFireClick?.(selectedFire)} />
+                    onZoomToLocation={() => onFireClick?.(selectedFire)}
+                    incidents={incidents} setIncidentStatus={setIncidentStatus} />
                 </Popup>
               </CircleMarker>
             </>

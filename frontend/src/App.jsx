@@ -1,5 +1,6 @@
 import { useState, useRef } from "react"
 import { useFireData } from "./hooks/useFireData"
+import useIncidents from "./hooks/useIncidents"
 import FireMap from "./components/FireMap"
 import FreshnessPanel from "./components/FreshnessPanel"
 import Sidebar from "./components/Sidebar"
@@ -40,6 +41,7 @@ function AppInner() {
   const [searchResults, setSearchResults] = useState([])
   const mapRef = useRef(null)
   const layers = useFireData()
+  const { incidents, setIncidentStatus } = useIncidents()
   const [infraFilter, setInfraFilter] = useState({ hospital: true, fire_station: true, police: true, power: true, school: true, fuel: true, tower: true, water: true, airport: true })
   // Mirrors FireMap's internal "Wildfires only" toggle (FireMap owns the
   // actual UI checkbox and its own visibleLayers state) — lifted here only
@@ -239,11 +241,13 @@ function AppInner() {
             infraFilter={infraFilter} onInfraFilter={(key, val) => setInfraFilter(prev => ({...prev, [key]: val}))}
             mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire}
             onFireClick={handleSelectFire} zoneLoading={zoneLoading}
-            onHideNonVegetationChange={setHideNonVegetation} />
+            onHideNonVegetationChange={setHideNonVegetation}
+            incidents={incidents} setIncidentStatus={setIncidentStatus} />
         </div>
         <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
           zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire}
-          hideNonVegetation={hideNonVegetation} />
+          hideNonVegetation={hideNonVegetation}
+          incidents={incidents} setIncidentStatus={setIncidentStatus} />
       </div>
 
       <FreshnessPanel layers={layers} />
