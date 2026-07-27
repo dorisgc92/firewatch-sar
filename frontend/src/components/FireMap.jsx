@@ -472,7 +472,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         <TileLayer
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
           attribution='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), swisstopo, and the GIS User Community'
-          maxZoom={19} maxNativeZoom={19} />
+          maxZoom={19} maxNativeZoom={16} />
 
         <MapController mapRef={mapRef} onZoom={setMapZoom} onMove={handleMove} />
 
