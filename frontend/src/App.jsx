@@ -50,7 +50,7 @@ function AppInner() {
   // actual UI checkbox and its own visibleLayers state) — lifted here only
   // so Sidebar's world/country/state/zone counts can react to it too.
   const [hideNonVegetation, setHideNonVegetation] = useState(false)
-  const isNarrow = useIsNarrow(900)
+  const isNarrow = useIsNarrow(700)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mapZoom, setMapZoom] = useState(9)
   const [selectedFire, setSelectedFire] = useState(null)
@@ -222,8 +222,10 @@ function AppInner() {
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginLeft: "auto", flexShrink: 0 }}>
           {isNarrow && (
             <button onClick={() => setSidebarOpen((v) => !v)} title={t("togglePanel")} style={{
-              border: `1px solid ${theme.border}`, background: sidebarOpen ? theme.orangeSoft : "#fff",
-              color: theme.textPrimary, borderRadius: "6px", padding: "6px 10px", fontSize: "13px", cursor: "pointer" }}>
+              border: `1px solid ${theme.orange}`,
+              background: sidebarOpen ? theme.orangeSoft : theme.orange,
+              color: sidebarOpen ? theme.orange : "#fff",
+              fontWeight: "bold", borderRadius: "6px", padding: "6px 10px", fontSize: "13px", cursor: "pointer" }}>
               ☰ {t("togglePanel")}
             </button>
           )}
