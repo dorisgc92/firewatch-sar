@@ -4,6 +4,7 @@ import useIncidents from "./hooks/useIncidents"
 import FireMap from "./components/FireMap"
 import FreshnessPanel from "./components/FreshnessPanel"
 import Sidebar from "./components/Sidebar"
+import IncidentStatusBar from "./components/IncidentStatusBar"
 import StartScreen from "./components/StartScreen"
 import { theme } from "./utils/theme"
 import { LanguageProvider, useLanguage } from "./context/LanguageContext"
@@ -234,6 +235,9 @@ function AppInner() {
           )}
         </div>
       </header>
+
+      <IncidentStatusBar activeModule={activeModule} layers={layers} zoneInfo={zoneInfo}
+        incidents={incidents} setIncidentStatus={setIncidentStatus} onSelectFire={handleSelectFire} />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
