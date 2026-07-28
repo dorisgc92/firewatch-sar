@@ -107,7 +107,7 @@ function pointInRing(lon, lat, ring) {
 // True if (lat, lon) falls inside a Polygon or MultiPolygon geometry
 // (checking the outer ring only — holes are rare for wildfire perimeters
 // and not worth the extra complexity here).
-function pointInPolygonGeometry(lat, lon, geom) {
+export function pointInPolygonGeometry(lat, lon, geom) {
   if (!geom) return false
   if (geom.type === "Polygon") {
     return pointInRing(lon, lat, geom.coordinates[0])

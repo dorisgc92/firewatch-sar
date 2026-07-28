@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
-import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot } from "../utils/spatial"
+import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot, pointInPolygonGeometry, nearestFeatures } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
 import useIsNarrow from "../hooks/useIsNarrow"
@@ -628,11 +628,37 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               ? { color: "#FFAA33", fillColor: "#FF8800", fillOpacity: 0.18, weight: 1.5, dashArray: "6 4" }
               : { color: "#FF6600", fillColor: "#FF4400", fillOpacity: 0.25, weight: 2 }}
             onEachFeature={(feature, layer) => {
-              const { name, hectares, country, source, date_updated, estimated } = feature.properties
-              const estimatedNote = estimated
-                ? `<br/><em style="color:#CC6600;font-size:11px;">${t("estimatedAreaNote") || "Derived from clustered hotspots, not a surveyed perimeter."}</em>`
-                : ""
-              layer.bindPopup(`<strong>${name}</strong><br/>Area: ${hectares ? hectares.toLocaleString() + " ha" : "N/A"}<br/>Country: ${country}<br/>Updated: ${date_updated || "N/A"}<br/>Source: ${source}${estimatedNote}`)
+              // Used to just bindPopup() a read-only HTML blurb here (area,
+              // country, source) — no way to assign resources from a click
+              // on the shaded area itself, only from the small individual
+              // fire dots underneath it. Now: pick the most severe fire
+              // inside (or, failing that, nearest to) this perimeter and
+              // route through the same selection flow a marker click uses
+              // — that popup already knows how to show a linked perimeter's
+              // area info (linkedPerimeterForFire finds this same shape),
+              // so nothing about that context is lost, and Atender/
+              // evacuation controls come along with it.
+              layer.on("click", () => {
+                const candidates = viewportHotspots.length > 0 ? viewportHotspots : (layers.hotspots?.data?.features || [])
+                const inside = candidates.filter((h) => {
+                  const [hlon, hlat] = h.geometry.coordinates
+                  return pointInPolygonGeometry(hlat, hlon, feature.geometry)
+                })
+                let repFire = inside.length > 0
+                  ? inside.reduce((best, h) => (h.properties.frp || 0) > (best.properties.frp || 0) ? h : best)
+                  : null
+                if (!repFire && candidates.length > 0) {
+                  const ring = feature.geometry.type === "Polygon" ? feature.geometry.coordinates[0]
+                    : feature.geometry.type === "MultiPolygon" ? feature.geometry.coordinates[0][0] : null
+                  if (ring?.length) {
+                    const cLat = ring.reduce((s, [, lt]) => s + lt, 0) / ring.length
+                    const cLon = ring.reduce((s, [ln]) => s + ln, 0) / ring.length
+                    const [nearest] = nearestFeatures(cLat, cLon, candidates, 1)
+                    repFire = nearest?.feature || null
+                  }
+                }
+                if (repFire) onFireClick?.(repFire)
+              })
             }} />
         )}
 

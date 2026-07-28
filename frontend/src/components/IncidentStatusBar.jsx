@@ -100,17 +100,29 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
     return filterFeaturesByBbox(allDetections, zoneInfo?.countryBbox)
   }, [allDetections, countryFeature, zoneInfo])
 
+  // The expensive part (building a fireKey string for every fire in the
+  // country — up to 20k+ for somewhere like Canada in an active season) is
+  // deliberately NOT in the same memo as the incidents-dependent grouping
+  // below. Without this split, that full per-fire key computation was
+  // re-running on every single incidents change — including from OTHER
+  // responders' actions arriving via the 30s poll, not just your own
+  // clicks — which is what was making "Asignar" feel like it froze the tab.
+  const keyedHotspots = useMemo(() => {
+    return countryHotspots.map((feature) => {
+      const [lon, lat] = feature.geometry.coordinates
+      return { feature, fireKey: fireKeyFromLatLon(lat, lon), lat, lon }
+    })
+  }, [countryHotspots])
+
   const grouped = useMemo(() => {
     const groups = { unassigned: [], assigned: [], attending: [], resolved: [] }
-    for (const feature of countryHotspots) {
-      const [lon, lat] = feature.geometry.coordinates
-      const fireKey = fireKeyFromLatLon(lat, lon)
-      const incident = incidents?.[fireKey] || null
+    for (const item of keyedHotspots) {
+      const incident = incidents?.[item.fireKey] || null
       const status = incident?.status || "unassigned"
-      groups[status]?.push({ feature, fireKey, incident, lat, lon })
+      groups[status]?.push({ ...item, incident })
     }
     return groups
-  }, [countryHotspots, incidents])
+  }, [keyedHotspots, incidents])
 
   const saveMyUnit = (value) => {
     setMyUnit(value)
