@@ -1,12 +1,12 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "generated_at": "2026-08-18T01:44:56.755492+00:00",
+    "generated_at": "2026-08-18T03:03:32.820963+00:00",
     "source": "NASA FIRMS (VIIRS SNPP/NOAA-20/NOAA-21 + MODIS NRT)",
     "api_url": "https://firms.modaps.eosdis.nasa.gov/api/",
     "coverage": "Global",
     "lookback_days": 1,
-    "total_hotspots": 27,
+    "total_hotspots": 206,
     "description": "Active fire hotspots detected by NASA satellite sensors. FRP = Fire Radiative Power in megawatts (MW). Higher FRP = more intense fire. Data latency: < 3 hours globally.",
     "intensity_scale": {
       "low": "FRP < 10 MW",
@@ -16,6 +16,4123 @@
     }
   },
   "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -54.69938,
+          -25.33232
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 20.18,
+        "intensity": "moderate",
+        "confidence": "63",
+        "acq_datetime": "2026-08-18 01:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -55.83728,
+          -25.26295
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 23.78,
+        "intensity": "moderate",
+        "confidence": "78",
+        "acq_datetime": "2026-08-18 01:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.57839,
+          -33.96807
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.55,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": false,
+        "non_vegetation_reason": "static_land_source"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.07792,
+          -33.31616
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.94,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.04644,
+          -32.9626
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.04,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": false,
+        "non_vegetation_reason": "static_land_source"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          18.04713,
+          -32.95923
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.61,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.6156,
+          -32.37652
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.12,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.85548,
+          -31.97346
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.61,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.77311,
+          -31.9601
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.97,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.54934,
+          -31.82709
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.68,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.54691,
+          -31.81075
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.79,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.53873,
+          -31.81013
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.65,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.91359,
+          -31.70444
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.8,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.90982,
+          -31.70416
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.8,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.91174,
+          -31.70211
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.77,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.87862,
+          -31.68042
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.11,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.87714,
+          -31.67924
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.86,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.84952,
+          -31.67838
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 5.98,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.84512,
+          -31.67807
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.83,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.85226,
+          -31.67733
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.52,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.84791,
+          -31.67699
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.52,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.84351,
+          -31.67665
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.86,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.91626,
+          -31.6328
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.74,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.91247,
+          -31.63252
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.63,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.88286,
+          -31.61391
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 4.31,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.12698,
+          -31.6092
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.21,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.88595,
+          -31.60865
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 4.31,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.8822,
+          -31.60838
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 4.31,
+        "intensity": "low",
+        "confidence": "h",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.87862,
+          -31.60812
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 5.86,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.87516,
+          -31.60788
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 5.86,
+        "intensity": "low",
+        "confidence": "h",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.11766,
+          -31.603
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.65,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.87512,
+          -31.6024
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.97,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.87178,
+          -31.60216
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.94,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.86837,
+          -31.60191
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.94,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.8272,
+          -31.54248
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.38,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.82306,
+          -31.54217
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.38,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.83111,
+          -31.53732
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.67,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.85528,
+          -31.53368
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.68,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.82317,
+          -31.53127
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.16,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.25178,
+          -31.52361
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.09,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.24651,
+          -31.52325
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.75,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.2426,
+          -31.51739
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.75,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.07934,
+          -31.51151
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.73,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.07522,
+          -31.51122
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.73,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.92952,
+          -31.51049
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.58,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.97843,
+          -31.50795
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.8,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.25536,
+          -31.5071
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.01,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.32339,
+          -31.50613
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.51,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.25587,
+          -31.50154
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.64,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.95574,
+          -31.489
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.18,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.95082,
+          -31.48867
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.01,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.16446,
+          -31.47352
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.33,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.16628,
+          -31.47317
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.7,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.23223,
+          -31.45621
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.68,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.52235,
+          -31.33185
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.96,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.52571,
+          -31.32641
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.96,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.5092,
+          -31.31963
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.89,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.51778,
+          -31.30889
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.76,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.51008,
+          -31.30838
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.76,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.51737,
+          -31.29754
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.76,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.39843,
+          -31.29574
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.84,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.39288,
+          -31.29539
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.55,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.51757,
+          -31.29445
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.58,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.21516,
+          -31.18502
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.69,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.20983,
+          -31.18468
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.69,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.46892,
+          -31.14417
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.57,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.46358,
+          -31.14382
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.57,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.47276,
+          -31.14168
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 4.22,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.46758,
+          -31.14138
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 4.22,
+        "intensity": "low",
+        "confidence": "h",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.46948,
+          -31.13824
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.85,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.46458,
+          -31.13792
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.85,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.9968,
+          -31.10616
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.98,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.98897,
+          -31.10557
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.98,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.5373,
+          -31.07976
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.82,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.53409,
+          -31.0771
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.15,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.23362,
+          -31.01755
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.58,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.23041,
+          -31.01658
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.66,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.23928,
+          -31.01205
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.93,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.24143,
+          -31.01137
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.56,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.54276,
+          -30.99614
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.8,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.53819,
+          -30.99585
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.15,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.5381,
+          -30.98987
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.28,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.54731,
+          -30.98446
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.52,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.76126,
+          -30.97339
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.69,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.75621,
+          -30.97303
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.69,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.79742,
+          -30.95726
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.1,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.79331,
+          -30.95556
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.83,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.76655,
+          -30.95548
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.83,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.7677,
+          -30.95393
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.88,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.7236,
+          -30.94218
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.85,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.60863,
+          -30.92825
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.07,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.61558,
+          -30.9261
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.93,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.61018,
+          -30.92575
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.58,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.5799,
+          -30.81883
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.68,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.35025,
+          -30.80513
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.98,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.33835,
+          -30.79312
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.11,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.32386,
+          -30.79208
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.74,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.31936,
+          -30.79176
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.74,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.35209,
+          -30.78852
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.28,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.3485,
+          -30.78826
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.28,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.34466,
+          -30.78799
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.11,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.71313,
+          -30.78246
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.79,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.70882,
+          -30.78215
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.0,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.71197,
+          -30.77943
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.48,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.70784,
+          -30.77915
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.48,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.70401,
+          -30.7789
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.98,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.70434,
+          -30.77612
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.0,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.8324,
+          -30.7759
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.65,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.83436,
+          -30.77403
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.75,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.70353,
+          -30.77317
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.47,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.83182,
+          -30.76812
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.88,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.48141,
+          -30.76599
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.68,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.38988,
+          -30.73052
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.76,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.38739,
+          -30.71356
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.65,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.37907,
+          -30.70737
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.83,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.5929,
+          -30.69707
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.6,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.68852,
+          -30.65855
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.84,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.61016,
+          -30.65628
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.51,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.62649,
+          -30.6513
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.3,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.61542,
+          -30.65062
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.51,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.60955,
+          -30.65026
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 3.51,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.60379,
+          -30.64991
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.14,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.63002,
+          -30.64837
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.8,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.61269,
+          -30.6472
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.17,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.60677,
+          -30.64679
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.17,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.23091,
+          -30.6467
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.91,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.22933,
+          -30.64655
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.86,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.22693,
+          -30.64642
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.91,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.62765,
+          -30.64538
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.27,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.61569,
+          -30.64466
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.11,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.62617,
+          -30.64212
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 2.92,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          29.44742,
+          -30.64021
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.05,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.18926,
+          -30.60479
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.89,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.18491,
+          -30.60446
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.89,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.27047,
+          -30.54992
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.16,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.26981,
+          -30.54964
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.9,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.28066,
+          -30.45072
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.84,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.2858,
+          -30.44555
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 0.84,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.28419,
+          -30.44549
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.13,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.45516,
+          -30.39719
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.68,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.45092,
+          -30.39688
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.51,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.51263,
+          -30.19642
+        ]
+      },
+      "properties": {
+        "source": "VIIRS (NOAA-20)",
+        "resolution_m": 375,
+        "frp": 1.06,
+        "intensity": "low",
+        "confidence": "n",
+        "acq_datetime": "2026-08-18 00:01Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.14742,
+          31.27374
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 59.82,
+        "intensity": "high",
+        "confidence": "83",
+        "acq_datetime": "2026-08-18 00:03Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.10973,
+          31.27637
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 106.44,
+        "intensity": "high",
+        "confidence": "99",
+        "acq_datetime": "2026-08-18 00:03Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.42167,
+          32.13142
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 86.03,
+        "intensity": "high",
+        "confidence": "89",
+        "acq_datetime": "2026-08-18 00:03Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          54.26147,
+          23.27313
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.79,
+        "intensity": "moderate",
+        "confidence": "84",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          54.27357,
+          23.28089
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 18.53,
+        "intensity": "moderate",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          54.26293,
+          23.28237
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 108.87,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          54.25225,
+          23.28385
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.27,
+        "intensity": "low",
+        "confidence": "82",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.28703,
+          23.52921
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 24.67,
+        "intensity": "moderate",
+        "confidence": "81",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.28848,
+          23.539
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 28.65,
+        "intensity": "moderate",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.32751,
+          23.55388
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 101.8,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          54.01891,
+          24.51378
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.99,
+        "intensity": "moderate",
+        "confidence": "94",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.66518,
+          24.84989
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.35,
+        "intensity": "low",
+        "confidence": "86",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.07579,
+          24.88381
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 0.0,
+        "intensity": "low",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.86376,
+          25.16415
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 79.57,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.87886,
+          25.17278
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 64.15,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.88034,
+          25.18308
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 152.86,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.14861,
+          25.53782
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 26.69,
+        "intensity": "moderate",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.64697,
+          27.50522
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 23.7,
+        "intensity": "moderate",
+        "confidence": "99",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.63026,
+          27.50717
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 11.09,
+        "intensity": "moderate",
+        "confidence": "29",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.56898,
+          27.57177
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 20.07,
+        "intensity": "moderate",
+        "confidence": "90",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.1756,
+          27.7643
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 12.53,
+        "intensity": "moderate",
+        "confidence": "74",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.16864,
+          27.76597
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 14.14,
+        "intensity": "moderate",
+        "confidence": "78",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.72564,
+          28.49881
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 75.85,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          50.30593,
+          30.35118
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 30.33,
+        "intensity": "moderate",
+        "confidence": "86",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          50.28053,
+          30.3534
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 25.6,
+        "intensity": "moderate",
+        "confidence": "82",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.28932,
+          30.75193
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 187.97,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.28485,
+          30.75493
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 237.67,
+        "intensity": "extreme",
+        "confidence": "100",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.93322,
+          30.86452
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 51.76,
+        "intensity": "high",
+        "confidence": "77",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.92588,
+          30.87271
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 56.3,
+        "intensity": "high",
+        "confidence": "78",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.30162,
+          31.02877
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 72.69,
+        "intensity": "high",
+        "confidence": "85",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.29735,
+          31.03851
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 110.4,
+        "intensity": "high",
+        "confidence": "97",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.80135,
+          31.09399
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 53.55,
+        "intensity": "high",
+        "confidence": "78",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          56.47622,
+          22.33414
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 2.97,
+        "intensity": "low",
+        "confidence": "48",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          56.61131,
+          24.50516
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.34,
+        "intensity": "low",
+        "confidence": "50",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          55.85556,
+          29.99872
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 16.31,
+        "intensity": "moderate",
+        "confidence": "85",
+        "acq_datetime": "2026-08-18 00:05Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          55.11377,
+          18.32626
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.02,
+        "intensity": "low",
+        "confidence": "81",
+        "acq_datetime": "2026-08-18 00:07Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          55.10464,
+          18.32763
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 11.14,
+        "intensity": "moderate",
+        "confidence": "93",
+        "acq_datetime": "2026-08-18 00:07Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
     {
       "type": "Feature",
       "geometry": {
