@@ -8,16 +8,22 @@ const KV_URL = process.env.KV_REST_API_URL
 const KV_TOKEN = process.env.KV_REST_API_TOKEN
 
 // Single key holding the whole incidents map as one JSON blob:
-// { [fireKey]: { status, unit, responderName, note, updatedAt, evacuation? } }.
-// evacuation (added for Phase 2) is: { targetHospitalOsmId, targetHospitalName,
-// targetHospitalLat, targetHospitalLon, status, rejectedHospitalIds, requestedAt }.
+// { [fireKey]: { status, updatedAt, requests } }.
+// requests is keyed by responder group ("bombero", "proteccion_civil",
+// "ems", "utilities", "ong" — see responderGroups.js on the frontend) and
+// each value is: { targetId, targetName, targetLat, targetLon, distanceKm,
+// status: pending|accepted|attending|resolved|exhausted, rejectedIds,
+// requestedAt, respondedAt }. One record per group per fire, all living
+// under the same fireKey, is what lets the EOC dispatch (say) a fire
+// station AND a hospital to the same incident independently.
 // Expected volume here is small (responders manually claiming specific
 // fires, not one record per FIRMS detection), so one blob is simpler and
 // cheap enough — no need for per-incident keys or a scan/index.
 const INCIDENTS_KEY = "incidents"
 
 const VALID_STATUSES = new Set(["unassigned", "assigned", "attending", "resolved"])
-const VALID_EVAC_STATUSES = new Set(["pending", "accepted", "attending", "resolved", "rejected_exhausted"])
+const VALID_REQUEST_STATUSES = new Set(["pending", "accepted", "attending", "resolved", "exhausted"])
+const VALID_GROUPS = new Set(["bombero", "proteccion_civil", "ems", "utilities", "ong"])
 
 async function kvGet(key) {
   const r = await fetch(`${KV_URL}/get/${encodeURIComponent(key)}`, {
@@ -55,13 +61,20 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST") {
-      const { fireKey, status, unit, responderName, note, evacuation } = req.body || {}
+      const { fireKey, status, requests } = req.body || {}
       if (!fireKey) return res.status(400).json({ error: "fireKey is required" })
       if (status && !VALID_STATUSES.has(status)) {
         return res.status(400).json({ error: `status must be one of: ${[...VALID_STATUSES].join(", ")}` })
       }
-      if (evacuation && evacuation.status && !VALID_EVAC_STATUSES.has(evacuation.status)) {
-        return res.status(400).json({ error: `evacuation.status must be one of: ${[...VALID_EVAC_STATUSES].join(", ")}` })
+      if (requests) {
+        for (const [group, reqRecord] of Object.entries(requests)) {
+          if (!VALID_GROUPS.has(group)) {
+            return res.status(400).json({ error: `requests key must be one of: ${[...VALID_GROUPS].join(", ")}` })
+          }
+          if (reqRecord && reqRecord.status && !VALID_REQUEST_STATUSES.has(reqRecord.status)) {
+            return res.status(400).json({ error: `requests.${group}.status must be one of: ${[...VALID_REQUEST_STATUSES].join(", ")}` })
+          }
+        }
       }
 
       // Read-modify-write. Last-write-wins on the whole blob — fine for
@@ -72,25 +85,25 @@ export default async function handler(req, res) {
       const raw = await kvGet(INCIDENTS_KEY)
       const map = raw ? JSON.parse(raw) : {}
 
-      if (status === "unassigned") {
-        // Releasing a fire also drops any evacuation request tied to it —
-        // a released fire has no active response coordinating it.
+      if (status === "unassigned" && !requests) {
+        // Releasing a fire drops the whole record — no active response is
+        // coordinating it anymore, for any group.
         delete map[fireKey]
       } else {
-        // Merge into the existing record instead of replacing it — a
-        // request that only touches `evacuation` (e.g. a hospital
-        // accepting/rejecting) shouldn't wipe out `status`/`unit`, and
-        // vice versa.
+        // Merge into the existing record instead of replacing it. `status`
+        // (the aggregate unassigned/assigned/attending/resolved bucket) is
+        // simply overwritten — the client always sends the freshly-derived
+        // value (see deriveOverallStatus on the frontend). `requests` is
+        // merged one GROUP at a time: a payload only ever contains the
+        // group(s) that actually changed (e.g. just { bombero: {...} }
+        // when the fire station accepts), so the other groups' requests on
+        // this fire must survive untouched.
         const existing = map[fireKey] || {}
         const next = { ...existing }
         if (status) next.status = status
-        if (unit !== undefined) next.unit = unit
-        if (responderName !== undefined) next.responderName = responderName
-        if (note !== undefined) next.note = note
+        if (requests) next.requests = { ...(existing.requests || {}), ...requests }
         if (!next.status) next.status = "assigned" // first write with no explicit status
         next.updatedAt = new Date().toISOString()
-        if (evacuation === null) delete next.evacuation
-        else if (evacuation) next.evacuation = evacuation
         map[fireKey] = next
       }
 

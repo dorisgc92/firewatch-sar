@@ -4,7 +4,7 @@ import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } fr
 import { buildCommandBrief, findThreatenedInfrastructure, windDirLabel } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
-import EvacuationSection from "./EvacuationSection"
+import FireCommandPanel from "./FireCommandPanel"
 import { theme } from "../utils/theme"
 import { INTENSITY_COLORS } from "../utils/fireColors"
 import { useLanguage } from "../context/LanguageContext"
@@ -114,73 +114,7 @@ const FWI_LABELS = {
   extreme: { label: "EXTREME", color: "#AA0000" },
 }
 
-const INCIDENT_NEXT_STATUS = { assigned: "attending", attending: "resolved" }
-
-// Claim/advance/release controls for one fire's incident-assignment
-// state, shared between App.jsx's incidents map (synced via Vercel KV —
-// see useIncidents.js) so any responder viewing this fire sees the same
-// status. Unassigned -> pick a unit (optional) -> Assigned -> Attending
-// -> Resolved, with Release available at any claimed state to reset it.
-function IncidentControls({ fireKey, incident, setIncidentStatus, t }) {
-  const [showForm, setShowForm] = useState(false)
-  const [unitInput, setUnitInput] = useState("")
-  const [busy, setBusy] = useState(false)
-
-  const run = async (status, extra = {}) => {
-    setBusy(true)
-    await setIncidentStatus(fireKey, { status, ...extra })
-    setBusy(false)
-  }
-
-  const btnStyle = {
-    fontSize: "10.5px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
-    border: `1px solid ${theme.border}`, background: "#fff", color: theme.textPrimary,
-  }
-
-  if (!incident) {
-    if (!showForm) {
-      return (
-        <button
-          onClick={() => setShowForm(true)}
-          style={{ ...btnStyle, marginTop: "5px", borderColor: theme.warning || "#cc5500", color: theme.warning || "#cc5500", fontWeight: "bold" }}>
-          {t("incidentAttend")}
-        </button>
-      )
-    }
-    return (
-      <div style={{ display: "flex", gap: "4px", marginTop: "5px", alignItems: "center" }}>
-        <input value={unitInput} onChange={(e) => setUnitInput(e.target.value)}
-          placeholder={t("incidentUnitPlaceholder")}
-          style={{ fontSize: "11px", padding: "3px 6px", borderRadius: "4px", border: `1px solid ${theme.border}`, flex: 1, minWidth: 0 }} />
-        <button disabled={busy} style={btnStyle}
-          onClick={async () => { await run("assigned", { unit: unitInput.trim() || null }); setShowForm(false); setUnitInput("") }}>
-          {t("incidentConfirm")}
-        </button>
-        <button disabled={busy} style={btnStyle} onClick={() => setShowForm(false)}>{t("incidentCancel")}</button>
-      </div>
-    )
-  }
-
-  const next = INCIDENT_NEXT_STATUS[incident.status]
-  return (
-    <div style={{ marginTop: "5px" }}>
-      <div style={{ fontSize: "11px", color: theme.textSecondary }}>
-        {t("incidentStatus_" + incident.status)}{incident.unit ? ` — ${incident.unit}` : ""}
-      </div>
-      <div style={{ display: "flex", gap: "4px", marginTop: "3px" }}>
-        {next && (
-          <button disabled={busy} style={btnStyle}
-            onClick={() => run(next, { unit: incident.unit, responderName: incident.responderName })}>
-            {t(next === "attending" ? "incidentMarkAttending" : "incidentMarkResolved")}
-          </button>
-        )}
-        <button disabled={busy} style={btnStyle} onClick={() => run("unassigned")}>{t("incidentRelease")}</button>
-      </div>
-    </div>
-  )
-}
-
-function PriorityFireCard({ fire, index, t, incidents, setIncidentStatus, infraFeatures }) {
+function PriorityFireCard({ fire, index, t, incidents, onSelectFire }) {
   const [place, setPlace] = useState(null)
   const fireKey = fireKeyFromLatLon(fire.lat, fire.lon)
   const incident = incidents?.[fireKey] || null
@@ -225,13 +159,20 @@ function PriorityFireCard({ fire, index, t, incidents, setIncidentStatus, infraF
           : t("noWindData")}</div>
       </div>
 
-      {setIncidentStatus && (
-        <>
-          <IncidentControls fireKey={fireKey} incident={incident} setIncidentStatus={setIncidentStatus} t={t} />
-          <EvacuationSection fireKey={fireKey} lat={fire.lat} lon={fire.lon} incident={incident}
-            infraFeatures={infraFeatures} setIncidentStatus={setIncidentStatus} t={t} />
-        </>
-      )}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
+        <span style={{ fontSize: "11px", color: theme.textSecondary }}>
+          {t("cmdPanelOverallStatus")}: <strong style={{ color: theme.textPrimary }}>{t("incidentStatus_" + (incident?.status || "unassigned"))}</strong>
+        </span>
+        <button onClick={() => onSelectFire?.({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [fire.lon, fire.lat] },
+            properties: { frp: fire.frp, intensity: fire.intensity, source: fire.source, acq_datetime: fire.acq_datetime },
+          })}
+          style={{ fontSize: "10.5px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
+            border: `1px solid ${theme.orange}`, background: "#fff", color: theme.orange, fontWeight: "bold" }}>
+          {t("incidentAttend")}
+        </button>
+      </div>
     </div>
   )
 }
@@ -269,7 +210,7 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, incidents, setIncidentStatus, onClose }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, incidents, requestResponder, selectedFire, onClearSelection, onClose }) {
   const { t } = useLanguage()
   const rawDetections = layers.hotspots?.data?.features || []
   // Mirrors the "Wildfires only" toggle in the map's layer panel
@@ -359,6 +300,11 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
           ✕
         </button>
       )}
+      {activeModule === 2 && selectedFire && (
+        <FireCommandPanel selectedFire={selectedFire} incidents={incidents}
+          requestResponder={requestResponder} infraFeatures={layers.infrastructure?.data?.features}
+          responderType={responderType} onClose={() => onClearSelection?.()} />
+      )}
       <div style={{
         background: activeModule === 1 ? theme.navySoft : theme.orangeSoft,
         border: `1px solid ${activeModule === 1 ? theme.navy : theme.orange}`,
@@ -420,8 +366,8 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
                   )}
                 </div>
                 {brief.priorityFires.map((fire, i) => (
-                  <PriorityFireCard key={i} fire={fire} index={i} t={t} incidents={incidents} setIncidentStatus={setIncidentStatus}
-                    infraFeatures={layers.infrastructure?.data?.features} />
+                  <PriorityFireCard key={i} fire={fire} index={i} t={t} incidents={incidents}
+                    onSelectFire={flyTo} />
                 ))}
                 {brief.actionLine && (
                   <div style={{

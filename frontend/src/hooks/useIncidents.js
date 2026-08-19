@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react"
+import { deriveOverallStatus, nextCandidateForGroup } from "../utils/responderGroups"
 
-const POLL_MS = 30_000
+// Was 30s. The EOC assignment/accept-reject flow needs the OTHER side
+// (the responder who just got a request, or the EOC waiting on an
+// answer) to see a change within a couple of seconds, not up to half a
+// minute — a 30s gap reads as "did it even send?" during a live demo.
+// 3s keeps it feeling close to real-time without turning this into a
+// websocket/SSE project; at this app's traffic (a handful of responders
+// per session) the extra KV reads are negligible.
+const POLL_MS = 3_000
 
 // Builds the stable-enough key used to identify "the same fire" across
 // polls/refreshes. FIRMS doesn't give detections a persistent ID — each
@@ -26,6 +34,12 @@ export default function useIncidents() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const pollRef = useRef(null)
+  // setIncidentStatus/requestResponder/respondToRequest all need to read
+  // the latest incidents to compute their next payload — a ref avoids
+  // stale-closure bugs from calling them right after another update
+  // without waiting for a re-render.
+  const incidentsRef = useRef(incidents)
+  incidentsRef.current = incidents
 
   const refresh = useCallback(async () => {
     try {
@@ -50,28 +64,23 @@ export default function useIncidents() {
     return () => clearInterval(pollRef.current)
   }, [refresh])
 
-  const setIncidentStatus = useCallback(async (fireKey, { status, unit, responderName, note, evacuation } = {}) => {
-    // Optimistic update — reflect the change immediately instead of
-    // waiting up to POLL_MS for it to come back around, then reconcile
-    // with whatever the server actually stored (in case someone else's
-    // change landed in between). Merges into the existing record (same
-    // as the server does) so an evacuation-only update doesn't clobber
-    // status/unit, and vice versa.
+  // Low-level write: merges `status` and/or one-or-more groups' worth of
+  // `requests` into whatever's already stored for fireKey. Kept generic
+  // (rather than one setter per field) so the API and this hook agree on
+  // exactly one merge strategy — see api/incidents.js for the server side
+  // of the same merge.
+  const setIncidentStatus = useCallback(async (fireKey, { status, requests } = {}) => {
     setIncidents((prev) => {
       const next = { ...prev }
-      if (status === "unassigned") {
+      if (status === "unassigned" && !requests) {
         delete next[fireKey]
       } else {
         const existing = next[fireKey] || {}
         const merged = { ...existing }
         if (status) merged.status = status
-        if (unit !== undefined) merged.unit = unit
-        if (responderName !== undefined) merged.responderName = responderName
-        if (note !== undefined) merged.note = note
+        if (requests) merged.requests = { ...(existing.requests || {}), ...requests }
         if (!merged.status) merged.status = "assigned"
         merged.updatedAt = new Date().toISOString()
-        if (evacuation === null) delete merged.evacuation
-        else if (evacuation) merged.evacuation = evacuation
         next[fireKey] = merged
       }
       return next
@@ -80,7 +89,7 @@ export default function useIncidents() {
       const r = await fetch("/api/incidents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fireKey, status, unit, responderName, note, evacuation }),
+        body: JSON.stringify({ fireKey, status, requests }),
       })
       if (!r.ok) throw new Error(`HTTP ${r.status}`)
       const data = await r.json()
@@ -96,5 +105,61 @@ export default function useIncidents() {
     }
   }, [refresh])
 
-  return { incidents, loading, error, setIncidentStatus, refresh }
+  // EOC action: dispatch a specific facility for one group to one fire.
+  // Overwrites any previous request for that same group on that fire
+  // (a fresh Asignar always starts a new pending request), leaving every
+  // other group's request untouched.
+  const requestResponder = useCallback(async (fireKey, group, candidate) => {
+    const req = {
+      targetId: candidate.id, targetName: candidate.name,
+      targetLat: candidate.lat, targetLon: candidate.lon, distanceKm: candidate.distanceKm,
+      status: "pending", rejectedIds: [], requestedAt: new Date().toISOString(),
+    }
+    const existing = incidentsRef.current[fireKey]?.requests || {}
+    const nextRequests = { ...existing, [group]: req }
+    return setIncidentStatus(fireKey, { status: deriveOverallStatus(nextRequests), requests: { [group]: req } })
+  }, [setIncidentStatus])
+
+  // Responder-side action: accept / reject / mark-attending / mark-resolved
+  // on the request currently targeting them. Reject auto-advances to the
+  // next-nearest facility in that group (same cascade the old hospital-only
+  // evacuation flow used) rather than just dead-ending the request — the
+  // EOC panel keeps showing "pending", now against a new target, instead
+  // of silently going quiet.
+  const respondToRequest = useCallback(async (fireKey, group, action, { infraFeatures, lat, lon, fallbackName } = {}) => {
+    const incident = incidentsRef.current[fireKey]
+    const req = incident?.requests?.[group]
+    if (!req) return false
+
+    let updated
+    if (action === "accept") {
+      updated = { ...req, status: "accepted", respondedAt: new Date().toISOString() }
+    } else if (action === "attending") {
+      updated = { ...req, status: "attending" }
+    } else if (action === "resolved") {
+      updated = { ...req, status: "resolved" }
+    } else if (action === "reject") {
+      const excluded = [...(req.rejectedIds || []), req.targetId]
+      const next = nextCandidateForGroup(lat, lon, infraFeatures, group, excluded, fallbackName)
+      updated = next
+        ? { targetId: next.id, targetName: next.name, targetLat: next.lat, targetLon: next.lon,
+            distanceKm: next.distanceKm, status: "pending", rejectedIds: excluded,
+            requestedAt: req.requestedAt, respondedAt: new Date().toISOString() }
+        : { ...req, status: "exhausted", rejectedIds: excluded, respondedAt: new Date().toISOString() }
+    } else {
+      return false
+    }
+
+    const existing = incident.requests || {}
+    const nextRequests = { ...existing, [group]: updated }
+    return setIncidentStatus(fireKey, { status: deriveOverallStatus(nextRequests), requests: { [group]: updated } })
+  }, [setIncidentStatus])
+
+  // EOC action: fully reset a fire back to unclaimed, clearing every
+  // group's request — used by the "Liberar" control.
+  const releaseIncident = useCallback(async (fireKey) => {
+    return setIncidentStatus(fireKey, { status: "unassigned" })
+  }, [setIncidentStatus])
+
+  return { incidents, loading, error, setIncidentStatus, requestResponder, respondToRequest, releaseIncident, refresh }
 }

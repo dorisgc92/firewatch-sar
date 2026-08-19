@@ -6,7 +6,7 @@ import FireMap from "./components/FireMap"
 import FreshnessPanel from "./components/FreshnessPanel"
 import Sidebar from "./components/Sidebar"
 import IncidentStatusBar from "./components/IncidentStatusBar"
-import HospitalRequestInbox from "./components/HospitalRequestInbox"
+import ResponderRequestOverlay from "./components/ResponderRequestOverlay"
 import StartScreen from "./components/StartScreen"
 import { theme } from "./utils/theme"
 import { LanguageProvider, useLanguage } from "./context/LanguageContext"
@@ -44,7 +44,7 @@ function AppInner() {
   const [searchResults, setSearchResults] = useState([])
   const mapRef = useRef(null)
   const layers = useFireData()
-  const { incidents, setIncidentStatus } = useIncidents()
+  const { incidents, requestResponder, respondToRequest, releaseIncident } = useIncidents()
   const [infraFilter, setInfraFilter] = useState({ hospital: true, fire_station: true, police: true, power: true, school: true, fuel: true, tower: true, water: true, airport: true })
   // Mirrors FireMap's internal "Wildfires only" toggle (FireMap owns the
   // actual UI checkbox and its own visibleLayers state) — lifted here only
@@ -250,10 +250,10 @@ function AppInner() {
       </header>
 
       <IncidentStatusBar activeModule={activeModule} layers={layers} zoneInfo={zoneInfo}
-        incidents={incidents} setIncidentStatus={setIncidentStatus} onSelectFire={handleSelectFire} />
+        incidents={incidents} releaseIncident={releaseIncident} onSelectFire={handleSelectFire} />
 
-      <HospitalRequestInbox activeModule={activeModule} responderType={responderType} layers={layers}
-        incidents={incidents} setIncidentStatus={setIncidentStatus} />
+      <ResponderRequestOverlay activeModule={activeModule} responderType={responderType} layers={layers}
+        incidents={incidents} respondToRequest={respondToRequest} onSelectFire={handleSelectFire} />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
@@ -262,7 +262,7 @@ function AppInner() {
             mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire}
             onFireClick={handleSelectFire} zoneLoading={zoneLoading}
             onHideNonVegetationChange={setHideNonVegetation}
-            incidents={incidents} setIncidentStatus={setIncidentStatus} />
+            incidents={incidents} />
         </div>
         {(!isNarrow || sidebarOpen) && (
           <>
@@ -276,7 +276,8 @@ function AppInner() {
               <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
                 zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire}
                 hideNonVegetation={hideNonVegetation}
-                incidents={incidents} setIncidentStatus={setIncidentStatus}
+                incidents={incidents} requestResponder={requestResponder}
+                selectedFire={selectedFire} onClearSelection={() => setSelectedFire(null)}
                 onClose={isNarrow ? () => setSidebarOpen(false) : null} />
             </div>
           </>

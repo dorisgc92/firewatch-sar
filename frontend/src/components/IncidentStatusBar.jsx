@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react"
 import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } from "../utils/countryBoundaries"
 import { filterFeaturesByBbox } from "../utils/spatial"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import { GROUP_KEYS, GROUP_META } from "../utils/responderGroups"
 import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
 
@@ -12,28 +13,26 @@ const STATUS_COLOR = {
   attending: theme.danger,
   resolved: theme.navy,
 }
-const MY_UNIT_STORAGE_KEY = "firewatch_my_unit"
+const REQ_STATUS_COLOR = {
+  pending: theme.orange, accepted: theme.navy, attending: theme.danger,
+  resolved: theme.textMuted, exhausted: theme.danger,
+}
 
-// One row in an expanded status group. Local state (assignInput) needs to
-// live per-row, so this can't just be inlined in a .map() callback.
-// Gives the EOC (or anyone) both visibility — unit assigned, evacuation
-// target hospital + its status — and direct control: typing a unit and
-// pressing Asignar/Reasignar works whether or not anyone has claimed this
-// fire yet, instead of only being able to release what a firefighter
-// already self-assigned.
-function IncidentRow({ feature, fireKey, incident, lat, lon, onSelectFire, setIncidentStatus, t }) {
-  const [assignInput, setAssignInput] = useState(incident?.unit || "")
+// One row in an expanded status group. Gives the EOC (or anyone) full
+// visibility at a glance — a compact chip per responder group showing who's
+// been requested/accepted/attending on this fire, sourced straight from
+// incident.requests (same live, KV-synced data FireCommandPanel uses to
+// actually make the assignment) — this row is read-only; "Ver / Asignar"
+// jumps to the map and opens the real assignment panel there instead of
+// duplicating those controls in a second place.
+function IncidentRow({ feature, fireKey, incident, lat, lon, onSelectFire, releaseIncident, t }) {
   const [busy, setBusy] = useState(false)
-
-  const assign = async () => {
-    setBusy(true)
-    await setIncidentStatus(fireKey, { status: incident?.status || "assigned", unit: assignInput.trim() || null })
-    setBusy(false)
-  }
+  const requests = incident?.requests || {}
+  const activeGroups = GROUP_KEYS.filter((g) => requests[g])
 
   const release = async () => {
     setBusy(true)
-    await setIncidentStatus(fireKey, { status: "unassigned" })
+    await releaseIncident(fireKey)
     setBusy(false)
   }
 
@@ -43,41 +42,46 @@ function IncidentRow({ feature, fireKey, incident, lat, lon, onSelectFire, setIn
         <button onClick={() => onSelectFire?.(feature)}
           style={{ background: "none", border: "none", cursor: "pointer", color: theme.textPrimary, textAlign: "left", flex: 1, padding: 0 }}>
           📍 {lat.toFixed(3)}, {lon.toFixed(3)}
-          {incident?.unit && <span style={{ color: theme.textMuted }}> — {incident.unit}</span>}
         </button>
-        {incident && (
-          <button disabled={busy} onClick={release}
+        <span style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+          <button onClick={() => onSelectFire?.(feature)}
             style={{ fontSize: "10.5px", padding: "2px 7px", borderRadius: "4px", cursor: "pointer",
-              border: `1px solid ${theme.border}`, background: "#fff", color: theme.textSecondary, marginLeft: "8px" }}>
-            {t("incidentRelease")}
+              border: `1px solid ${theme.orange}`, background: "#fff", color: theme.orange, fontWeight: "bold" }}>
+            {t("incidentAttend")}
           </button>
-        )}
+          {incident && (
+            <button disabled={busy} onClick={release}
+              style={{ fontSize: "10.5px", padding: "2px 7px", borderRadius: "4px", cursor: "pointer",
+                border: `1px solid ${theme.border}`, background: "#fff", color: theme.textSecondary }}>
+              {t("incidentRelease")}
+            </button>
+          )}
+        </span>
       </div>
-      {incident?.evacuation && (
-        <div style={{ fontSize: "10.5px", color: theme.textSecondary, marginTop: "3px" }}>
-          🏥 {incident.evacuation.targetHospitalName} — {t("evacStatus_" + incident.evacuation.status)}
+      {activeGroups.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginTop: "5px" }}>
+          {activeGroups.map((g) => {
+            const req = requests[g]
+            return (
+              <span key={g} style={{
+                fontSize: "10px", padding: "2px 6px", borderRadius: "10px",
+                border: `1px solid ${REQ_STATUS_COLOR[req.status] || theme.border}`,
+                color: REQ_STATUS_COLOR[req.status] || theme.textSecondary,
+              }}>
+                {GROUP_META[g].icon} {req.targetName} — {t("reqStatus_" + req.status)}
+              </span>
+            )
+          })}
         </div>
       )}
-      <div style={{ display: "flex", gap: "4px", marginTop: "4px", alignItems: "center" }}>
-        <input value={assignInput} onChange={(e) => setAssignInput(e.target.value)}
-          placeholder={t("incidentUnitPlaceholder")}
-          style={{ fontSize: "11px", flex: 1, minWidth: 0, padding: "3px 6px", borderRadius: "4px", border: `1px solid ${theme.border}` }} />
-        <button disabled={busy} onClick={assign}
-          style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "4px", cursor: "pointer",
-            border: `1px solid ${theme.navy}`, background: "#fff", color: theme.navy, fontWeight: "bold", flexShrink: 0 }}>
-          {incident ? t("incidentReassign") : t("incidentAssign")}
-        </button>
-      </div>
     </div>
   )
 }
 
-export default function IncidentStatusBar({ activeModule, layers, zoneInfo, incidents, setIncidentStatus, onSelectFire }) {
+export default function IncidentStatusBar({ activeModule, layers, zoneInfo, incidents, releaseIncident, onSelectFire }) {
   const { t } = useLanguage()
   const [countryFeature, setCountryFeature] = useState(null)
   const [openGroup, setOpenGroup] = useState(null)
-  const [myUnit, setMyUnit] = useState(() => localStorage.getItem(MY_UNIT_STORAGE_KEY) || "")
-  const [onlyMyUnit, setOnlyMyUnit] = useState(false)
 
   useEffect(() => {
     if (!zoneInfo?.country) { setCountryFeature(null); return }
@@ -105,8 +109,8 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
   // deliberately NOT in the same memo as the incidents-dependent grouping
   // below. Without this split, that full per-fire key computation was
   // re-running on every single incidents change — including from OTHER
-  // responders' actions arriving via the 30s poll, not just your own
-  // clicks — which is what was making "Asignar" feel like it froze the tab.
+  // responders' actions arriving via the poll, not just your own clicks —
+  // which is what was making "Asignar" feel like it froze the tab.
   const keyedHotspots = useMemo(() => {
     return countryHotspots.map((feature) => {
       const [lon, lat] = feature.geometry.coordinates
@@ -124,18 +128,9 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
     return groups
   }, [keyedHotspots, incidents])
 
-  const saveMyUnit = (value) => {
-    setMyUnit(value)
-    localStorage.setItem(MY_UNIT_STORAGE_KEY, value)
-  }
-
   if (activeModule !== 2) return null
 
-  const displayedGroup = openGroup
-    ? (onlyMyUnit && myUnit.trim()
-        ? grouped[openGroup].filter((item) => (item.incident?.unit || "").trim().toLowerCase() === myUnit.trim().toLowerCase())
-        : grouped[openGroup])
-    : []
+  const displayedGroup = openGroup ? grouped[openGroup] : []
 
   return (
     <div style={{ borderBottom: `1px solid ${theme.border}`, background: theme.panelBgSoft, padding: "8px 16px" }}>
@@ -157,27 +152,16 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
             </button>
           )
         })}
-
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "auto" }}>
-          <input value={myUnit} onChange={(e) => saveMyUnit(e.target.value)}
-            placeholder={t("incidentMyUnitPlaceholder")}
-            style={{ fontSize: "11px", padding: "5px 8px", borderRadius: "6px", border: `1px solid ${theme.border}`, width: "120px" }} />
-          <label style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: theme.textSecondary, cursor: "pointer" }}>
-            <input type="checkbox" checked={onlyMyUnit} onChange={(e) => setOnlyMyUnit(e.target.checked)}
-              disabled={!myUnit.trim()} />
-            {t("incidentOnlyMyUnit")}
-          </label>
-        </div>
       </div>
 
       {openGroup && (
-        <div style={{ marginTop: "8px", maxHeight: "160px", overflowY: "auto", border: `1px solid ${theme.border}`, borderRadius: "6px", background: "#fff" }}>
+        <div style={{ marginTop: "8px", maxHeight: "220px", overflowY: "auto", border: `1px solid ${theme.border}`, borderRadius: "6px", background: "#fff" }}>
           {displayedGroup.length === 0 && (
             <div style={{ padding: "10px", fontSize: "12px", color: theme.textMuted }}>{t("incidentGroupEmpty")}</div>
           )}
           {displayedGroup.map(({ feature, fireKey, incident, lat, lon }) => (
             <IncidentRow key={fireKey} feature={feature} fireKey={fireKey} incident={incident} lat={lat} lon={lon}
-              onSelectFire={onSelectFire} setIncidentStatus={setIncidentStatus} t={t} />
+              onSelectFire={onSelectFire} releaseIncident={releaseIncident} t={t} />
           ))}
         </div>
       )}
