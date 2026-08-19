@@ -2,6 +2,7 @@ import { useState, useRef } from "react"
 import { useFireData } from "./hooks/useFireData"
 import useIncidents from "./hooks/useIncidents"
 import useIsNarrow from "./hooks/useIsNarrow"
+import useZoneInfrastructure from "./hooks/useZoneInfrastructure"
 import FireMap from "./components/FireMap"
 import FreshnessPanel from "./components/FreshnessPanel"
 import Sidebar from "./components/Sidebar"
@@ -54,6 +55,13 @@ function AppInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mapZoom, setMapZoom] = useState(9)
   const [selectedFire, setSelectedFire] = useState(null)
+
+  // Zone-scoped infrastructure (bundled world-crawl data, or live Overpass
+  // fallback when the zone isn't crawled yet) — shared by the map render,
+  // the EOC assignment panel, and the responder inbox, so "nearest fire
+  // station" always means "nearest within the zone actually being
+  // viewed", never "nearest among whatever happens to be loaded globally".
+  const zoneInfrastructure = useZoneInfrastructure(layers, session?.zoneInfo)
 
   const [zoneLoading, setZoneLoading] = useState(false)
   // Bumped on every new zone-resolution request; a request only gets to
@@ -252,8 +260,9 @@ function AppInner() {
       <IncidentStatusBar activeModule={activeModule} layers={layers} zoneInfo={zoneInfo}
         incidents={incidents} releaseIncident={releaseIncident} onSelectFire={handleSelectFire} />
 
-      <ResponderRequestOverlay activeModule={activeModule} responderType={responderType} layers={layers}
-        incidents={incidents} respondToRequest={respondToRequest} onSelectFire={handleSelectFire} />
+      <ResponderRequestOverlay activeModule={activeModule} responderType={responderType}
+        incidents={incidents} respondToRequest={respondToRequest} onSelectFire={handleSelectFire}
+        zoneInfrastructure={zoneInfrastructure.features} />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
@@ -262,7 +271,8 @@ function AppInner() {
             mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire}
             onFireClick={handleSelectFire} zoneLoading={zoneLoading}
             onHideNonVegetationChange={setHideNonVegetation}
-            incidents={incidents} />
+            incidents={incidents}
+            zoneInfrastructure={zoneInfrastructure.features} zoneInfrastructureLoading={zoneInfrastructure.loading} />
         </div>
         {(!isNarrow || sidebarOpen) && (
           <>
@@ -278,6 +288,7 @@ function AppInner() {
                 hideNonVegetation={hideNonVegetation}
                 incidents={incidents} requestResponder={requestResponder}
                 selectedFire={selectedFire} onClearSelection={() => setSelectedFire(null)}
+                zoneInfrastructure={zoneInfrastructure.features}
                 onClose={isNarrow ? () => setSidebarOpen(false) : null} />
             </div>
           </>

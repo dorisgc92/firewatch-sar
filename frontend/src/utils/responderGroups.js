@@ -46,24 +46,41 @@ function candidateFromFeature(feature, distanceKm, fallbackName) {
 }
 
 /**
- * Top N nearest facilities for a group, ordered nearest-first.
+ * Top N nearest facilities for a group, ordered nearest-first. Capped at
+ * MAX_CANDIDATE_DISTANCE_KM — a facility beyond that is never considered
+ * "the nearest bombero" no matter what, even if it's technically the
+ * closest thing present in whatever infraFeatures happens to be loaded.
+ * That distinction matters because infraFeatures may be an incompletely
+ * covered dataset (world-crawl still in progress) with data for some
+ * far-away region but none for the zone actually being viewed — without
+ * this cap, "nearest fire station to a fire in Guadalajara" could resolve
+ * to a station on the other side of the planet just because it was the
+ * only one loaded. When nothing is within range, this returns an empty
+ * list — candidatesForGroup's callers already render "no unit nearby" for
+ * that case, which is the honest answer here.
+ *
  * infraFeatures: whatever's currently loaded for the zone (bundled
  * world-crawl data + any live per-zone Overpass fetch), same source
  * every other nearest-infra lookup in this app already uses.
  */
+const MAX_CANDIDATE_DISTANCE_KM = 120
+
 export function candidatesForGroup(lat, lon, infraFeatures, group, n = 3, fallbackName = "Unit") {
   const meta = GROUP_META[group]
   if (!meta) return []
   const types = new Set(meta.infraTypes)
   const pool = (infraFeatures || []).filter((f) => types.has(f.properties?.type))
   if (pool.length === 0) return []
-  return nearestFeatures(lat, lon, pool, n).map(({ feature, distanceKm }) => candidateFromFeature(feature, distanceKm, fallbackName))
+  return nearestFeatures(lat, lon, pool, n)
+    .filter(({ distanceKm }) => distanceKm <= MAX_CANDIDATE_DISTANCE_KM)
+    .map(({ feature, distanceKm }) => candidateFromFeature(feature, distanceKm, fallbackName))
 }
 
 // Reject-and-cascade: the next nearest facility not already in
-// excludeIds. Pulls a larger pool (50) than the 3 shown to the EOC so a
-// fire with several fire stations nearby doesn't run out of options
-// after two rejections just because only the top 3 were ever computed.
+// excludeIds, still bound by the same MAX_CANDIDATE_DISTANCE_KM sanity
+// cap. Pulls a larger pool (50) than the 3 shown to the EOC so a fire
+// with several fire stations nearby doesn't run out of options after two
+// rejections just because only the top 3 were ever computed.
 export function nextCandidateForGroup(lat, lon, infraFeatures, group, excludeIds = [], fallbackName = "Unit") {
   const excluded = new Set(excludeIds.map(String))
   const pool = candidatesForGroup(lat, lon, infraFeatures, group, 50, fallbackName)

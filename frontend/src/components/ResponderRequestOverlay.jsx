@@ -12,13 +12,20 @@ import { useLanguage } from "../context/LanguageContext"
 //      grabbing floating card over the map (Doris asked for this to be
 //      near-impossible to miss — semi-transparent, sits on top of the map),
 //      and already-accepted ones as a compact status bar to advance.
-export default function ResponderRequestOverlay({ activeModule, responderType, layers, incidents, respondToRequest, onSelectFire }) {
+export default function ResponderRequestOverlay({ activeModule, responderType, incidents, respondToRequest, onSelectFire, zoneInfrastructure }) {
   const { t } = useLanguage()
   const [myFacility, setMyFacility] = useState(() => isDispatchableGroup(responderType) ? loadMyFacility(responderType) : null)
   const [search, setSearch] = useState("")
   const [busyKey, setBusyKey] = useState(null)
 
-  const infraFeatures = layers.infrastructure?.data?.features || []
+  // Zone-scoped (bundled-if-covered, live-Overpass-fallback otherwise) —
+  // NOT the raw global bundled layer. A responder's own station may sit
+  // in a world-crawl tile that hasn't run yet; searching only the global
+  // bundle would make their own facility invisible in the "which unit are
+  // you" picker. This is the same dataset the EOC's assignment panel and
+  // the map itself use, so "my facility" and "nearest facility" always
+  // agree on what exists nearby.
+  const infraFeatures = zoneInfrastructure || []
   const meta = GROUP_META[responderType]
 
   const searchResults = useMemo(() => {

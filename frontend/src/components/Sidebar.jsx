@@ -210,7 +210,7 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, incidents, requestResponder, selectedFire, onClearSelection, onClose }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
   const { t } = useLanguage()
   const rawDetections = layers.hotspots?.data?.features || []
   // Mirrors the "Wildfires only" toggle in the map's layer panel
@@ -255,10 +255,13 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     () => filterFeaturesByBbox(allDetections, zoneInfo?.stateBbox),
     [allDetections, zoneInfo]
   )
-  const zoneInfrastructure = useMemo(
-    () => filterFeaturesByBbox(layers.infrastructure?.data?.features || [], zoneInfo?.zoneBbox),
-    [layers.infrastructure?.data, zoneInfo]
-  )
+  // zoneInfrastructure now arrives as a prop from App.jsx's
+  // useZoneInfrastructure — bundled world-crawl data if it covers this
+  // zone, live Overpass fallback otherwise. Used to just be bbox-filtered
+  // straight off the raw global bundled layer here, which meant zones
+  // outside crawled coverage silently got an empty infrastructure list
+  // (no nearest hospital/fire station suggestions at all) instead of the
+  // live-fetched real answer FireCommandPanel now also relies on.
   const zonePerimeters = useMemo(
     () => filterFeaturesByBbox(layers.perimeters?.data?.features || [], zoneInfo?.zoneBbox),
     [layers.perimeters?.data, zoneInfo]
@@ -302,7 +305,7 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
       )}
       {activeModule === 2 && selectedFire && (
         <FireCommandPanel selectedFire={selectedFire} incidents={incidents}
-          requestResponder={requestResponder} infraFeatures={layers.infrastructure?.data?.features}
+          requestResponder={requestResponder} infraFeatures={zoneInfrastructure}
           responderType={responderType} onClose={() => onClearSelection?.()} />
       )}
       <div style={{

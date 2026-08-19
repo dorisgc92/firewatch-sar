@@ -5,7 +5,6 @@ import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
 import useIsNarrow from "../hooks/useIsNarrow"
-import { loadZoneInfrastructure } from "../utils/liveInfra"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
@@ -308,11 +307,10 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading }) {
   const { t } = useLanguage()
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
-  const [liveInfra, setLiveInfra] = useState({ features: [], loading: false, error: null, zoneKey: null })
 
   const toggleLayer = (key, value) => {
     if (key.startsWith("intensity_")) {
@@ -376,32 +374,10 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   // selected zone already falls inside crawled coverage, use it — instant,
   // no network call. Otherwise fetch live from Overpass for this zone
   // specifically (see utils/liveInfra.js), cached per browser session.
-  const bundledZoneInfrastructure = useMemo(() => {
-    const feats = layers.infrastructure?.data?.features
-    if (!feats || !zoneInfo?.zoneBbox) return []
-    return filterFeaturesByBbox(feats, zoneInfo.zoneBbox)
-  }, [layers.infrastructure?.data, zoneInfo])
-
-  useEffect(() => {
-    if (!zoneInfo?.zoneBbox) return
-    if (bundledZoneInfrastructure.length > 0) {
-      // Already covered by the bundled dataset — no live fetch needed.
-      setLiveInfra({ features: [], loading: false, error: null, zoneKey: zoneInfo.name })
-      return
-    }
-    let cancelled = false
-    setLiveInfra({ features: [], loading: true, error: null, zoneKey: zoneInfo.name })
-    loadZoneInfrastructure(zoneInfo.zoneBbox)
-      .then(({ features }) => {
-        if (!cancelled) setLiveInfra({ features, loading: false, error: null, zoneKey: zoneInfo.name })
-      })
-      .catch((e) => {
-        if (!cancelled) setLiveInfra({ features: [], loading: false, error: e.message, zoneKey: zoneInfo.name })
-      })
-    return () => { cancelled = true }
-  }, [zoneInfo?.name, zoneInfo?.zoneBbox, bundledZoneInfrastructure.length])
-
-  const zoneInfrastructure = bundledZoneInfrastructure.length > 0 ? bundledZoneInfrastructure : liveInfra.features
+  // Lifted up to App.jsx (useZoneInfrastructure) so the EOC assignment
+  // panel sees the exact same zone-scoped data this map renders, instead
+  // of a second, unfiltered copy — passed in as zoneInfrastructure/
+  // zoneInfrastructureLoading props.
 
   const visibleViewportHotspots = useMemo(() => {
     const filtered = viewportHotspots.filter(f => {
@@ -664,7 +640,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
       <LayerToggle layers={visibleLayers} onChange={toggleLayer}
         activeModule={activeModule} intensities={visibleIntensities}
         infraFilter={infraFilter} onInfraFilter={onInfraFilter} mapZoom={mapZoom}
-        infraLoading={liveInfra.loading} />
+        infraLoading={zoneInfrastructureLoading} />
 
       {isMarkerCapped && (
         <div style={{ position: "absolute", top: "12px", left: "50%", transform: "translateX(-50%)",
@@ -676,7 +652,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         </div>
       )}
 
-      {liveInfra.loading && (
+      {zoneInfrastructureLoading && (
         <div style={{ position: "absolute", bottom: "16px", left: "50%", transform: "translateX(-50%)",
           zIndex: 1000, background: theme.panelBgSoft, color: theme.textPrimary,
           padding: "6px 14px", borderRadius: "20px", fontSize: "12px", border: `1px solid ${theme.border}`,
