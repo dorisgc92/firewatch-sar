@@ -4,10 +4,10 @@
  * a fire (bombero, proteccion_civil, ems, utilities, ong — matches the
  * responderType keys from StartScreen.jsx, minus "eoc" itself and
  * "analista" which don't get dispatched to). Each group is backed by an
- * OSM infrastructure type already present in liveInfra.js/the bundled
- * infrastructure.geojson, used as a stand-in for "where that kind of unit
- * is based" — there's no real responder-roster data source, so nearest
- * facility of the matching type is the best available proxy.
+ * OSM infrastructure type served by /api/infrastructure (Doris's remote
+ * server, see remote_server/), used as a stand-in for "where that kind of
+ * unit is based" — there's no real responder-roster data source, so
+ * nearest facility of the matching type is the best available proxy.
  *
  * This is the single source of truth both the EOC's assignment panel
  * (FireCommandPanel) and each responder's own request inbox
@@ -36,7 +36,8 @@ function candidateFromFeature(feature, distanceKm, fallbackName) {
   const [lon, lat] = feature.geometry.coordinates
   const osmId = feature.properties?.osm_id
   return {
-    // Live Overpass fallback features (liveInfra.js) don't carry an
+    // Overpass-fallback features (from the /api/infrastructure proxy's
+    // direct-Overpass path) don't carry an
     // osm_id — fall back to a coordinate-based id so "is this the same
     // facility" still works, same trick fireKeyFromLatLon uses for fires.
     id: osmId != null ? String(osmId) : `${lat.toFixed(4)},${lon.toFixed(4)}`,

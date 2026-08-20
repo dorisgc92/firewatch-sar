@@ -1,0 +1,20 @@
+[Unit]
+Description=FireWatch SAR - infrastructure crawler
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=REPLACE_WITH_YOUR_USERNAME
+WorkingDirectory=/home/REPLACE_WITH_YOUR_USERNAME/firewatch-sar/remote_server
+ExecStart=/home/REPLACE_WITH_YOUR_USERNAME/firewatch-sar/remote_server/venv/bin/python crawler.py
+Restart=always
+RestartSec=15
+# Set to 0 here (instead of the script's own 6h default) if you want
+# continuous refreshing with no pause between laps -- see README.md.
+# Environment=CRAWLER_LAP_PAUSE_HOURS=0
+StandardOutput=append:/home/REPLACE_WITH_YOUR_USERNAME/firewatch-sar/remote_server/crawler.log
+StandardError=append:/home/REPLACE_WITH_YOUR_USERNAME/firewatch-sar/remote_server/crawler.log
+
+[Install]
+WantedBy=multi-user.target

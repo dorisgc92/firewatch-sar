@@ -369,15 +369,11 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     return inView.filter((p) => perimeterHasActiveHotspot(p, hotspotsForPerimeterCheck))
   }, [layers.perimeters?.data, hotspotsForPerimeterCheck, viewportBbox, zoneInfo])
 
-  // Bundled infrastructure.geojson grows incrementally from
-  // fetch_infrastructure.py's world-tile crawl (~1 tile/run). If the
-  // selected zone already falls inside crawled coverage, use it — instant,
-  // no network call. Otherwise fetch live from Overpass for this zone
-  // specifically (see utils/liveInfra.js), cached per browser session.
-  // Lifted up to App.jsx (useZoneInfrastructure) so the EOC assignment
-  // panel sees the exact same zone-scoped data this map renders, instead
-  // of a second, unfiltered copy — passed in as zoneInfrastructure/
-  // zoneInfrastructureLoading props.
+  // Infrastructure now lives on Doris's own remote server (see
+  // remote_server/), queried per-zone through /api/infrastructure — see
+  // hooks/useZoneInfrastructure.js, called once in App.jsx and passed
+  // down here (and to the EOC assignment panel) as zoneInfrastructure/
+  // zoneInfrastructureLoading props, so every consumer sees the same data.
 
   const visibleViewportHotspots = useMemo(() => {
     const filtered = viewportHotspots.filter(f => {

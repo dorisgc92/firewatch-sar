@@ -226,10 +226,35 @@ def parse_overpass_response(data, types):
             continue
 
         tags = el.get("tags", {})
-        label, color, icon = classify_element(tags, types)
+        label, _color, _icon = classify_element(tags, types)
 
         name = (tags.get("name") or tags.get("name:en") or
                 tags.get("name:es") or label)
+
+        # Only name/type/osm_id/osm_type/coordinates are ever read by the
+        # frontend (confirmed by grepping frontend/src -- color/icon/
+        # source/osm_url are unused, and address/phone/operator/capacity/
+        # emergency are almost always empty strings from OSM). At world
+        # scale (hundreds of thousands of features, one lap = every
+        # hospital/fire station/police/power/airport on the planet) that
+        # dead weight was the direct cause of infrastructure.geojson
+        # crossing GitHub's 100MB push limit -- every push since has been
+        # silently rejected, freezing the crawl on whatever tile it was on
+        # when that first happened. Optional OSM tag fields are only
+        # included when actually present, instead of always writing an
+        # empty string.
+        props = {
+            "name": name,
+            "type": label,
+            "osm_id": el.get("id"),
+            "osm_type": el["type"],
+        }
+        for tag_key, prop_key in (("addr:street", "address"), ("phone", "phone"),
+                                   ("operator", "operator"), ("capacity", "capacity"),
+                                   ("emergency", "emergency")):
+            val = tags.get(tag_key)
+            if val:
+                props[prop_key] = val
 
         features.append({
             "type": "Feature",
@@ -237,21 +262,7 @@ def parse_overpass_response(data, types):
                 "type": "Point",
                 "coordinates": [lon, lat]
             },
-            "properties": {
-                "name": name,
-                "type": label,
-                "color": color,
-                "icon": icon,
-                "osm_id": el.get("id"),
-                "osm_type": el["type"],
-                "address": tags.get("addr:street", ""),
-                "phone": tags.get("phone", tags.get("contact:phone", "")),
-                "operator": tags.get("operator", ""),
-                "capacity": tags.get("capacity", ""),
-                "emergency": tags.get("emergency", ""),
-                "source": "OpenStreetMap",
-                "osm_url": f"https://www.openstreetmap.org/{el['type']}/{el.get('id')}",
-            }
+            "properties": props
         })
 
     return features
@@ -412,9 +423,26 @@ def main():
 
     geojson = stabilize_generated_at(geojson, OUTPUT_PATH)
 
+    # Compact (no indent) rather than pretty-printed -- this file is only
+    # ever machine-read (frontend fetch, this same script's next run), so
+    # the indentation whitespace was pure overhead, adding up fast at
+    # hundreds of thousands of features. Combined with dropping the unused
+    # per-feature fields above, this is what keeps the world crawl under
+    # GitHub's 100MB push limit -- see the note above parse_overpass_response
+    # for the incident this fixes.
     with open(OUTPUT_PATH, "w") as f:
-        json.dump(geojson, f, indent=2)
+        json.dump(geojson, f, separators=(",", ":"))
     update_manifest("infrastructure", OUTPUT_PATH)
+
+    # Loud early warning rather than a silent rejected push next time this
+    # creeps back up -- 90MB gives a few runs' worth of margin (a tile
+    # typically adds well under 1MB) to notice and act before hitting
+    # GitHub's hard 100MB limit again.
+    written_size_mb = os.path.getsize(OUTPUT_PATH) / (1024 * 1024)
+    if written_size_mb > 90:
+        print(f"WARNING: {OUTPUT_PATH} is {written_size_mb:.1f} MB -- approaching "
+              f"GitHub's 100MB push limit. Consider sharding this file (e.g. one "
+              f"file per continent) before it blocks the crawl again.")
 
     if not manual_run:
         progress["next_index"] = (progress["next_index"] + 1) % len(WORLD_TILES)

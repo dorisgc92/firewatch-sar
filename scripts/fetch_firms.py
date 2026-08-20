@@ -55,15 +55,13 @@ REGIONS = [
 # Days to look back (1 = last 24 hours, max 10)
 DAYS = 1
 
-# Data sources: VIIRS is higher resolution (375m) and now comes from three
-# satellites (Suomi NPP + NOAA-20 + NOAA-21); MODIS is older (1km, Aqua+Terra
-# combined by NASA's API under one endpoint). We fetch all of them and merge.
+# Data sources: VIIRS is higher resolution (375m). NASA discontinues Suomi
+# NPP data delivery on 2026-11-01 (see FIRMS notifications banner) — VIIRS_
+# SNPP_NRT removed proactively rather than waiting for it to start failing
+# in production. NOAA-20 and NOAA-21 (VIIRS's replacement satellites) plus
+# MODIS (Aqua+Terra combined by NASA's API under one endpoint) still cover
+# the same detection capability.
 SOURCES = [
-    {
-        "name": "VIIRS_SNPP_NRT",
-        "label": "VIIRS (Suomi NPP)",
-        "resolution_m": 375,
-    },
     {
         "name": "VIIRS_NOAA20_NRT",
         "label": "VIIRS (NOAA-20)",
@@ -385,7 +383,7 @@ def build_geojson(all_features):
         "type": "FeatureCollection",
         "metadata": {
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "source": "NASA FIRMS (VIIRS SNPP/NOAA-20/NOAA-21 + MODIS NRT)",
+            "source": "NASA FIRMS (VIIRS NOAA-20/NOAA-21 + MODIS NRT)",
             "api_url": "https://firms.modaps.eosdis.nasa.gov/api/",
             "coverage": "Global",
             "lookback_days": DAYS,

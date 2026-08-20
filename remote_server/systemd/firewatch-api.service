@@ -1,0 +1,17 @@
+[Unit]
+Description=FireWatch SAR - infrastructure API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=REPLACE_WITH_YOUR_USERNAME
+WorkingDirectory=/home/REPLACE_WITH_YOUR_USERNAME/firewatch-sar/remote_server
+ExecStart=/home/REPLACE_WITH_YOUR_USERNAME/firewatch-sar/remote_server/venv/bin/uvicorn api:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/REPLACE_WITH_YOUR_USERNAME/firewatch-sar/remote_server/api.log
+StandardError=append:/home/REPLACE_WITH_YOUR_USERNAME/firewatch-sar/remote_server/api.log
+
+[Install]
+WantedBy=multi-user.target

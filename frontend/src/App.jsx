@@ -61,7 +61,7 @@ function AppInner() {
   // the EOC assignment panel, and the responder inbox, so "nearest fire
   // station" always means "nearest within the zone actually being
   // viewed", never "nearest among whatever happens to be loaded globally".
-  const zoneInfrastructure = useZoneInfrastructure(layers, session?.zoneInfo)
+  const zoneInfrastructure = useZoneInfrastructure(session?.zoneInfo)
 
   const [zoneLoading, setZoneLoading] = useState(false)
   // Bumped on every new zone-resolution request; a request only gets to

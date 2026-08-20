@@ -37,12 +37,16 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 // In production: served from GitHub raw content or Vercel.
 const DATA_BASE_URL = import.meta.env.VITE_DATA_BASE_URL || '/data'
 
+// infrastructure used to be here too, fetched the same manifest-driven
+// way as the others -- retired now that infrastructure lives on Doris's
+// own remote server (see remote_server/) instead of a bundled GeoJSON in
+// this repo. Zone-scoped infrastructure now comes from
+// hooks/useZoneInfrastructure.js -> /api/infrastructure, not from here.
 const DATA_LAYERS = {
   hotspots:       `${DATA_BASE_URL}/hotspots.geojson`,
   weather:        `${DATA_BASE_URL}/weather.geojson`,
   fwi:            `${DATA_BASE_URL}/fwi_grid.geojson`,
   perimeters:     `${DATA_BASE_URL}/perimeters.geojson`,
-  infrastructure: `${DATA_BASE_URL}/infrastructure.geojson`,
 }
 
 const MANIFEST_URL = `${DATA_BASE_URL}/manifest.json`
