@@ -71,24 +71,22 @@ export default function ResponderRequestOverlay({ activeModule, responderType, i
 
   const accept = async (item) => {
     setBusyKey(item.fireKey)
-    await respondToRequest(item.fireKey, responderType, "accept", {})
+    await respondToRequest(item.fireKey, responderType, "accept")
     setBusyKey(null)
   }
   const reject = async (item) => {
     setBusyKey(item.fireKey)
-    await respondToRequest(item.fireKey, responderType, "reject", {
-      infraFeatures, lat: item.lat, lon: item.lon, fallbackName: t(meta.fallbackNameKey),
-    })
+    await respondToRequest(item.fireKey, responderType, "reject")
     setBusyKey(null)
   }
   const markAttending = async (item) => {
     setBusyKey(item.fireKey)
-    await respondToRequest(item.fireKey, responderType, "attending", {})
+    await respondToRequest(item.fireKey, responderType, "attending")
     setBusyKey(null)
   }
   const markResolved = async (item) => {
     setBusyKey(item.fireKey)
-    await respondToRequest(item.fireKey, responderType, "resolved", {})
+    await respondToRequest(item.fireKey, responderType, "resolved")
     setBusyKey(null)
   }
 

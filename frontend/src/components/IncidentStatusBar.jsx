@@ -2,33 +2,50 @@ import { useState, useEffect, useMemo } from "react"
 import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } from "../utils/countryBoundaries"
 import { filterFeaturesByBbox } from "../utils/spatial"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
-import { GROUP_KEYS, GROUP_META } from "../utils/responderGroups"
+import { GROUP_META } from "../utils/responderGroups"
 import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
 
-const STATUS_ORDER = ["unassigned", "assigned", "attending", "resolved"]
+// Six buckets now instead of four: a single fire can have several
+// responder groups in flight at once (a bombero already attending while
+// EMS is still just accepted, say), so the bar tracks each GROUP'S own
+// request status independently rather than collapsing a whole fire into
+// one status. "Sin asignar" is the one exception — it's about fires with
+// no requests at all, so it's still counted per-fire.
+const STATUS_ORDER = ["unassigned", "assigned", "accepted", "rejected", "attending", "resolved"]
 const STATUS_COLOR = {
   unassigned: theme.textMuted,
   assigned: theme.orange,
+  accepted: theme.navy,
+  rejected: "#c2410c",
   attending: theme.danger,
   resolved: theme.navy,
 }
+// Maps a single request's own status to which bucket/column it belongs
+// in. "exhausted" (candidates ran out after repeated rejection, from
+// before rejections required EOC re-assignment) folds into the same
+// "Rechazado" bucket — both mean "needs the EOC's attention to pick a
+// new unit", just via a different history.
+const REQUEST_STATUS_TO_BUCKET = {
+  pending: "assigned", accepted: "accepted", rejected: "rejected",
+  exhausted: "rejected", attending: "attending", resolved: "resolved",
+}
 const REQ_STATUS_COLOR = {
-  pending: theme.orange, accepted: theme.navy, attending: theme.danger,
-  resolved: theme.textMuted, exhausted: theme.danger,
+  pending: theme.orange, accepted: theme.navy, rejected: "#c2410c",
+  attending: theme.danger, resolved: theme.textMuted, exhausted: "#c2410c",
 }
 
-// One row in an expanded status group. Gives the EOC (or anyone) full
-// visibility at a glance — a compact chip per responder group showing who's
-// been requested/accepted/attending on this fire, sourced straight from
-// incident.requests (same live, KV-synced data FireCommandPanel uses to
-// actually make the assignment) — this row is read-only; "Ver / Asignar"
-// jumps to the map and opens the real assignment panel there instead of
-// duplicating those controls in a second place.
-function IncidentRow({ feature, fireKey, incident, lat, lon, onSelectFire, releaseIncident, t }) {
+// One row in an expanded status bucket. Unlike a fire-level summary, this
+// only renders chips for the responder groups that actually belong in the
+// bucket currently open — a fire with bombero=atendiendo and EMS=aceptado
+// shows up in BOTH the "Atendiendo" and "Aceptado" tabs, but each time
+// only with the one chip relevant to that tab, matching how asynchronous
+// each group's own progress really is (the EOC opens "Atendiendo" to see
+// who's actually on scene right now, not everything ever requested for
+// that fire).
+function IncidentRow({ feature, fireKey, matchingGroups, onSelectFire, releaseIncident, t }) {
   const [busy, setBusy] = useState(false)
-  const requests = incident?.requests || {}
-  const activeGroups = GROUP_KEYS.filter((g) => requests[g])
+  const [lat, lon] = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]
 
   const release = async () => {
     setBusy(true)
@@ -49,7 +66,7 @@ function IncidentRow({ feature, fireKey, incident, lat, lon, onSelectFire, relea
               border: `1px solid ${theme.orange}`, background: "#fff", color: theme.orange, fontWeight: "bold" }}>
             {t("incidentAttend")}
           </button>
-          {incident && (
+          {matchingGroups.length > 0 && (
             <button disabled={busy} onClick={release}
               style={{ fontSize: "10.5px", padding: "2px 7px", borderRadius: "4px", cursor: "pointer",
                 border: `1px solid ${theme.border}`, background: "#fff", color: theme.textSecondary }}>
@@ -58,20 +75,17 @@ function IncidentRow({ feature, fireKey, incident, lat, lon, onSelectFire, relea
           )}
         </span>
       </div>
-      {activeGroups.length > 0 && (
+      {matchingGroups.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginTop: "5px" }}>
-          {activeGroups.map((g) => {
-            const req = requests[g]
-            return (
-              <span key={g} style={{
-                fontSize: "10px", padding: "2px 6px", borderRadius: "10px",
-                border: `1px solid ${REQ_STATUS_COLOR[req.status] || theme.border}`,
-                color: REQ_STATUS_COLOR[req.status] || theme.textSecondary,
-              }}>
-                {GROUP_META[g].icon} {req.targetName} — {t("reqStatus_" + req.status)}
-              </span>
-            )
-          })}
+          {matchingGroups.map(([g, req]) => (
+            <span key={g} style={{
+              fontSize: "10px", padding: "2px 6px", borderRadius: "10px",
+              border: `1px solid ${REQ_STATUS_COLOR[req.status] || theme.border}`,
+              color: REQ_STATUS_COLOR[req.status] || theme.textSecondary,
+            }}>
+              {GROUP_META[g].icon} {req.targetName} — {t("reqStatus_" + req.status)}
+            </span>
+          ))}
         </div>
       )}
     </div>
@@ -114,19 +128,43 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
   const keyedHotspots = useMemo(() => {
     return countryHotspots.map((feature) => {
       const [lon, lat] = feature.geometry.coordinates
-      return { feature, fireKey: fireKeyFromLatLon(lat, lon), lat, lon }
+      return { feature, fireKey: fireKeyFromLatLon(lat, lon) }
     })
   }, [countryHotspots])
 
+  // A fire with, say, bombero=attending and ems=accepted lands in BOTH the
+  // "Atendiendo" and "Aceptado" buckets — once each, carrying only the
+  // group(s) that actually belong in that specific bucket. Counts on the
+  // pill buttons follow the same unit: "Sin asignar" counts FIRES (there's
+  // no per-group request to count yet), every other bucket counts
+  // individual group-requests, since that's what the EOC is really asking
+  // "how many of these do I have right now".
   const grouped = useMemo(() => {
-    const groups = { unassigned: [], assigned: [], attending: [], resolved: [] }
+    const buckets = { unassigned: [], assigned: [], accepted: [], rejected: [], attending: [], resolved: [] }
     for (const item of keyedHotspots) {
-      const incident = incidents?.[item.fireKey] || null
-      const status = incident?.status || "unassigned"
-      groups[status]?.push({ ...item, incident })
+      const incident = incidents?.[item.fireKey]
+      const requests = incident?.requests || {}
+      const entries = Object.entries(requests)
+      if (entries.length === 0) {
+        buckets.unassigned.push({ ...item, matchingGroups: [] })
+        continue
+      }
+      const byBucket = {}
+      for (const [group, req] of entries) {
+        const bucket = REQUEST_STATUS_TO_BUCKET[req.status]
+        if (!bucket) continue
+        ;(byBucket[bucket] ||= []).push([group, req])
+      }
+      for (const [bucket, matchingGroups] of Object.entries(byBucket)) {
+        buckets[bucket].push({ ...item, matchingGroups })
+      }
     }
-    return groups
+    return buckets
   }, [keyedHotspots, incidents])
+
+  const countFor = (status) => status === "unassigned"
+    ? grouped.unassigned.length
+    : grouped[status].reduce((sum, item) => sum + item.matchingGroups.length, 0)
 
   if (activeModule !== 2) return null
 
@@ -136,7 +174,7 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
     <div style={{ borderBottom: `1px solid ${theme.border}`, background: theme.panelBgSoft, padding: "8px 16px" }}>
       <div style={{ display: "flex", gap: "8px", alignItems: "stretch", flexWrap: "wrap" }}>
         {STATUS_ORDER.map((status) => {
-          const count = grouped[status].length
+          const count = countFor(status)
           const isOpen = openGroup === status
           return (
             <button key={status}
@@ -159,8 +197,8 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
           {displayedGroup.length === 0 && (
             <div style={{ padding: "10px", fontSize: "12px", color: theme.textMuted }}>{t("incidentGroupEmpty")}</div>
           )}
-          {displayedGroup.map(({ feature, fireKey, incident, lat, lon }) => (
-            <IncidentRow key={fireKey} feature={feature} fireKey={fireKey} incident={incident} lat={lat} lon={lon}
+          {displayedGroup.map(({ feature, fireKey, matchingGroups }, i) => (
+            <IncidentRow key={fireKey + "-" + i} feature={feature} fireKey={fireKey} matchingGroups={matchingGroups}
               onSelectFire={onSelectFire} releaseIncident={releaseIncident} t={t} />
           ))}
         </div>

@@ -66,34 +66,30 @@ function candidateFromFeature(feature, distanceKm, fallbackName) {
  */
 const MAX_CANDIDATE_DISTANCE_KM = 120
 
-export function candidatesForGroup(lat, lon, infraFeatures, group, n = 3, fallbackName = "Unit") {
+export function candidatesForGroup(lat, lon, infraFeatures, group, n = 3, fallbackName = "Unit", excludeIds = []) {
   const meta = GROUP_META[group]
   if (!meta) return []
   const types = new Set(meta.infraTypes)
+  const excluded = new Set(excludeIds.map(String))
   const pool = (infraFeatures || []).filter((f) => types.has(f.properties?.type))
   if (pool.length === 0) return []
-  return nearestFeatures(lat, lon, pool, n)
+  // Ask for more than n so that, after filtering out anyone already in
+  // excludeIds (past rejections for this same request), there's still
+  // enough left to fill n genuinely-new suggestions instead of quietly
+  // returning fewer than expected.
+  return nearestFeatures(lat, lon, pool, n + excluded.size + 3)
     .filter(({ distanceKm }) => distanceKm <= MAX_CANDIDATE_DISTANCE_KM)
     .map(({ feature, distanceKm }) => candidateFromFeature(feature, distanceKm, fallbackName))
-}
-
-// Reject-and-cascade: the next nearest facility not already in
-// excludeIds, still bound by the same MAX_CANDIDATE_DISTANCE_KM sanity
-// cap. Pulls a larger pool (50) than the 3 shown to the EOC so a fire
-// with several fire stations nearby doesn't run out of options after two
-// rejections just because only the top 3 were ever computed.
-export function nextCandidateForGroup(lat, lon, infraFeatures, group, excludeIds = [], fallbackName = "Unit") {
-  const excluded = new Set(excludeIds.map(String))
-  const pool = candidatesForGroup(lat, lon, infraFeatures, group, 50, fallbackName)
-  return pool.find((c) => !excluded.has(c.id)) || null
+    .filter((c) => !excluded.has(c.id))
+    .slice(0, n)
 }
 
 // Derives the aggregate incident.status (unassigned/assigned/attending/
-// resolved — what IncidentStatusBar's four buckets already group by) from
-// the per-group request states, so that bar stays accurate automatically
-// as requests get accepted/rejected/advanced, without every call site
-// that touches a single group's request having to also reason about the
-// other four groups.
+// resolved — the one-line "Estado: X" summary shown near the top of the
+// fire panel) from the per-group request states. The 6-bucket breakdown
+// in IncidentStatusBar (Asignado/Aceptado/Rechazado/Atendiendo/Resuelto)
+// reads incident.requests directly instead of this — this function only
+// feeds that single summary line, so it deliberately stays coarse.
 export function deriveOverallStatus(requestsMap) {
   const values = Object.values(requestsMap || {}).filter(Boolean)
   if (values.length === 0) return "unassigned"

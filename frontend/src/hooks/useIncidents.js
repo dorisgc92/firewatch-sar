@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { deriveOverallStatus, nextCandidateForGroup } from "../utils/responderGroups"
+import { deriveOverallStatus } from "../utils/responderGroups"
 
 // Was 30s. The EOC assignment/accept-reject flow needs the OTHER side
 // (the responder who just got a request, or the EOC waiting on an
@@ -121,12 +121,14 @@ export default function useIncidents() {
   }, [setIncidentStatus])
 
   // Responder-side action: accept / reject / mark-attending / mark-resolved
-  // on the request currently targeting them. Reject auto-advances to the
-  // next-nearest facility in that group (same cascade the old hospital-only
-  // evacuation flow used) rather than just dead-ending the request — the
-  // EOC panel keeps showing "pending", now against a new target, instead
-  // of silently going quiet.
-  const respondToRequest = useCallback(async (fireKey, group, action, { infraFeatures, lat, lon, fallbackName } = {}) => {
+  // on the request currently targeting them. Reject no longer auto-picks
+  // the next-nearest facility and silently re-sends — it just marks this
+  // group's request "rejected" and stops there. The EOC sees it land in
+  // the "Rechazado" bucket and picks the next unit themselves from a
+  // refreshed candidate list (FireCommandPanel excludes anyone already in
+  // rejectedIds), instead of a rejection disappearing into an automatic
+  // retry the EOC never gets to see.
+  const respondToRequest = useCallback(async (fireKey, group, action) => {
     const incident = incidentsRef.current[fireKey]
     const req = incident?.requests?.[group]
     if (!req) return false
@@ -139,13 +141,8 @@ export default function useIncidents() {
     } else if (action === "resolved") {
       updated = { ...req, status: "resolved" }
     } else if (action === "reject") {
-      const excluded = [...(req.rejectedIds || []), req.targetId]
-      const next = nextCandidateForGroup(lat, lon, infraFeatures, group, excluded, fallbackName)
-      updated = next
-        ? { targetId: next.id, targetName: next.name, targetLat: next.lat, targetLon: next.lon,
-            distanceKm: next.distanceKm, status: "pending", rejectedIds: excluded,
-            requestedAt: req.requestedAt, respondedAt: new Date().toISOString() }
-        : { ...req, status: "exhausted", rejectedIds: excluded, respondedAt: new Date().toISOString() }
+      const rejectedIds = [...(req.rejectedIds || []), req.targetId]
+      updated = { ...req, status: "rejected", rejectedIds, respondedAt: new Date().toISOString() }
     } else {
       return false
     }

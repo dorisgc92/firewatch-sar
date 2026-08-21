@@ -6,8 +6,8 @@ import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
 
 const REQ_STATUS_COLOR = {
-  pending: theme.orange, accepted: theme.navy, attending: theme.danger,
-  resolved: theme.textMuted, exhausted: theme.danger,
+  pending: theme.orange, accepted: theme.navy, rejected: "#c2410c",
+  attending: theme.danger, resolved: theme.textMuted, exhausted: "#c2410c",
 }
 
 // One responder group's card inside the assignment section: shows the
@@ -21,7 +21,10 @@ function GroupCard({ group, lat, lon, infraFeatures, req, canAssign, requestResp
   const [sendingId, setSendingId] = useState(null)
   const meta = GROUP_META[group]
   const fallbackName = t(meta.fallbackNameKey)
-  const candidates = candidatesForGroup(lat, lon, infraFeatures, group, 3, fallbackName)
+  // Exclude anyone this same request already rejected, so re-assigning
+  // after a rejection offers 3 genuinely new candidates instead of
+  // re-listing the one who just said no.
+  const candidates = candidatesForGroup(lat, lon, infraFeatures, group, 3, fallbackName, req?.rejectedIds || [])
   const fireKey = fireKeyFromLatLon(lat, lon)
 
   const assign = async (candidate) => {
@@ -40,7 +43,9 @@ function GroupCard({ group, lat, lon, infraFeatures, req, canAssign, requestResp
           <span style={{ fontSize: "11px", fontWeight: "bold", color: REQ_STATUS_COLOR[req.status] || theme.textMuted }}>
             {req.status === "accepted" || req.status === "attending"
               ? t("reqAcceptedBy", { name: req.targetName })
-              : t("reqStatus_" + req.status)}
+              : req.status === "rejected"
+                ? t("reqRejectedBy", { name: req.targetName })
+                : t("reqStatus_" + req.status)}
           </span>
         )}
       </div>

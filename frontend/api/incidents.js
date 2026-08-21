@@ -22,7 +22,7 @@ const KV_TOKEN = process.env.KV_REST_API_TOKEN
 const INCIDENTS_KEY = "incidents"
 
 const VALID_STATUSES = new Set(["unassigned", "assigned", "attending", "resolved"])
-const VALID_REQUEST_STATUSES = new Set(["pending", "accepted", "attending", "resolved", "exhausted"])
+const VALID_REQUEST_STATUSES = new Set(["pending", "accepted", "rejected", "attending", "resolved", "exhausted"])
 const VALID_GROUPS = new Set(["bombero", "proteccion_civil", "ems", "utilities", "ong"])
 
 async function kvGet(key) {
