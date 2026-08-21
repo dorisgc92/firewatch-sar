@@ -81,6 +81,14 @@ SOURCES = [
 
 OUTPUT_PATH = "data/hotspots.geojson"
 
+# Sanity floor for the "did this run actually get global coverage" check
+# below (not the hard 0-hotspots guard, which was already here). Global,
+# 24h, 6-continent, 3-satellite-pair days have consistently landed in the
+# thousands-to-tens-of-thousands range in practice -- 500 is comfortably
+# below any real day's count while still well above what a partial-NRT-
+# pipeline run (data published for maybe one region) tends to produce.
+MIN_EXPECTED_HOTSPOTS = 500
+
 # FRP thresholds for intensity classification
 # FRP = Fire Radiative Power (MW)
 def classify_intensity(frp):
@@ -488,6 +496,29 @@ def main():
             json.dump(empty, f, indent=2)
         update_manifest("hotspots", OUTPUT_PATH)
         raise SystemExit(1)
+
+    if len(deduped) < MIN_EXPECTED_HOTSPOTS:
+        # Not zero, so the hard guard above doesn't fire — but a genuinely
+        # global day (all 6 continents, 24h window, 3 satellite pairs) has
+        # never come in this low in practice. The one confirmed cause so
+        # far: NASA's NRT pipeline hasn't finished publishing every
+        # region's latest pass yet at the moment this ran, so most regions
+        # come back empty while whichever region got processed first (often
+        # Asia, since that's furthest along UTC-wise) looks "normal" on its
+        # own — the same data shows up completely if you re-query a few
+        # hours later. This is loud specifically so that pattern is
+        # recognizable at a glance in the workflow log instead of someone
+        # having to notice "huh, that count looks low" days later. Still
+        # writes the file — an unusually quiet day is possible in principle,
+        # and this isn't confident enough to justify discarding real data.
+        print("\n" + "=" * 70)
+        print(f"WARNING: only {len(deduped)} hotspots found (expected at least "
+              f"{MIN_EXPECTED_HOTSPOTS} on a normal day). Writing this data anyway, "
+              f"but it's worth a manual look — this has previously meant NASA's NRT "
+              f"pipeline was still catching up on some regions when this ran, not a "
+              f"real drop in fire activity. Re-running this workflow in a few hours "
+              f"should self-correct if that's what's happening.")
+        print("=" * 70)
 
     deduped = classify_vegetation_likelihood(deduped)
 
