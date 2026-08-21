@@ -1,12 +1,12 @@
 {
   "type": "FeatureCollection",
   "metadata": {
-    "generated_at": "2026-08-21T01:50:51.386430+00:00",
+    "generated_at": "2026-08-21T02:33:26.021479+00:00",
     "source": "NASA FIRMS (VIIRS NOAA-20/NOAA-21 + MODIS NRT)",
     "api_url": "https://firms.modaps.eosdis.nasa.gov/api/",
     "coverage": "Global",
     "lookback_days": 1,
-    "total_hotspots": 79,
+    "total_hotspots": 161,
     "description": "Active fire hotspots detected by NASA satellite sensors. FRP = Fire Radiative Power in megawatts (MW). Higher FRP = more intense fire. Data latency: < 3 hours globally.",
     "intensity_scale": {
       "low": "FRP < 10 MW",
@@ -16,6 +16,1892 @@
     }
   },
   "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          43.83839,
+          34.90492
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 70.49,
+        "intensity": "high",
+        "confidence": "80",
+        "acq_datetime": "2026-08-21 00:18Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          43.792,
+          34.90739
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 69.72,
+        "intensity": "high",
+        "confidence": "78",
+        "acq_datetime": "2026-08-21 00:18Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          43.80045,
+          34.91017
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 70.82,
+        "intensity": "high",
+        "confidence": "72",
+        "acq_datetime": "2026-08-21 00:18Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          43.89862,
+          35.68564
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 93.8,
+        "intensity": "high",
+        "confidence": "87",
+        "acq_datetime": "2026-08-21 00:18Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          43.9074,
+          35.68836
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 79.16,
+        "intensity": "high",
+        "confidence": "80",
+        "acq_datetime": "2026-08-21 00:18Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          43.86021,
+          35.69071
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 52.59,
+        "intensity": "high",
+        "confidence": "67",
+        "acq_datetime": "2026-08-21 00:18Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          54.26223,
+          23.28367
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 12.7,
+        "intensity": "moderate",
+        "confidence": "90",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.29635,
+          23.5294
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.92,
+        "intensity": "low",
+        "confidence": "85",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.28685,
+          23.53087
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 18.05,
+        "intensity": "moderate",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.32956,
+          23.55117
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 18.41,
+        "intensity": "moderate",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.87345,
+          25.16864
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 35.86,
+        "intensity": "moderate",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.88457,
+          25.17593
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 38.5,
+        "intensity": "moderate",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.875,
+          25.17735
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 50.35,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.38897,
+          25.49683
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.36,
+        "intensity": "low",
+        "confidence": "80",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          53.15038,
+          25.53314
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 30.48,
+        "intensity": "moderate",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.55344,
+          25.90215
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 7.14,
+        "intensity": "low",
+        "confidence": "81",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.60815,
+          25.94132
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.19,
+        "intensity": "low",
+        "confidence": "76",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.33642,
+          26.24406
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.14,
+        "intensity": "low",
+        "confidence": "44",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.64436,
+          27.50277
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.48,
+        "intensity": "low",
+        "confidence": "73",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.62249,
+          27.51626
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.11,
+        "intensity": "low",
+        "confidence": "52",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.71467,
+          28.49636
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 34.86,
+        "intensity": "moderate",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.40079,
+          30.20991
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 27.05,
+        "intensity": "moderate",
+        "confidence": "84",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          50.29958,
+          30.35415
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 15.28,
+        "intensity": "moderate",
+        "confidence": "86",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          50.28569,
+          30.35581
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 15.03,
+        "intensity": "moderate",
+        "confidence": "86",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.33519,
+          30.35924
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 25.06,
+        "intensity": "moderate",
+        "confidence": "82",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.34278,
+          30.35935
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 52.36,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          50.62211,
+          30.39622
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.5,
+        "intensity": "low",
+        "confidence": "75",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.10574,
+          30.56305
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 36.17,
+        "intensity": "moderate",
+        "confidence": "88",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.09816,
+          30.5648
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 22.55,
+        "intensity": "moderate",
+        "confidence": "74",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.33577,
+          30.56743
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 24.72,
+        "intensity": "moderate",
+        "confidence": "81",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.8262,
+          30.72683
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 11.26,
+        "intensity": "moderate",
+        "confidence": "77",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.27898,
+          30.74908
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 28.79,
+        "intensity": "moderate",
+        "confidence": "88",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.2998,
+          30.75893
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 30.23,
+        "intensity": "moderate",
+        "confidence": "90",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.28055,
+          30.7609
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 121.42,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.34764,
+          30.89147
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 28.47,
+        "intensity": "moderate",
+        "confidence": "79",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.33246,
+          30.89304
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 28.94,
+        "intensity": "moderate",
+        "confidence": "81",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.85991,
+          30.92904
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 13.28,
+        "intensity": "moderate",
+        "confidence": "63",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.28655,
+          31.04066
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 55.64,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.63762,
+          31.08461
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 22.69,
+        "intensity": "moderate",
+        "confidence": "75",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.79078,
+          31.0948
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 35.84,
+        "intensity": "moderate",
+        "confidence": "88",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.32656,
+          31.12826
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 17.88,
+        "intensity": "moderate",
+        "confidence": "83",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.32813,
+          31.13929
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 31.31,
+        "intensity": "moderate",
+        "confidence": "98",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.96951,
+          31.23463
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 16.62,
+        "intensity": "moderate",
+        "confidence": "60",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.11898,
+          31.26875
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 18.3,
+        "intensity": "moderate",
+        "confidence": "71",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.12523,
+          31.27479
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 66.44,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.10495,
+          31.27674
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 16.02,
+        "intensity": "moderate",
+        "confidence": "66",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.12052,
+          31.2808
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 55.52,
+        "intensity": "high",
+        "confidence": "100",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.42228,
+          32.11881
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 50.29,
+        "intensity": "high",
+        "confidence": "95",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.39875,
+          32.12096
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 24.08,
+        "intensity": "moderate",
+        "confidence": "69",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.53265,
+          32.18565
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 21.3,
+        "intensity": "moderate",
+        "confidence": "65",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.43561,
+          32.24696
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.87,
+        "intensity": "low",
+        "confidence": "65",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.42266,
+          32.24856
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.55,
+        "intensity": "moderate",
+        "confidence": "68",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.25436,
+          32.26328
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 20.62,
+        "intensity": "moderate",
+        "confidence": "58",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.70535,
+          32.35162
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 20.15,
+        "intensity": "moderate",
+        "confidence": "70",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          47.7072,
+          32.3642
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 35.82,
+        "intensity": "moderate",
+        "confidence": "89",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.32515,
+          -16.3925
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 6.66,
+        "intensity": "low",
+        "confidence": "47",
+        "acq_datetime": "2026-08-21 00:33Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          83.62995,
+          68.41595
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 12.8,
+        "intensity": "moderate",
+        "confidence": "57",
+        "acq_datetime": "2026-08-21 00:07Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.1468,
+          69.36924
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 20.03,
+        "intensity": "moderate",
+        "confidence": "70",
+        "acq_datetime": "2026-08-21 00:07Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.05871,
+          71.2571
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.98,
+        "intensity": "low",
+        "confidence": "44",
+        "acq_datetime": "2026-08-21 00:07Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          72.06912,
+          71.26573
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 64.96,
+        "intensity": "high",
+        "confidence": "0",
+        "acq_datetime": "2026-08-21 00:07Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.7383,
+          59.89356
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 12.69,
+        "intensity": "moderate",
+        "confidence": "63",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          71.28444,
+          60.86949
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.37,
+        "intensity": "low",
+        "confidence": "48",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.86808,
+          60.96716
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.02,
+        "intensity": "low",
+        "confidence": "14",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.01773,
+          64.6356
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 12.83,
+        "intensity": "moderate",
+        "confidence": "75",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.63885,
+          64.64743
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 11.96,
+        "intensity": "moderate",
+        "confidence": "22",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          73.82833,
+          64.80021
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 13.8,
+        "intensity": "moderate",
+        "confidence": "78",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.8669,
+          64.86147
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.55,
+        "intensity": "moderate",
+        "confidence": "31",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.31898,
+          64.92517
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.58,
+        "intensity": "low",
+        "confidence": "29",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.29789,
+          64.92928
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 16.63,
+        "intensity": "moderate",
+        "confidence": "0",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.96069,
+          65.62168
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.3,
+        "intensity": "low",
+        "confidence": "24",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          74.36335,
+          65.65305
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.19,
+        "intensity": "low",
+        "confidence": "48",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.9708,
+          65.86264
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.87,
+        "intensity": "low",
+        "confidence": "53",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.02252,
+          66.05469
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.26,
+        "intensity": "moderate",
+        "confidence": "53",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.48347,
+          66.40961
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 13.79,
+        "intensity": "moderate",
+        "confidence": "68",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.54517,
+          66.96112
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 8.81,
+        "intensity": "low",
+        "confidence": "46",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.75454,
+          66.96278
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.35,
+        "intensity": "moderate",
+        "confidence": "43",
+        "acq_datetime": "2026-08-21 00:09Z",
+        "daynight": "Day",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          59.04794,
+          53.46122
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.74,
+        "intensity": "low",
+        "confidence": "55",
+        "acq_datetime": "2026-08-21 00:11Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          59.03159,
+          53.46318
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 10.43,
+        "intensity": "moderate",
+        "confidence": "58",
+        "acq_datetime": "2026-08-21 00:11Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          52.93794,
+          51.60605
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 21.4,
+        "intensity": "moderate",
+        "confidence": "61",
+        "acq_datetime": "2026-08-21 00:13Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          55.85573,
+          29.99712
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 19.7,
+        "intensity": "moderate",
+        "confidence": "99",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          55.39903,
+          30.08883
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 5.23,
+        "intensity": "low",
+        "confidence": "40",
+        "acq_datetime": "2026-08-21 00:20Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          55.99317,
+          21.64714
+        ]
+      },
+      "properties": {
+        "source": "MODIS (Terra/Aqua)",
+        "resolution_m": 1000,
+        "frp": 9.7,
+        "intensity": "low",
+        "confidence": "87",
+        "acq_datetime": "2026-08-21 00:22Z",
+        "daynight": "Night",
+        "fire_type": null,
+        "fire_type_label": null,
+        "likely_vegetation": true,
+        "non_vegetation_reason": null
+      }
+    },
     {
       "type": "Feature",
       "geometry": {
