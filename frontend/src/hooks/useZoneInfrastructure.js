@@ -62,7 +62,15 @@ export default function useZoneInfrastructure(zoneInfo) {
       .then((data) => {
         if (id !== requestId.current) return // a newer zone request superseded this one
         const features = data.features || []
-        setCached(key, features)
+        // Deliberately NOT caching empty results. A zone can legitimately
+        // come back empty for a moment (the remote crawler mid-tile, a
+        // transient proxy hiccup already retried server-side and still
+        // empty) — caching that would trap the tab with "no units here"
+        // for the rest of the session even once the real data exists,
+        // since sessionStorage survives page reloads and only clears when
+        // the tab/window closes. Only a genuinely non-empty result is
+        // worth remembering.
+        if (features.length > 0) setCached(key, features)
         setState({ features, loading: false, error: null })
       })
       .catch((e) => {
