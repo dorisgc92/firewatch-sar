@@ -303,11 +303,6 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
           ✕
         </button>
       )}
-      {activeModule === 2 && selectedFire && (
-        <FireCommandPanel selectedFire={selectedFire} incidents={incidents}
-          requestResponder={requestResponder} infraFeatures={zoneInfrastructure}
-          responderType={responderType} onClose={() => onClearSelection?.()} />
-      )}
       <div style={{
         background: activeModule === 1 ? theme.navySoft : theme.orangeSoft,
         border: `1px solid ${activeModule === 1 ? theme.navy : theme.orange}`,
@@ -400,6 +395,15 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
               </div>
             </>
           )}
+        </>
+      )}
+
+      {activeModule === 2 && selectedFire && (
+        <>
+          <SectionTitle>{t("situationSummaryTitle")}</SectionTitle>
+          <FireCommandPanel selectedFire={selectedFire} incidents={incidents}
+            requestResponder={requestResponder} infraFeatures={zoneInfrastructure}
+            responderType={responderType} onClose={() => onClearSelection?.()} />
         </>
       )}
 
