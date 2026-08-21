@@ -279,6 +279,19 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints, responderType,
   }), [zoneHotspots, zoneInfrastructure, fwiPoints, responderType])
 
+  // Avoid showing the same fire's description twice: once as a card in
+  // this AI-generated priority list, and again in the FireCommandPanel
+  // below (which is what the EOC actually uses to assign responders).
+  // When a fire is selected, its card is dropped from this list — the
+  // priority list still covers every OTHER fire needing attention, just
+  // not the one already fully shown lower down.
+  const priorityFires = useMemo(() => {
+    if (!selectedFire) return brief.priorityFires
+    const [selLon, selLat] = selectedFire.geometry.coordinates
+    const selectedKey = fireKeyFromLatLon(selLat, selLon)
+    return brief.priorityFires.filter((fire) => fireKeyFromLatLon(fire.lat, fire.lon) !== selectedKey)
+  }, [brief.priorityFires, selectedFire])
+
   const threatenedInfra = useMemo(() => findThreatenedInfrastructure({
     zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints,
   }), [zoneHotspots, zoneInfrastructure, fwiPoints])
@@ -357,13 +370,15 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
               </span>
             ) : (
               <>
-                <div style={{ color: theme.textSecondary, marginBottom: "8px", lineHeight: "1.5" }}>
-                  {t("fociRequireAttention", { count: brief.priorityFires.length, zone: zoneInfo?.name })}
-                  {!brief.hasInfraData && (
-                    <span style={{ color: theme.orange }}> {t("noInfraDataYet")}</span>
-                  )}
-                </div>
-                {brief.priorityFires.map((fire, i) => (
+                {priorityFires.length > 0 && (
+                  <div style={{ color: theme.textSecondary, marginBottom: "8px", lineHeight: "1.5" }}>
+                    {t("fociRequireAttention", { count: priorityFires.length, zone: zoneInfo?.name })}
+                    {!brief.hasInfraData && (
+                      <span style={{ color: theme.orange }}> {t("noInfraDataYet")}</span>
+                    )}
+                  </div>
+                )}
+                {priorityFires.map((fire, i) => (
                   <PriorityFireCard key={i} fire={fire} index={i} t={t} incidents={incidents}
                     onSelectFire={flyTo} />
                 ))}
