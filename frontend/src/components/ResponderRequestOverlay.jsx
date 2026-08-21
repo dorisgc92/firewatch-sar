@@ -106,7 +106,7 @@ export default function ResponderRequestOverlay({ activeModule, responderType, i
               style={{ fontSize: "12px", padding: "6px 10px", borderRadius: "6px", border: `1px solid ${theme.border}`, width: "100%", boxSizing: "border-box" }} />
             {searchResults.length > 0 && (
               <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff",
-                border: `1px solid ${theme.border}`, borderRadius: "6px", marginTop: "4px", zIndex: 10, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+                border: `1px solid ${theme.border}`, borderRadius: "6px", marginTop: "4px", zIndex: 2000, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
                 {searchResults.map((f, i) => (
                   <div key={i} onClick={() => pickFacility(f)}
                     style={{ padding: "7px 10px", cursor: "pointer", fontSize: "12px", borderBottom: `1px solid ${theme.border}` }}>
