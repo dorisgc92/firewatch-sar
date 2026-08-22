@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useFireData } from "./hooks/useFireData"
 import useIncidents from "./hooks/useIncidents"
 import useIsNarrow from "./hooks/useIsNarrow"
@@ -10,6 +10,7 @@ import IncidentStatusBar from "./components/IncidentStatusBar"
 import ResponderRequestOverlay from "./components/ResponderRequestOverlay"
 import StartScreen from "./components/StartScreen"
 import { theme } from "./utils/theme"
+import { isDispatchableGroup, loadMyFacility } from "./utils/responderGroups"
 import { LanguageProvider, useLanguage } from "./context/LanguageContext"
 import { LANG_LABELS } from "./utils/i18n"
 import { zoneInfoFromPhotonFeature, reverseGeocodeFeature, zoneInfoFromCoordinates, searchPlaces, SEARCH_DEBOUNCE_MS } from "./utils/geocode"
@@ -55,6 +56,19 @@ function AppInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mapZoom, setMapZoom] = useState(9)
   const [selectedFire, setSelectedFire] = useState(null)
+
+  // Lives here, not inside ResponderRequestOverlay, because IncidentStatusBar
+  // needs it too — to relabel its own "Asignado" pill into a blinking
+  // "Request" count scoped to just this responder's own facility, instead
+  // of the whole country's pending count, when that's who's looking.
+  // localStorage is the actual source of truth (loadMyFacility/
+  // saveMyFacility) — this just mirrors it into React state so both
+  // components re-render when it changes.
+  const [myFacility, setMyFacility] = useState(null)
+  useEffect(() => {
+    const responderType = session?.responderType
+    setMyFacility(responderType && isDispatchableGroup(responderType) ? loadMyFacility(responderType) : null)
+  }, [session?.responderType])
 
   // Zone-scoped infrastructure (bundled world-crawl data, or live Overpass
   // fallback when the zone isn't crawled yet) — shared by the map render,
@@ -258,11 +272,13 @@ function AppInner() {
       </header>
 
       <IncidentStatusBar activeModule={activeModule} layers={layers} zoneInfo={zoneInfo}
-        incidents={incidents} releaseIncident={releaseIncident} onSelectFire={handleSelectFire} />
+        incidents={incidents} releaseIncident={releaseIncident} onSelectFire={handleSelectFire}
+        responderType={responderType} myFacility={myFacility} />
 
       <ResponderRequestOverlay activeModule={activeModule} responderType={responderType}
         incidents={incidents} respondToRequest={respondToRequest} onSelectFire={handleSelectFire}
-        zoneInfrastructure={zoneInfrastructure.features} />
+        zoneInfrastructure={zoneInfrastructure.features}
+        myFacility={myFacility} onMyFacilityChange={setMyFacility} />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>

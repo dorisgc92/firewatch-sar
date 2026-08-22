@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } from "../utils/countryBoundaries"
 import { filterFeaturesByBbox } from "../utils/spatial"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
-import { GROUP_META } from "../utils/responderGroups"
+import { GROUP_META, isDispatchableGroup } from "../utils/responderGroups"
+import { playAlarmChime } from "../utils/alarm"
 import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
 
@@ -92,7 +93,7 @@ function IncidentRow({ feature, fireKey, matchingGroups, onSelectFire, releaseIn
   )
 }
 
-export default function IncidentStatusBar({ activeModule, layers, zoneInfo, incidents, releaseIncident, onSelectFire }) {
+export default function IncidentStatusBar({ activeModule, layers, zoneInfo, incidents, releaseIncident, onSelectFire, responderType, myFacility }) {
   const { t } = useLanguage()
   const [countryFeature, setCountryFeature] = useState(null)
   const [openGroup, setOpenGroup] = useState(null)
@@ -132,6 +133,49 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
     })
   }, [countryHotspots])
 
+  // EOC alarm: a brief chime + an 8s highlight on the "Sin asignar" pill
+  // the moment a fire that WASN'T in the previous country-scoped snapshot
+  // shows up (a fresh FIRMS detection, not just "there are unassigned
+  // fires" in general — that's always true on a busy day and would make
+  // this fire constantly). Deliberately scoped to the currently-viewed
+  // country (same reason the whole bar already is) — alarming on "a new
+  // fire somewhere on Earth" would fire on nearly every poll, since
+  // that's true globally almost all the time.
+  const isEOC = responderType === "eoc"
+  const seenFireKeysRef = useRef(null)
+  const [newFireAlarm, setNewFireAlarm] = useState(false)
+  const newFireTimeoutRef = useRef(null)
+
+  // Switching country resets the baseline instead of comparing against
+  // the PREVIOUS country's fires — otherwise every fire in a newly-viewed
+  // country would look "new" and trigger a false mass alarm.
+  useEffect(() => {
+    seenFireKeysRef.current = null
+    setNewFireAlarm(false)
+  }, [zoneInfo?.country])
+
+  useEffect(() => {
+    if (!isEOC) return
+    const currentKeys = new Set(keyedHotspots.map((item) => item.fireKey))
+    if (seenFireKeysRef.current === null) {
+      seenFireKeysRef.current = currentKeys // first snapshot for this country — nothing to compare yet
+      return
+    }
+    let hasNew = false
+    for (const key of currentKeys) {
+      if (!seenFireKeysRef.current.has(key)) { hasNew = true; break }
+    }
+    seenFireKeysRef.current = currentKeys
+    if (hasNew) {
+      playAlarmChime()
+      setNewFireAlarm(true)
+      clearTimeout(newFireTimeoutRef.current)
+      newFireTimeoutRef.current = setTimeout(() => setNewFireAlarm(false), 8000)
+    }
+  }, [keyedHotspots, isEOC])
+
+  useEffect(() => () => clearTimeout(newFireTimeoutRef.current), [])
+
   // A fire with, say, bombero=attending and ems=accepted lands in BOTH the
   // "Atendiendo" and "Aceptado" buckets — once each, carrying only the
   // group(s) that actually belong in that specific bucket. Counts on the
@@ -166,15 +210,48 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
     ? grouped.unassigned.length
     : grouped[status].reduce((sum, item) => sum + item.matchingGroups.length, 0)
 
+  // Responder alarm: when the viewer is a dispatchable group with a
+  // facility picked, the "Asignado" pill stops being a country-wide count
+  // (not actionable for one bombero or hospital) and instead becomes
+  // "Request" — how many of MY OWN group's requests are still pending —
+  // blinking continuously while that's above zero, matching "no se pierda
+  // de vista mientras tenga algo pendiente".
+  const myPendingItems = useMemo(() => {
+    if (!isDispatchableGroup(responderType) || !myFacility) return null
+    return grouped.assigned
+      .map((item) => {
+        const mine = item.matchingGroups.filter(([g, req]) => g === responderType && req.targetId === myFacility.id)
+        return mine.length > 0 ? { ...item, matchingGroups: mine } : null
+      })
+      .filter(Boolean)
+  }, [grouped.assigned, responderType, myFacility])
+
+  const isMyRequestsView = myPendingItems !== null
+
   if (activeModule !== 2) return null
 
-  const displayedGroup = openGroup ? grouped[openGroup] : []
+  const displayedGroup = openGroup === "assigned" && isMyRequestsView
+    ? myPendingItems
+    : (openGroup ? grouped[openGroup] : [])
 
   return (
     <div style={{ borderBottom: `1px solid ${theme.border}`, background: theme.panelBgSoft, padding: "8px 16px" }}>
+      <style>{`
+        @keyframes fw-status-blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.45; }
+        }
+      `}</style>
       <div style={{ display: "flex", gap: "8px", alignItems: "stretch", flexWrap: "wrap" }}>
         {STATUS_ORDER.map((status) => {
-          const count = countFor(status)
+          // "assigned" gets swapped out entirely for a responder-scoped
+          // "Request" view when the viewer has a facility picked — same
+          // slot in the bar, different meaning, since "how many fires in
+          // the country are pending" isn't actionable for one bombero.
+          const isAssignedSlot = status === "assigned"
+          const count = isAssignedSlot && isMyRequestsView ? myPendingItems.length : countFor(status)
+          const label = isAssignedSlot && isMyRequestsView ? t("reqPendingLabel") : t("incidentStatus_" + status)
+          const blinking = (isAssignedSlot && isMyRequestsView && count > 0) || (status === "unassigned" && newFireAlarm)
           const isOpen = openGroup === status
           return (
             <button key={status}
@@ -184,9 +261,10 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
                 border: `2px solid ${isOpen ? STATUS_COLOR[status] : theme.border}`,
                 background: isOpen ? STATUS_COLOR[status] + "22" : "#fff",
                 textAlign: "left",
+                animation: blinking ? "fw-status-blink 1s ease-in-out infinite" : "none",
               }}>
               <div style={{ fontSize: "18px", fontWeight: "bold", color: STATUS_COLOR[status] }}>{count}</div>
-              <div style={{ fontSize: "11px", color: theme.textSecondary }}>{t("incidentStatus_" + status)}</div>
+              <div style={{ fontSize: "11px", color: theme.textSecondary }}>{label}</div>
             </button>
           )
         })}

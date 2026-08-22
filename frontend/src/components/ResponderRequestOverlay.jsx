@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react"
-import { GROUP_META, isDispatchableGroup, loadMyFacility, saveMyFacility } from "../utils/responderGroups"
+import { useState, useMemo, useEffect, useRef } from "react"
+import { GROUP_META, isDispatchableGroup, saveMyFacility } from "../utils/responderGroups"
+import { playAlarmChime } from "../utils/alarm"
 import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
 
@@ -12,9 +13,13 @@ import { useLanguage } from "../context/LanguageContext"
 //      grabbing floating card over the map (Doris asked for this to be
 //      near-impossible to miss — semi-transparent, sits on top of the map),
 //      and already-accepted ones as a compact status bar to advance.
-export default function ResponderRequestOverlay({ activeModule, responderType, incidents, respondToRequest, onSelectFire, zoneInfrastructure }) {
+//
+// myFacility itself now lives in App.jsx (single source of truth shared
+// with IncidentStatusBar, which needs it too — to relabel its own
+// "Asignado" pill into a blinking "Request" count scoped to just this
+// responder instead of the whole country when that's who's looking).
+export default function ResponderRequestOverlay({ activeModule, responderType, incidents, respondToRequest, onSelectFire, zoneInfrastructure, myFacility, onMyFacilityChange }) {
   const { t } = useLanguage()
-  const [myFacility, setMyFacility] = useState(() => isDispatchableGroup(responderType) ? loadMyFacility(responderType) : null)
   const [search, setSearch] = useState("")
   const [busyKey, setBusyKey] = useState(null)
 
@@ -45,12 +50,12 @@ export default function ResponderRequestOverlay({ activeModule, responderType, i
       name: feature.properties.name || t(meta.fallbackNameKey) || "Unnamed unit",
       lat, lon,
     }
-    setMyFacility(chosen)
+    onMyFacilityChange(chosen)
     saveMyFacility(responderType, chosen)
     setSearch("")
   }
 
-  const changeFacility = () => { setMyFacility(null); saveMyFacility(responderType, null) }
+  const changeFacility = () => { onMyFacilityChange(null); saveMyFacility(responderType, null) }
 
   const myRequests = useMemo(() => {
     if (!myFacility) return []
@@ -66,6 +71,21 @@ export default function ResponderRequestOverlay({ activeModule, responderType, i
 
   const pending = myRequests.filter((r) => r.req.status === "pending")
   const active = myRequests.filter((r) => r.req.status === "accepted" || r.req.status === "attending")
+
+  // Sound alarm: a brief chime the moment a NEW pending request shows up
+  // (count goes up), not a continuous siren and not re-fired just because
+  // the poll refreshed with the same pending items still there. Skips the
+  // very first render (hasMounted ref) so opening the app with an
+  // already-pending request waiting doesn't surprise-beep on load.
+  const prevPendingCount = useRef(0)
+  const hasMounted = useRef(false)
+  useEffect(() => {
+    if (hasMounted.current && pending.length > prevPendingCount.current) {
+      playAlarmChime()
+    }
+    prevPendingCount.current = pending.length
+    hasMounted.current = true
+  }, [pending.length])
 
   if (activeModule !== 2 || !isDispatchableGroup(responderType)) return null
 
