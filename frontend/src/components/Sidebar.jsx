@@ -292,9 +292,15 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     return brief.priorityFires.filter((fire) => fireKeyFromLatLon(fire.lat, fire.lon) !== selectedKey)
   }, [brief.priorityFires, selectedFire])
 
+  // Scoped to just the SELECTED fire once one is picked (updates every
+  // time a different fire is selected) — this section now lives after
+  // the assignment panel specifically so the EOC sees "what's at risk
+  // from THIS fire" right where they're deciding what to send. Falls
+  // back to the old zone-wide view when nothing's selected yet, so the
+  // section isn't simply empty before the EOC has picked a focus.
   const threatenedInfra = useMemo(() => findThreatenedInfrastructure({
-    zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints,
-  }), [zoneHotspots, zoneInfrastructure, fwiPoints])
+    zoneHotspots: selectedFire ? [selectedFire] : zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints,
+  }), [zoneHotspots, zoneInfrastructure, fwiPoints, selectedFire])
 
   const maxFWI = fwiPoints.reduce((max, f) =>
     (f.properties.fwi || 0) > (max?.properties?.fwi || 0) ? f : max, null)
@@ -382,34 +388,9 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
                   <PriorityFireCard key={i} fire={fire} index={i} t={t} incidents={incidents}
                     onSelectFire={flyTo} />
                 ))}
-                {brief.actionLine && (
-                  <div style={{
-                    marginTop: "4px", background: theme.orangeSoft, border: `1px solid ${theme.orange}`,
-                    borderRadius: "6px", padding: "8px", fontSize: "11.5px", color: "#8a4200", lineHeight: "1.5",
-                  }}>
-                    <strong>{t("recommendedAction")}</strong> {brief.actionLine}
-                  </div>
-                )}
               </>
             )}
           </div>
-
-          {threatenedInfra.length > 0 && (
-            <>
-              <SectionTitle>{t("threatenedInfraTitle")}</SectionTitle>
-              <div style={{
-                background: "#fff", border: `1px solid ${theme.border}`,
-                borderRadius: "6px", padding: "10px", fontSize: "12px",
-              }}>
-                <div style={{ color: theme.textSecondary, marginBottom: "8px", lineHeight: "1.5" }}>
-                  {t("threatenedInfraCount", { count: threatenedInfra.length })}
-                </div>
-                {threatenedInfra.slice(0, 10).map((threat, i) => (
-                  <ThreatenedInfraCard key={i} threat={threat} t={t} onSelectFire={flyTo} />
-                ))}
-              </div>
-            </>
-          )}
         </>
       )}
 
@@ -419,6 +400,23 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
           <FireCommandPanel selectedFire={selectedFire} incidents={incidents}
             requestResponder={requestResponder} infraFeatures={zoneInfrastructure}
             responderType={responderType} onClose={() => onClearSelection?.()} />
+        </>
+      )}
+
+      {activeModule === 2 && threatenedInfra.length > 0 && (
+        <>
+          <SectionTitle>{t("threatenedInfraTitle")}</SectionTitle>
+          <div style={{
+            background: "#fff", border: `1px solid ${theme.border}`,
+            borderRadius: "6px", padding: "10px", fontSize: "12px",
+          }}>
+            <div style={{ color: theme.textSecondary, marginBottom: "8px", lineHeight: "1.5" }}>
+              {t("threatenedInfraCount", { count: threatenedInfra.length })}
+            </div>
+            {threatenedInfra.slice(0, 10).map((threat, i) => (
+              <ThreatenedInfraCard key={i} threat={threat} t={t} onSelectFire={flyTo} />
+            ))}
+          </div>
         </>
       )}
 

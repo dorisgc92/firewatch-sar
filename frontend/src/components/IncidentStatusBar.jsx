@@ -206,9 +206,22 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
     return buckets
   }, [keyedHotspots, incidents])
 
+  // Counting unit differs by bucket, on purpose: "Asignado"/"Aceptado"/
+  // "Atendiendo"/"Resuelto" count FIRES (a fire with both bombero and EMS
+  // attending is still just ONE fire being attended — counting it twice
+  // made "2" look like two different fires when expanding the tab showed
+  // only one). "Rechazado" is the deliberate exception: it counts
+  // individual REJECTIONS, because the same fire being turned down by two
+  // different groups really is two separate problems the EOC needs to
+  // notice and act on separately, not one. grouped[status] already holds
+  // exactly one entry per fire (with matchingGroups listing everyone
+  // relevant within that bucket), so fire-based counting is just the
+  // entry count — no separate computation needed.
   const countFor = (status) => status === "unassigned"
     ? grouped.unassigned.length
-    : grouped[status].reduce((sum, item) => sum + item.matchingGroups.length, 0)
+    : status === "rejected"
+      ? grouped.rejected.reduce((sum, item) => sum + item.matchingGroups.length, 0)
+      : grouped[status].length
 
   // Responder alarm: when the viewer is a dispatchable group with a
   // facility picked, the "Asignado" pill stops being a country-wide count
