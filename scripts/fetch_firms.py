@@ -267,16 +267,26 @@ def row_to_feature(row, source_label, resolution_m):
 
 INFRASTRUCTURE_PATH = "data/infrastructure.geojson"
 
+# Set as a GitHub Actions secret pointing at the same Cloudflare Tunnel URL
+# used for INFRA_API_URL on Vercel (see remote_server/README.md). Optional
+# on purpose -- this workflow must keep working even if that machine is
+# off or the secret was never configured, just with staler classification
+# data (whatever's still checked into INFRASTRUCTURE_PATH, if anything).
+LANDCOVER_INDEX_URL = os.environ.get("INFRA_LANDCOVER_URL")
+
 # Same thresholds as the frontend's isNearIndustrialSite/isNearUrbanArea
 # (frontend/src/utils/spatial.js) — kept identical so moving this
 # computation server-side doesn't change what counts as "likely not a
-# wildfire". 0.3km for industrial/quarry sites (tight — these are usually
+# wildfire". 0.3km for industrial sites (tight — these are usually
 # small, precisely-mapped point features); 2km for urban areas (generous,
 # since an OSM place node marks only an approximate city-center point, not
 # the true built-up footprint edge).
 INDUSTRIAL_RADIUS_KM = 0.3
 URBAN_RADIUS_KM = 2.0
-INDUSTRIAL_TYPES = ("Industrial Zone", "Quarry/Landfill")
+# "Quarry/Landfill" never actually existed anywhere in fetch_infrastructure.py
+# — this checked for a type string nothing ever produced. Fixed to just the
+# one industrial category that's real.
+INDUSTRIAL_TYPES = ("Industrial Zone",)
 
 # Grid cell size for the spatial index below. 0.05° is ~5.5km at the
 # equator; searching the 3x3 neighborhood around a point's own cell (below)
@@ -302,25 +312,43 @@ def _grid_key(lat, lon, cell_deg=GRID_CELL_DEG):
 
 
 def load_infrastructure_index():
-    """Loads data/infrastructure.geojson (built separately by
-    fetch_infrastructure.py's world-tile crawl) and buckets industrial/
-    quarry and urban-area points into a coarse lat/lon grid for fast
-    proximity lookups. Missing/unreadable file degrades to empty indexes
-    (every hotspot then classifies as likely-vegetation) rather than
-    failing the whole fetch — infrastructure coverage is still incomplete
-    globally (ongoing crawl), so this is already a best-effort signal, not
-    a hard dependency."""
+    """Builds a coarse lat/lon grid of industrial and urban-area points for
+    fast proximity lookups, used to flag hotspots that are probably not
+    wildfires (factory heat signatures, city thermal anomalies).
+
+    Tries Doris's remote infrastructure server first (see remote_server/,
+    INFRA_LANDCOVER_URL secret) — that's the live, continuously-crawled
+    data source now that infrastructure moved off GitHub. Falls back to
+    whatever's checked into INFRASTRUCTURE_PATH (a static snapshot, no
+    longer updated by any workflow, but better than nothing) if the remote
+    server is unreachable or the secret isn't configured — and falls back
+    to empty indexes (everything classifies as likely-vegetation) if
+    neither source is available, same as before. This workflow must never
+    hard-fail just because one laptop happens to be off.
+    """
     industrial_grid = defaultdict(list)
     urban_grid = defaultdict(list)
-    try:
-        with open(INFRASTRUCTURE_PATH) as f:
-            data = json.load(f)
-    except Exception as e:
-        print(f"  WARNING: couldn't load {INFRASTRUCTURE_PATH} for vegetation classification: {e}")
-        print("  Proceeding without it — every hotspot will classify as likely-vegetation.")
-        return industrial_grid, urban_grid
+    features = None
 
-    for feat in data.get("features", []):
+    if LANDCOVER_INDEX_URL:
+        try:
+            r = requests.get(f"{LANDCOVER_INDEX_URL}/landcover-index", timeout=15)
+            r.raise_for_status()
+            features = r.json().get("features", [])
+            print(f"  Loaded {len(features)} industrial/urban points from remote server.")
+        except Exception as e:
+            print(f"  WARNING: remote landcover index unreachable ({e}) — falling back to local snapshot.")
+
+    if features is None:
+        try:
+            with open(INFRASTRUCTURE_PATH) as f:
+                features = json.load(f).get("features", [])
+        except Exception as e:
+            print(f"  WARNING: couldn't load {INFRASTRUCTURE_PATH} either: {e}")
+            print("  Proceeding without it — every hotspot will classify as likely-vegetation.")
+            return industrial_grid, urban_grid
+
+    for feat in features:
         props = feat.get("properties", {}) or {}
         geom = feat.get("geometry", {}) or {}
         if geom.get("type") != "Point":

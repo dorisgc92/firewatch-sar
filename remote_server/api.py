@@ -68,6 +68,25 @@ def get_infrastructure(bbox: str = Query(..., description="west,south,east,north
     return {"type": "FeatureCollection", "features": features}
 
 
+# Global (no bbox), just Industrial Zone + Urban Area points -- what
+# fetch_firms.py's vegetation-vs-urban/industrial classification needs.
+# Kept as its own endpoint rather than reusing /infrastructure with a huge
+# bbox, since /infrastructure's bbox filter is the whole reason it's fast
+# for a zone query -- this one is deliberately unbounded and only ever
+# needs two cheap categories, not everything.
+LANDCOVER_INDEX_TYPES = ("Industrial Zone", "Urban Area")
+
+
+@app.get("/landcover-index")
+def get_landcover_index():
+    conn = store.get_connection()
+    try:
+        features = store.query_by_types(conn, LANDCOVER_INDEX_TYPES)
+    finally:
+        conn.close()
+    return {"type": "FeatureCollection", "features": features}
+
+
 @app.get("/health")
 def health():
     conn = store.get_connection()

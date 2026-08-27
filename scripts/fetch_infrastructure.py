@@ -142,6 +142,24 @@ INDUSTRIAL_TYPES = [
     ("man_made", "works",             "Industrial Zone",    "#996633", "factory"),
 ]
 
+# Urban-area markers -- this category never actually existed anywhere in
+# this file before: fetch_firms.py's classify_vegetation_likelihood() has
+# been checking for a "Urban Area" type this whole time, but nothing here
+# ever produced one, so that half of the vegetation-vs-urban heuristic has
+# silently done nothing since it was written (industrial-proximity still
+# worked; urban-proximity never did). place=city/town/suburb nodes are OSM's
+# standard way of marking a settlement's approximate center -- not a
+# precise footprint, which is exactly why the heuristic's URBAN_RADIUS_KM
+# in fetch_firms.py is generous (2km) rather than tight. Kept as its own
+# query for the same reason INDUSTRIAL_TYPES is separate: isolating it
+# means a timeout here only loses urban-area data for this run, not the
+# whole crawl.
+URBAN_TYPES = [
+    ("place", "city",   "Urban Area", "#888888", "city"),
+    ("place", "town",   "Urban Area", "#888888", "city"),
+    ("place", "suburb", "Urban Area", "#888888", "city"),
+]
+
 
 def build_overpass_query(bbox, types):
     """Build Overpass QL query for the given infrastructure types within bbox."""

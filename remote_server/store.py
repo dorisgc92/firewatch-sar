@@ -127,6 +127,33 @@ def query_bbox(conn, west, south, east, north):
     return features
 
 
+def query_by_types(conn, types):
+    """
+    Returns every stored feature matching any of the given `type` labels,
+    world-wide, no bbox filter -- used for the /landcover-index endpoint
+    (fetch_firms.py's vegetation-vs-urban/industrial classification needs
+    a global index, not a per-zone one, since fires can be anywhere on
+    Earth on any given run).
+    """
+    cur = conn.cursor()
+    placeholders = ",".join("?" for _ in types)
+    cur.execute(
+        f"SELECT osm_type, osm_id, name, type, lat, lon, extra FROM features WHERE type IN ({placeholders})",
+        tuple(types),
+    )
+    features = []
+    for osm_type, osm_id, name, ftype, lat, lon, extra_json in cur.fetchall():
+        props = {"name": name, "type": ftype, "osm_id": osm_id, "osm_type": osm_type}
+        if extra_json:
+            props.update(json.loads(extra_json))
+        features.append({
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [lon, lat]},
+            "properties": props,
+        })
+    return features
+
+
 def get_stats(conn):
     cur = conn.cursor()
     total = cur.execute("SELECT COUNT(*) FROM features").fetchone()[0]

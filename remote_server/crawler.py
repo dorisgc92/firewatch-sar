@@ -39,7 +39,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 from fetch_infrastructure import (  # noqa: E402
-    fetch_overpass, CORE_WORLD_TYPES, ZONE_ONLY_TYPES, INDUSTRIAL_TYPES, WORLD_TILES,
+    fetch_overpass, CORE_WORLD_TYPES, ZONE_ONLY_TYPES, INDUSTRIAL_TYPES, URBAN_TYPES, WORLD_TILES,
 )
 
 import store  # noqa: E402
@@ -59,6 +59,9 @@ def fetch_one_tile(tile):
     industrial = fetch_overpass(bbox_str, INDUSTRIAL_TYPES, f"industrial {bbox_str}")
     if industrial:
         features = features + industrial
+    urban = fetch_overpass(bbox_str, URBAN_TYPES, f"urban {bbox_str}")
+    if urban:
+        features = features + urban
     return bbox_str, features
 
 
