@@ -243,23 +243,33 @@ def row_to_feature(row, source_label, resolution_m):
     acq_time_padded = acq_time.zfill(4) if acq_time else acq_time
     acq_datetime = f"{acq_date} {acq_time_padded[:2]}:{acq_time_padded[2:]}Z" if acq_time_padded else acq_date
 
+    props = {
+        "source": source_label,
+        "resolution_m": resolution_m,
+        "frp": float(frp) if frp else None,
+        "intensity": classify_intensity(frp),
+        "confidence": confidence,
+        "acq_datetime": acq_datetime,
+        "daynight": "Day" if daynight == "D" else "Night",
+    }
+    # fire_type/fire_type_label are null for the overwhelming majority of
+    # detections (NRT sources rarely populate NASA's `type` column at
+    # all -- see classify_vegetation_likelihood's docstring for the full
+    # story). Writing "fire_type":null on every single feature was pure
+    # wasted bytes across tens of thousands of detections -- omitted
+    # entirely instead when there's nothing there; still written when a
+    # real value exists.
+    if fire_type is not None:
+        props["fire_type"] = fire_type
+        props["fire_type_label"] = fire_type_label
+
     return {
         "type": "Feature",
         "geometry": {
             "type": "Point",
             "coordinates": [lon, lat]
         },
-        "properties": {
-            "source": source_label,
-            "resolution_m": resolution_m,
-            "frp": float(frp) if frp else None,
-            "intensity": classify_intensity(frp),
-            "confidence": confidence,
-            "acq_datetime": acq_datetime,
-            "daynight": "Day" if daynight == "D" else "Night",
-            "fire_type": fire_type,
-            "fire_type_label": fire_type_label,
-        }
+        "properties": props
     }
 
 
@@ -306,8 +316,6 @@ def classify_vegetation_likelihood(features):
               "(every hotspot defaults to likely_vegetation=True).")
         for f in features:
             f["properties"]["likely_vegetation"] = True
-            f["properties"]["land_cover"] = None
-            f["properties"]["non_vegetation_reason"] = None
         return features
 
     classified = 0
@@ -327,28 +335,31 @@ def classify_vegetation_likelihood(features):
             print(f"  WARNING: land cover batch {batch_start}-{batch_start + len(batch)} failed: {e}")
             for f in batch:
                 f["properties"]["likely_vegetation"] = True
-                f["properties"]["land_cover"] = None
-                f["properties"]["non_vegetation_reason"] = None
                 failed += 1
             continue
 
         for f, result in zip(batch, results):
             category = result.get("category")
-            f["properties"]["land_cover"] = category
             if category is None:
                 f["properties"]["likely_vegetation"] = True
-                f["properties"]["non_vegetation_reason"] = None
             else:
                 is_vegetation = category in ("forestal", "agricola")
                 f["properties"]["likely_vegetation"] = is_vegetation
+                f["properties"]["land_cover"] = category
                 # Reuses the existing frontend translation keys
                 # (fireTypeUrban/fireTypeStatic) rather than adding new
                 # ones -- "otro" (bare soil/water/snow/ice) doesn't have a
                 # perfect existing label, "static_land_source" is the
-                # closest available approximation.
-                f["properties"]["non_vegetation_reason"] = (
-                    "urban_area" if category == "urbano" else "static_land_source" if category == "otro" else None
-                )
+                # closest available approximation. Only written when
+                # non-vegetation -- omitted (not set to null) for the
+                # ~93% of detections that ARE vegetation, since that's
+                # where nearly all the per-feature byte savings are:
+                # tens of thousands of "non_vegetation_reason":null pairs
+                # that were never going to be read by anything.
+                if category == "urbano":
+                    f["properties"]["non_vegetation_reason"] = "urban_area"
+                elif category == "otro":
+                    f["properties"]["non_vegetation_reason"] = "static_land_source"
                 classified += 1
 
     print(f"  Land cover classification: {classified} classified via WorldCover, {failed} fell back to likely_vegetation=True.")
@@ -391,7 +402,7 @@ def main():
         empty = build_geojson([])
         empty["metadata"]["error"] = "No API key provided"
         with open(OUTPUT_PATH, "w") as f:
-            json.dump(empty, f, indent=2)
+            json.dump(empty, f, separators=(",", ":"))
         update_manifest("hotspots", OUTPUT_PATH)
         return
 
@@ -463,7 +474,7 @@ def main():
         empty["metadata"]["warning"] = "0 hotspots returned — check FIRMS_MAP_KEY validity/quota"
         os.makedirs("data", exist_ok=True)
         with open(OUTPUT_PATH, "w") as f:
-            json.dump(empty, f, indent=2)
+            json.dump(empty, f, separators=(",", ":"))
         update_manifest("hotspots", OUTPUT_PATH)
         raise SystemExit(1)
 
@@ -496,12 +507,26 @@ def main():
     geojson = stabilize_generated_at(geojson, OUTPUT_PATH)
 
     os.makedirs("data", exist_ok=True)
+    # Compact (no indent), not pretty-printed -- this file is only ever
+    # machine-read (the frontend fetch), so indentation whitespace was
+    # pure overhead. With tens of thousands of detections and, as of
+    # today, three new per-feature properties (land_cover,
+    # likely_vegetation, non_vegetation_reason), that overhead was enough
+    # to push this file over GitHub's 100MB push limit -- the exact same
+    # fix already applied to fetch_infrastructure.py earlier for the same
+    # reason.
     with open(OUTPUT_PATH, "w") as f:
-        json.dump(geojson, f, indent=2)
+        json.dump(geojson, f, separators=(",", ":"))
 
     update_manifest("hotspots", OUTPUT_PATH)
 
-    print(f"Saved to {OUTPUT_PATH}")
+    written_size_mb = os.path.getsize(OUTPUT_PATH) / (1024 * 1024)
+    print(f"Saved to {OUTPUT_PATH} ({written_size_mb:.1f} MB)")
+    if written_size_mb > 90:
+        print(f"WARNING: {OUTPUT_PATH} is {written_size_mb:.1f} MB -- approaching GitHub's "
+              f"100MB push limit. If this keeps growing, consider dropping a lower-priority "
+              f"property or sharding this file the way infrastructure.geojson's crawl output "
+              f"would have needed to.")
 
     # Print summary by intensity
     intensities = {}
