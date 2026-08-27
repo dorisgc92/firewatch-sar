@@ -64,6 +64,19 @@ def init_db(db_path=DB_PATH):
             value TEXT
         )
     """)
+    # Land cover classifications (ESA WorldCover lookups) for the
+    # fetch_firms.py forestal/urbano/agricola/otro classification --
+    # persisted here (this machine is always-on) rather than in the
+    # ephemeral GitHub Actions runner, so the same fire location doesn't
+    # trigger a fresh S3 read every single hourly run. See api.py's
+    # /classify-landcover.
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS landcover_cache (
+            grid_key TEXT PRIMARY KEY,
+            category TEXT,
+            class_code INTEGER
+        )
+    """)
     conn.commit()
     return conn
 
@@ -175,5 +188,20 @@ def save_crawl_state(conn, state):
         "INSERT INTO crawl_state (key, value) VALUES ('progress', ?) "
         "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
         (json.dumps(state),),
+    )
+    conn.commit()
+
+
+def get_landcover(conn, grid_key):
+    """Returns (category, class_code) or None if not cached yet."""
+    return conn.execute(
+        "SELECT category, class_code FROM landcover_cache WHERE grid_key = ?", (grid_key,)
+    ).fetchone()
+
+
+def set_landcover(conn, grid_key, category, class_code):
+    conn.execute(
+        "INSERT OR REPLACE INTO landcover_cache (grid_key, category, class_code) VALUES (?, ?, ?)",
+        (grid_key, category, class_code),
     )
     conn.commit()

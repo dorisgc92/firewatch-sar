@@ -6,30 +6,37 @@ validating the forest-vs-urban classifiers in this folder. Runs on your
 own machine (needs network access to firms.modaps.eosdis.nasa.gov, which
 this sandbox doesn't have).
 
-Ground truth caveat, important to understand before trusting any metric
-that comes out of evaluate.py: NASA's own `type` column (0=presumed
-vegetation fire, 1=volcano, 2=other static/industrial land source,
-3=offshore) is the only independent, NASA-provided label available here.
-It is a real signal, but:
-  - It's populated mainly for MODIS, not VIIRS (a known FIRMS API quirk)
-    -- so this script pulls MODIS_NRT specifically to get it.
-  - It's still sparse even within MODIS -- most rows will have no type
-    at all, and those get dropped from the labeled sample.
-  - "type=2 other static/industrial land source" is NASA's own catch-all
-    for "not a vegetation fire", which is the label we actually want, but
-    it isn't a hand-verified ground truth in the way a labeled imagery
-    benchmark would be -- treat resulting metrics as informative, not
-    definitive.
+Uses MODIS_SP (Standard Processing), not MODIS_NRT. This matters:
+confirmed against real data (0/26998 labeled on a first attempt with
+MODIS_NRT) and against NASA's own documentation -- the `type` field
+(0=vegetation fire, 1=volcano, 2=other static/industrial land source,
+3=offshore) is simply never populated in the NRT product for either
+MODIS or VIIRS. It only exists in Standard Processing, the fully
+reprocessed, quality-controlled product that comes out with a lag of
+days to weeks -- which is exactly fine for a validation SAMPLE (we don't
+need today's fires to test a classifier), just wrong for the live app
+(which correctly stays on NRT for actual near-real-time operation).
+
+SP data is queried against a historical date, not "the last N days from
+now" -- FIRMS keeps roughly the past two months of SP data available.
+Defaults to 30 days ago, comfortably inside that window.
+
+Ground truth caveat, still worth keeping in mind: `type` is a real,
+NASA-provided label, but "type=2 other static/industrial land source" is
+NASA's own catch-all bucket for "not a vegetation fire" -- not a
+hand-verified ground truth in the way a labeled imagery benchmark would
+be. Treat resulting metrics as informative, not definitive.
 
 Usage:
     python download_firms_sample.py YOUR_FIRMS_MAP_KEY
-    python download_firms_sample.py YOUR_FIRMS_MAP_KEY --days 5
+    python download_firms_sample.py YOUR_FIRMS_MAP_KEY --days 5 --date 2026-07-01
 """
 
 import argparse
 import csv
 import io
 import sys
+from datetime import datetime, timedelta
 
 import requests
 
@@ -47,10 +54,11 @@ REGIONS = {
 }
 
 FIRMS_BASE = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
+SOURCE = "MODIS_SP"
 
 
-def download_region(map_key, region_name, bbox, days):
-    url = f"{FIRMS_BASE}/{map_key}/MODIS_NRT/{bbox}/{days}"
+def download_region(map_key, region_name, bbox, days, date_str):
+    url = f"{FIRMS_BASE}/{map_key}/{SOURCE}/{bbox}/{days}/{date_str}"
     r = requests.get(url, timeout=60)
     r.raise_for_status()
     reader = csv.DictReader(io.StringIO(r.text))
@@ -62,14 +70,19 @@ def download_region(map_key, region_name, bbox, days):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("map_key", help="Your FIRMS_MAP_KEY")
-    parser.add_argument("--days", type=int, default=3, help="Lookback window (1-10)")
+    parser.add_argument("--days", type=int, default=3, help="Window size in days (1-10)")
+    parser.add_argument("--date", default=None,
+                         help="Historical start date YYYY-MM-DD (default: 30 days ago, inside SP's ~2-month availability window)")
     parser.add_argument("--out", default="firms_sample.csv")
     args = parser.parse_args()
+
+    date_str = args.date or (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%d")
+    print(f"Querying MODIS_SP (Standard Processing) starting {date_str}, {args.days}-day window.\n")
 
     all_rows = []
     for name, bbox in REGIONS.items():
         try:
-            rows = download_region(args.map_key, name, bbox, args.days)
+            rows = download_region(args.map_key, name, bbox, args.days, date_str)
             for row in rows:
                 row["_region"] = name
             all_rows.extend(rows)
@@ -85,6 +98,9 @@ def main():
         label_names = {"0": "vegetation_fire", "1": "volcano", "2": "static_land_source", "3": "offshore"}
         for k, v in sorted(counts.items()):
             print(f"  type={k} ({label_names.get(k, 'unknown')}): {v}")
+    elif all_rows:
+        print("  Still 0 labeled rows with real data present -- check the CSV header "
+              "(Get-Content firms_sample.csv -TotalCount 1) to confirm a `type` column exists at all.")
 
     if not all_rows:
         print("No data downloaded -- check your MAP_KEY and network connection.")

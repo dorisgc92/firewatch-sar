@@ -17,12 +17,10 @@ How to run manually:
 
 import os
 import json
-import math
 import requests
 import csv
 import io
 import time
-from collections import defaultdict
 from datetime import datetime, timezone
 from manifest import update_manifest, stabilize_generated_at
 
@@ -265,151 +263,95 @@ def row_to_feature(row, source_label, resolution_m):
     }
 
 
-INFRASTRUCTURE_PATH = "data/infrastructure.geojson"
-
 # Set as a GitHub Actions secret pointing at the same Cloudflare Tunnel URL
-# used for INFRA_API_URL on Vercel (see remote_server/README.md). Optional
-# on purpose -- this workflow must keep working even if that machine is
-# off or the secret was never configured, just with staler classification
-# data (whatever's still checked into INFRASTRUCTURE_PATH, if anything).
+# used for INFRA_API_URL on Vercel (see remote_server/README.md). Reused
+# here for /classify-landcover -- same secret, same server, one more
+# endpoint on it. Optional on purpose: this workflow must keep working
+# even if that machine is off or the secret was never configured.
 LANDCOVER_INDEX_URL = os.environ.get("INFRA_LANDCOVER_URL")
+WORLDCOVER_WINDOW_SIZE = 3  # matches what ml/evaluate.py's comparison run settled on
 
-# Same thresholds as the frontend's isNearIndustrialSite/isNearUrbanArea
-# (frontend/src/utils/spatial.js) — kept identical so moving this
-# computation server-side doesn't change what counts as "likely not a
-# wildfire". 0.3km for industrial sites (tight — these are usually
-# small, precisely-mapped point features); 2km for urban areas (generous,
-# since an OSM place node marks only an approximate city-center point, not
-# the true built-up footprint edge).
-INDUSTRIAL_RADIUS_KM = 0.3
-URBAN_RADIUS_KM = 2.0
-# "Quarry/Landfill" never actually existed anywhere in fetch_infrastructure.py
-# — this checked for a type string nothing ever produced. Fixed to just the
-# one industrial category that's real.
-INDUSTRIAL_TYPES = ("Industrial Zone",)
-
-# Grid cell size for the spatial index below. 0.05° is ~5.5km at the
-# equator; searching the 3x3 neighborhood around a point's own cell (below)
-# comfortably covers both the 0.3km and 2km thresholds even for a point
-# sitting right at a cell edge, without falling back to an O(hotspots x
-# infrastructure) brute-force comparison — the difference between this
-# running in seconds vs. the many minutes it took client-side over 200k+
-# hotspots against thousands of infrastructure points.
-GRID_CELL_DEG = 0.05
-
-
-def haversine_km(lat1, lon1, lat2, lon2):
-    R = 6371
-    d_lat = math.radians(lat2 - lat1)
-    d_lon = math.radians(lon2 - lon1)
-    a = (math.sin(d_lat / 2) ** 2
-         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(d_lon / 2) ** 2)
-    return 2 * R * math.asin(math.sqrt(a))
-
-
-def _grid_key(lat, lon, cell_deg=GRID_CELL_DEG):
-    return (math.floor(lat / cell_deg), math.floor(lon / cell_deg))
-
-
-def load_infrastructure_index():
-    """Builds a coarse lat/lon grid of industrial and urban-area points for
-    fast proximity lookups, used to flag hotspots that are probably not
-    wildfires (factory heat signatures, city thermal anomalies).
-
-    Tries Doris's remote infrastructure server first (see remote_server/,
-    INFRA_LANDCOVER_URL secret) — that's the live, continuously-crawled
-    data source now that infrastructure moved off GitHub. Falls back to
-    whatever's checked into INFRASTRUCTURE_PATH (a static snapshot, no
-    longer updated by any workflow, but better than nothing) if the remote
-    server is unreachable or the secret isn't configured — and falls back
-    to empty indexes (everything classifies as likely-vegetation) if
-    neither source is available, same as before. This workflow must never
-    hard-fail just because one laptop happens to be off.
-    """
-    industrial_grid = defaultdict(list)
-    urban_grid = defaultdict(list)
-    features = None
-
-    if LANDCOVER_INDEX_URL:
-        try:
-            r = requests.get(f"{LANDCOVER_INDEX_URL}/landcover-index", timeout=15)
-            r.raise_for_status()
-            features = r.json().get("features", [])
-            print(f"  Loaded {len(features)} industrial/urban points from remote server.")
-        except Exception as e:
-            print(f"  WARNING: remote landcover index unreachable ({e}) — falling back to local snapshot.")
-
-    if features is None:
-        try:
-            with open(INFRASTRUCTURE_PATH) as f:
-                features = json.load(f).get("features", [])
-        except Exception as e:
-            print(f"  WARNING: couldn't load {INFRASTRUCTURE_PATH} either: {e}")
-            print("  Proceeding without it — every hotspot will classify as likely-vegetation.")
-            return industrial_grid, urban_grid
-
-    for feat in features:
-        props = feat.get("properties", {}) or {}
-        geom = feat.get("geometry", {}) or {}
-        if geom.get("type") != "Point":
-            continue
-        coords = geom.get("coordinates")
-        if not coords or len(coords) < 2:
-            continue
-        lon, lat = coords[0], coords[1]
-        ftype = props.get("type")
-        key = _grid_key(lat, lon)
-        if ftype in INDUSTRIAL_TYPES:
-            industrial_grid[key].append((lat, lon))
-        elif ftype == "Urban Area":
-            urban_grid[key].append((lat, lon))
-    return industrial_grid, urban_grid
-
-
-def _near_any_in_grid(lat, lon, grid, max_km):
-    if not grid:
-        return False
-    base_lat, base_lon = _grid_key(lat, lon)
-    for d_lat in (-1, 0, 1):
-        for d_lon in (-1, 0, 1):
-            for (plat, plon) in grid.get((base_lat + d_lat, base_lon + d_lon), ()):
-                if haversine_km(lat, lon, plat, plon) <= max_km:
-                    return True
-    return False
+# Batching keeps any single request to the remote server reasonably sized
+# (and gives visible progress on a run with tens of thousands of hotspots)
+# without needing to change anything about how the remote API itself works.
+LANDCOVER_BATCH_SIZE = 500
 
 
 def classify_vegetation_likelihood(features):
-    """Adds a `likely_vegetation` boolean to every feature's properties —
-    False when the detection sits within INDUSTRIAL_RADIUS_KM of a mapped
-    industrial/quarry site or within URBAN_RADIUS_KM of an OSM urban-area
-    node, True otherwise. This is the same heuristic the frontend used to
-    compute live in the browser (isNearIndustrialSite/isNearUrbanArea);
-    moving it here means the browser only ever reads a precomputed
-    property — no per-view/per-toggle distance math on the client at all.
-    NASA's own `type` field (fire_type/fire_type_label, when present) is
-    left untouched and still takes priority downstream — this only fills
-    in a signal for the far more common case where NASA doesn't provide one.
+    """Adds a `likely_vegetation` boolean (True/False) and a
+    `land_cover` category (forestal/urbano/agricola/otro/None) to every
+    feature's properties, via Doris's remote server's /classify-landcover
+    (ESA WorldCover lookup -- see ml/worldcover_classifier.py and
+    ml/evaluate.py for how this was chosen and validated: ~92% accuracy
+    on the vegetation-vs-not distinction against a real labeled FIRMS
+    sample, no training required, doesn't touch anything user-facing in
+    real time since this whole step runs here in the hourly batch fetch).
+
+    likely_vegetation is kept as a plain boolean (forestal or agricola ->
+    True, urbano/otro -> False) specifically so the existing frontend
+    filter (`properties.likely_vegetation === false` in FireMap.jsx /
+    Sidebar.jsx / FireCommandPanel.jsx) needs zero changes -- forestal and
+    agricola are both real vegetation/biomass fires that behave and need
+    a response the same way a classic wildfire does, unlike an
+    industrial/urban heat signature.
+
+    If the remote server is unreachable (machine off, network issue), every
+    hotspot falls back to likely_vegetation=True with no reason -- the
+    exact same "fail open" behavior the old OSM-proximity heuristic had,
+    so a down classification service degrades the "Solo focos forestales"
+    filter's precision, but never hides real fires or crashes the run.
     """
-    industrial_grid, urban_grid = load_infrastructure_index()
-    if not industrial_grid and not urban_grid:
+    if not LANDCOVER_INDEX_URL:
+        print("  INFRA_LANDCOVER_URL not configured — skipping land cover classification "
+              "(every hotspot defaults to likely_vegetation=True).")
         for f in features:
             f["properties"]["likely_vegetation"] = True
+            f["properties"]["land_cover"] = None
             f["properties"]["non_vegetation_reason"] = None
         return features
 
-    flagged = 0
-    for f in features:
-        lon, lat = f["geometry"]["coordinates"]
-        near_industrial = _near_any_in_grid(lat, lon, industrial_grid, INDUSTRIAL_RADIUS_KM)
-        near_urban = False if near_industrial else _near_any_in_grid(lat, lon, urban_grid, URBAN_RADIUS_KM)
-        likely_vegetation = not (near_industrial or near_urban)
-        f["properties"]["likely_vegetation"] = likely_vegetation
-        f["properties"]["non_vegetation_reason"] = (
-            "static_land_source" if near_industrial else "urban_area" if near_urban else None
-        )
-        if not likely_vegetation:
-            flagged += 1
-    print(f"  Vegetation classification: {flagged}/{len(features)} flagged as likely non-wildfire (industrial/urban proximity)")
+    classified = 0
+    failed = 0
+    for batch_start in range(0, len(features), LANDCOVER_BATCH_SIZE):
+        batch = features[batch_start:batch_start + LANDCOVER_BATCH_SIZE]
+        points = [{"lat": f["geometry"]["coordinates"][1], "lon": f["geometry"]["coordinates"][0]} for f in batch]
+        try:
+            r = requests.post(
+                f"{LANDCOVER_INDEX_URL}/classify-landcover",
+                json={"points": points, "window_size": WORLDCOVER_WINDOW_SIZE},
+                timeout=60,
+            )
+            r.raise_for_status()
+            results = r.json()["results"]
+        except Exception as e:
+            print(f"  WARNING: land cover batch {batch_start}-{batch_start + len(batch)} failed: {e}")
+            for f in batch:
+                f["properties"]["likely_vegetation"] = True
+                f["properties"]["land_cover"] = None
+                f["properties"]["non_vegetation_reason"] = None
+                failed += 1
+            continue
+
+        for f, result in zip(batch, results):
+            category = result.get("category")
+            f["properties"]["land_cover"] = category
+            if category is None:
+                f["properties"]["likely_vegetation"] = True
+                f["properties"]["non_vegetation_reason"] = None
+            else:
+                is_vegetation = category in ("forestal", "agricola")
+                f["properties"]["likely_vegetation"] = is_vegetation
+                # Reuses the existing frontend translation keys
+                # (fireTypeUrban/fireTypeStatic) rather than adding new
+                # ones -- "otro" (bare soil/water/snow/ice) doesn't have a
+                # perfect existing label, "static_land_source" is the
+                # closest available approximation.
+                f["properties"]["non_vegetation_reason"] = (
+                    "urban_area" if category == "urbano" else "static_land_source" if category == "otro" else None
+                )
+                classified += 1
+
+    print(f"  Land cover classification: {classified} classified via WorldCover, {failed} fell back to likely_vegetation=True.")
     return features
 
 

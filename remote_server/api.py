@@ -12,24 +12,39 @@ Endpoints:
            shape the frontend already expects from the old bundled/
            live-Overpass paths (see frontend/api/infrastructure.js and
            frontend/src/hooks/useZoneInfrastructure.js).
+    POST /classify-landcover
+        -> forestal/urbano/agricola/otro classification per point, via
+           ESA WorldCover (see ../ml/worldcover_classifier.py -- same
+           validated logic, reused here rather than duplicated). Cached
+           in store.py's landcover_cache table so the SAME fire location
+           doesn't trigger a fresh S3 read on every hourly fetch_firms.py
+           run -- this machine is always-on, unlike the ephemeral GitHub
+           Actions runner that calls this.
     GET /health
         -> feature counts + crawl progress, for a quick "is this alive
            and how much has it crawled" check (curl it, or point an
            uptime monitor at it).
 
-No auth on /infrastructure: this only ever serves read-only, already-
-public OpenStreetMap data (hospitals, fire stations, etc.) -- there's
-nothing sensitive to protect, and the Vercel proxy in front of this
-(frontend/api/infrastructure.js) is the only intended caller anyway.
+No auth: this only ever serves read-only, already-public data -- there's
+nothing sensitive to protect, and the Vercel proxy / GitHub Actions
+workflow calling these are the only intended callers anyway.
 
 Run with:
     uvicorn api:app --host 0.0.0.0 --port 8000
 """
 
+import os
+import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 import store
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "ml"))
+import worldcover_classifier as wc  # noqa: E402
 
 app = FastAPI(title="FireWatch SAR - Infrastructure API")
 
@@ -40,7 +55,7 @@ app = FastAPI(title="FireWatch SAR - Infrastructure API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -68,12 +83,11 @@ def get_infrastructure(bbox: str = Query(..., description="west,south,east,north
     return {"type": "FeatureCollection", "features": features}
 
 
-# Global (no bbox), just Industrial Zone + Urban Area points -- what
-# fetch_firms.py's vegetation-vs-urban/industrial classification needs.
-# Kept as its own endpoint rather than reusing /infrastructure with a huge
-# bbox, since /infrastructure's bbox filter is the whole reason it's fast
-# for a zone query -- this one is deliberately unbounded and only ever
-# needs two cheap categories, not everything.
+# Global (no bbox), just Industrial Zone + Urban Area points -- kept for
+# any future use, but no longer what fetch_firms.py's vegetation
+# classification relies on (see /classify-landcover below, which replaced
+# it with the validated WorldCover approach: same idea, no dependency on
+# the world-crawl having reached a given area yet).
 LANDCOVER_INDEX_TYPES = ("Industrial Zone", "Urban Area")
 
 
@@ -85,6 +99,65 @@ def get_landcover_index():
     finally:
         conn.close()
     return {"type": "FeatureCollection", "features": features}
+
+
+class LandcoverPoint(BaseModel):
+    lat: float
+    lon: float
+
+
+class LandcoverBatchRequest(BaseModel):
+    points: list[LandcoverPoint]
+    window_size: int = 3  # matches the value evaluate.py's comparison settled on
+
+
+@app.post("/classify-landcover")
+def classify_landcover(req: LandcoverBatchRequest, max_workers: int = 20):
+    """
+    Returns one {category, class_code} per input point, same order.
+    category is one of forestal/urbano/agricola/otro, or null if the
+    point couldn't be classified (tile unavailable, network error).
+
+    Cache lookups happen sequentially first (fast, local, not the
+    bottleneck); only cache-miss S3 reads run in parallel threads, then
+    get written back through a single connection afterward -- same
+    "don't touch SQLite from multiple threads" split used everywhere else
+    in this file, not just within one call but reused as the persistent
+    cross-run cache fetch_firms.py depends on to stay fast hour over hour.
+    """
+    conn = store.get_connection()
+    keys = [wc._grid_key(p.lat, p.lon, req.window_size) for p in req.points]
+
+    cached = {}
+    for key in set(keys):
+        row = store.get_landcover(conn, key)
+        if row is not None:
+            cached[key] = row  # (category, class_code)
+
+    to_fetch = [(i, p.lat, p.lon) for i, p in enumerate(req.points) if keys[i] not in cached]
+    fetched = {}
+    if to_fetch:
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {pool.submit(wc._fetch_pixel_code, lat, lon, req.window_size): i for i, lat, lon in to_fetch}
+            for future in as_completed(futures):
+                i = futures[future]
+                try:
+                    fetched[i] = future.result(timeout=30)
+                except Exception:
+                    fetched[i] = None
+
+    results = []
+    for i, key in enumerate(keys):
+        if key in cached:
+            category, class_code = cached[key]
+        else:
+            class_code = fetched.get(i)
+            category = wc.CLASS_MAP.get(class_code, "otro") if class_code is not None else None
+            if class_code is not None:
+                store.set_landcover(conn, key, category, class_code)
+        results.append({"category": category, "class_code": class_code})
+    conn.close()
+    return {"results": results}
 
 
 @app.get("/health")

@@ -21,6 +21,9 @@ run and test this on your own machine).
 import math
 import os
 import sqlite3
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import numpy as np
 
 try:
     import rasterio
@@ -59,8 +62,14 @@ def _init_cache():
     return conn
 
 
-def _grid_key(lat, lon):
-    return f"{round(lat / CACHE_GRID_DEG) * CACHE_GRID_DEG:.3f},{round(lon / CACHE_GRID_DEG) * CACHE_GRID_DEG:.3f}"
+def _grid_key(lat, lon, window_size):
+    # window_size is part of the key on purpose -- a 3x3 and a 5x5 result
+    # for the same point are genuinely different values (different amount
+    # of averaging), so they need to coexist in the cache rather than one
+    # silently overwriting the other when you switch window sizes to
+    # compare them, which is exactly the experiment this parameter exists
+    # to make easy.
+    return f"w{window_size}:{round(lat / CACHE_GRID_DEG) * CACHE_GRID_DEG:.3f},{round(lon / CACHE_GRID_DEG) * CACHE_GRID_DEG:.3f}"
 
 
 def _tile_name(lat, lon):
@@ -76,7 +85,57 @@ def _tile_name(lat, lon):
     return f"{lat_str}{lon_str}"
 
 
-def classify_point(lat, lon, conn=None):
+def _fetch_pixel_code(lat, lon, window_size):
+    """The actual S3 read, with no cache/DB interaction — split out so
+    classify_batch can run many of these concurrently (I/O-bound HTTP
+    range reads benefit heavily from that) without touching SQLite from
+    multiple threads, which isn't safe without real care (see api.py's
+    own earlier fix for this exact class of bug in remote_server/).
+
+    Reads a small window_size x window_size pixel window around the point
+    and returns the MAJORITY class, not a single pixel (window_size=1
+    reduces to a plain single-pixel read). This matters because the
+    ground truth this gets compared against (MODIS fire detections) has
+    ~1km pixel resolution -- the reported lat/lon is that 1km cell's
+    center, not a precise fire location. A single 10m WorldCover pixel
+    read at that exact coordinate can easily land on a small bare-soil/
+    water/snow sliver inside an otherwise forested or built-up 1km cell
+    purely by chance. Majority-vote over a window doesn't fully close a
+    10m-vs-1km gap, but it can smooth this out -- window_size is exposed
+    as a parameter (see evaluate.py --window-size) specifically so this
+    can be tested empirically (1x1, 3x3, 5x5, 7x7...) instead of assumed.
+
+    GDAL_HTTP_TIMEOUT/GDAL_HTTP_MAX_RETRY are set explicitly because
+    rasterio's /vsicurl/ driver has NO timeout by default — a single
+    stalled connection (flaky wifi, a dropped packet) hangs that thread
+    forever instead of failing and moving on, which is what silently
+    froze a batch with zero progress output in an earlier run.
+    GDAL_DISABLE_READDIR_ON_OPEN avoids an extra, sometimes-slow
+    directory-listing call GDAL does by default before reading a single
+    remote file."""
+    tile = _tile_name(lat, lon)
+    url = f"{WORLDCOVER_BASE_URL}/ESA_WorldCover_10m_2021_v200_{tile}_Map.tif"
+    with rasterio.Env(GDAL_HTTP_TIMEOUT=20, GDAL_HTTP_CONNECTTIMEOUT=10,
+                       GDAL_HTTP_MAX_RETRY=2, GDAL_HTTP_RETRY_DELAY=1,
+                       GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"):
+        with rasterio.open(f"/vsicurl/{url}") as src:
+            row, col = src.index(lon, lat)
+            if window_size <= 1:
+                value = src.read(1, window=Window(col, row, 1, 1))[0][0]
+                if value == 0:
+                    raise ValueError("nodata pixel")
+                return int(value)
+            half = window_size // 2
+            window = Window(col - half, row - half, window_size, window_size)
+            values = src.read(1, window=window, boundless=True, fill_value=0)
+            values = values[values != 0]  # 0 = nodata, outside the tile/window edge
+            if values.size == 0:
+                raise ValueError("window entirely nodata")
+            vals, counts = np.unique(values, return_counts=True)
+            return int(vals[np.argmax(counts)])
+
+
+def classify_point(lat, lon, conn=None, window_size=5):
     """
     Returns (category, class_code) for a single lat/lon, e.g.
     ("forestal", 10). category is None if the point can't be classified
@@ -90,7 +149,7 @@ def classify_point(lat, lon, conn=None):
     if owns_conn:
         conn = _init_cache()
 
-    key = _grid_key(lat, lon)
+    key = _grid_key(lat, lon, window_size)
     cached = conn.execute("SELECT class_code FROM lookups WHERE grid_key = ?", (key,)).fetchone()
     if cached is not None:
         code = cached[0]
@@ -98,15 +157,10 @@ def classify_point(lat, lon, conn=None):
             conn.close()
         return CLASS_MAP.get(code, "otro"), code
 
-    tile = _tile_name(lat, lon)
-    url = f"{WORLDCOVER_BASE_URL}/ESA_WorldCover_10m_2021_v200_{tile}_Map.tif"
     try:
-        with rasterio.open(f"/vsicurl/{url}") as src:
-            row, col = src.index(lon, lat)
-            window = Window(col, row, 1, 1)
-            value = src.read(1, window=window)[0][0]
-            code = int(value)
+        code = _fetch_pixel_code(lat, lon, window_size)
     except Exception as e:
+        tile = _tile_name(lat, lon)
         print(f"  WorldCover lookup failed for ({lat}, {lon}) tile {tile}: {e}")
         if owns_conn:
             conn.close()
@@ -119,15 +173,61 @@ def classify_point(lat, lon, conn=None):
     return CLASS_MAP.get(code, "otro"), code
 
 
-def classify_batch(points):
+def classify_batch(points, max_workers=20, window_size=5):
     """
     points: list of (lat, lon) tuples.
-    Returns a list of (category, class_code) in the same order, reusing
-    one cache connection across the whole batch instead of opening/
-    closing SQLite per point.
+    Returns a list of (category, class_code) in the same order.
+
+    Cache lookups happen sequentially first (fast, local SQLite, not the
+    bottleneck). Only the actual S3 reads for cache MISSES get
+    parallelized -- each worker thread does a self-contained, DB-free S3
+    read (_fetch_pixel_code); results get written back to the cache
+    afterward from a single connection/thread, avoiding any concurrent
+    SQLite access entirely rather than trying to make that safe.
+    For a few thousand+ points this is the difference between minutes and
+    hours -- worth it once a real sample this size is involved.
     """
     conn = _init_cache()
-    results = [classify_point(lat, lon, conn=conn) for lat, lon in points]
+    keys = [_grid_key(lat, lon, window_size) for lat, lon in points]
+
+    cached_codes = {}
+    for key in set(keys):
+        row = conn.execute("SELECT class_code FROM lookups WHERE grid_key = ?", (key,)).fetchone()
+        if row is not None:
+            cached_codes[key] = row[0]
+
+    to_fetch = [(i, lat, lon) for i, (lat, lon) in enumerate(points) if keys[i] not in cached_codes]
+    fetched_codes = {}
+    if to_fetch:
+        print(f"  {len(points) - len(to_fetch)} cached, fetching {len(to_fetch)} new points "
+              f"({max_workers} parallel, window_size={window_size})...")
+        progress_every = max(1, len(to_fetch) // 20)
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {pool.submit(_fetch_pixel_code, lat, lon, window_size): i for i, lat, lon in to_fetch}
+            done = 0
+            for future in as_completed(futures):
+                i = futures[future]
+                try:
+                    # Belt-and-suspenders on top of GDAL_HTTP_TIMEOUT: if a
+                    # future somehow still doesn't resolve, don't let it
+                    # block the whole batch forever waiting on it.
+                    fetched_codes[i] = future.result(timeout=30)
+                except Exception:
+                    fetched_codes[i] = None
+                done += 1
+                if done % progress_every == 0 or done == len(to_fetch):
+                    print(f"    {done}/{len(to_fetch)} fetched...")
+
+    results = []
+    for i, key in enumerate(keys):
+        if key in cached_codes:
+            code = cached_codes[key]
+        else:
+            code = fetched_codes.get(i)
+            if code is not None:
+                conn.execute("INSERT OR REPLACE INTO lookups (grid_key, class_code) VALUES (?, ?)", (key, code))
+        results.append((CLASS_MAP.get(code, "otro") if code is not None else None, code))
+    conn.commit()
     conn.close()
     return results
 
