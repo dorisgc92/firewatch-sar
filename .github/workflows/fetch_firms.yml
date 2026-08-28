@@ -26,6 +26,7 @@ jobs:
       - name: Fetch NASA FIRMS hotspots
         env:
           FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+          INFRA_LANDCOVER_URL: ${{ secrets.INFRA_LANDCOVER_URL }}
         run: python scripts/fetch_firms.py
 
       - name: Commit updated hotspots data
