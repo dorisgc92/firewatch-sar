@@ -282,13 +282,16 @@ LANDCOVER_INDEX_URL = os.environ.get("INFRA_LANDCOVER_URL")
 WORLDCOVER_WINDOW_SIZE = 3  # matches what ml/evaluate.py's comparison run settled on
 
 # Batching keeps any single request to the remote server reasonably sized
-# while cutting down the NUMBER of round trips -- with ~250k detections on
-# a busy global day, 500/batch meant ~500 sequential HTTP round trips just
-# in network overhead, on top of actual classification time. 2000/batch
-# cuts that to ~125, which is where most of a cold-cache run's wall-clock
-# time was actually going.
-LANDCOVER_BATCH_SIZE = 2000
-LANDCOVER_BATCH_TIMEOUT_SEC = 200  # a real cold-cache batch of 2000 at 25 concurrent workers hit the old 120s ceiling exactly
+# while cutting down the NUMBER of round trips. Bigger batches sounded
+# better for throughput, but real runs hit a hard external ceiling: the
+# free/quick Cloudflare Tunnel's own edge times out an unanswered request
+# at ~100s (a 524 error FROM CLOUDFLARE, not from this script or the
+# origin server) -- no client-side timeout value changes that, since
+# Cloudflare cuts the connection before this script's own timeout is ever
+# reached. 1000/batch at 25 concurrent workers finishes comfortably under
+# that ceiling for a cold-cache batch; 2000/batch didn't.
+LANDCOVER_BATCH_SIZE = 1000
+LANDCOVER_BATCH_TIMEOUT_SEC = 90  # kept just under Cloudflare's own ~100s edge timeout -- no point waiting past it
 
 
 def classify_vegetation_likelihood(features):
