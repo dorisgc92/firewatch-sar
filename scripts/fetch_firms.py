@@ -282,9 +282,13 @@ LANDCOVER_INDEX_URL = os.environ.get("INFRA_LANDCOVER_URL")
 WORLDCOVER_WINDOW_SIZE = 3  # matches what ml/evaluate.py's comparison run settled on
 
 # Batching keeps any single request to the remote server reasonably sized
-# (and gives visible progress on a run with tens of thousands of hotspots)
-# without needing to change anything about how the remote API itself works.
-LANDCOVER_BATCH_SIZE = 500
+# while cutting down the NUMBER of round trips -- with ~250k detections on
+# a busy global day, 500/batch meant ~500 sequential HTTP round trips just
+# in network overhead, on top of actual classification time. 2000/batch
+# cuts that to ~125, which is where most of a cold-cache run's wall-clock
+# time was actually going.
+LANDCOVER_BATCH_SIZE = 2000
+LANDCOVER_BATCH_TIMEOUT_SEC = 120  # generous: a cold-cache batch does real S3 reads, not just a lookup
 
 
 def classify_vegetation_likelihood(features):
@@ -320,14 +324,16 @@ def classify_vegetation_likelihood(features):
 
     classified = 0
     failed = 0
-    for batch_start in range(0, len(features), LANDCOVER_BATCH_SIZE):
+    total_batches = (len(features) + LANDCOVER_BATCH_SIZE - 1) // LANDCOVER_BATCH_SIZE
+    start_time = time.time()
+    for batch_num, batch_start in enumerate(range(0, len(features), LANDCOVER_BATCH_SIZE), start=1):
         batch = features[batch_start:batch_start + LANDCOVER_BATCH_SIZE]
         points = [{"lat": f["geometry"]["coordinates"][1], "lon": f["geometry"]["coordinates"][0]} for f in batch]
         try:
             r = requests.post(
                 f"{LANDCOVER_INDEX_URL}/classify-landcover",
                 json={"points": points, "window_size": WORLDCOVER_WINDOW_SIZE},
-                timeout=60,
+                timeout=LANDCOVER_BATCH_TIMEOUT_SEC,
             )
             r.raise_for_status()
             results = r.json()["results"]
@@ -336,6 +342,8 @@ def classify_vegetation_likelihood(features):
             for f in batch:
                 f["properties"]["likely_vegetation"] = True
                 failed += 1
+            print(f"  Batch {batch_num}/{total_batches} — {classified} classified, {failed} fell back so far "
+                  f"({time.time() - start_time:.0f}s elapsed)")
             continue
 
         for f, result in zip(batch, results):
@@ -362,7 +370,11 @@ def classify_vegetation_likelihood(features):
                     f["properties"]["non_vegetation_reason"] = "static_land_source"
                 classified += 1
 
-    print(f"  Land cover classification: {classified} classified via WorldCover, {failed} fell back to likely_vegetation=True.")
+        print(f"  Batch {batch_num}/{total_batches} — {classified} classified, {failed} fell back so far "
+              f"({time.time() - start_time:.0f}s elapsed)")
+
+    print(f"  Land cover classification: {classified} classified via WorldCover, {failed} fell back to likely_vegetation=True "
+          f"({time.time() - start_time:.0f}s total).")
     return features
 
 

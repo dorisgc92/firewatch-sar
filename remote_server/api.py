@@ -112,7 +112,7 @@ class LandcoverBatchRequest(BaseModel):
 
 
 @app.post("/classify-landcover")
-def classify_landcover(req: LandcoverBatchRequest, max_workers: int = 20):
+def classify_landcover(req: LandcoverBatchRequest, max_workers: int = 40):
     """
     Returns one {category, class_code} per input point, same order.
     category is one of forestal/urbano/agricola/otro, or null if the

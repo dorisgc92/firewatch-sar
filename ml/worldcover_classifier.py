@@ -52,7 +52,15 @@ CLASS_MAP = {
 }
 
 CACHE_DB_PATH = os.path.join(os.path.dirname(__file__), "worldcover_cache.db")
-CACHE_GRID_DEG = 0.01  # ~1km -- land cover doesn't meaningfully change within this
+# ~3km, not ~1km. This directly controls how often the SAME cache entry
+# gets reused -- a finer grid meant that fires scattered within the same
+# real-world complex (dozens of nearby VIIRS/MODIS pixels from one
+# wildfire) each needed their own fresh WorldCover lookup instead of
+# sharing one, which is what made a cold-cache run over ~250k detections
+# take hours instead of minutes. Land cover class is stable enough over a
+# few km (especially after the majority-vote window on top of this) that
+# the accuracy cost of coarsening is negligible next to the latency win.
+CACHE_GRID_DEG = 0.03
 
 
 def _init_cache():
