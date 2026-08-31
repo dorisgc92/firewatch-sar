@@ -329,16 +329,33 @@ def classify_vegetation_likelihood(features):
     for batch_num, batch_start in enumerate(range(0, len(features), LANDCOVER_BATCH_SIZE), start=1):
         batch = features[batch_start:batch_start + LANDCOVER_BATCH_SIZE]
         points = [{"lat": f["geometry"]["coordinates"][1], "lon": f["geometry"]["coordinates"][0]} for f in batch]
-        try:
-            r = requests.post(
-                f"{LANDCOVER_INDEX_URL}/classify-landcover",
-                json={"points": points, "window_size": WORLDCOVER_WINDOW_SIZE},
-                timeout=LANDCOVER_BATCH_TIMEOUT_SEC,
-            )
-            r.raise_for_status()
-            results = r.json()["results"]
-        except Exception as e:
-            print(f"  WARNING: land cover batch {batch_start}-{batch_start + len(batch)} failed: {e}")
+
+        # One retry after a short pause, not just a straight failure. A
+        # real run showed a stretch of 502/530 errors (the quick
+        # Cloudflare Tunnel destabilizing under sustained load) that
+        # cleared up on their own a few minutes later -- most of those
+        # batches would have succeeded on a second attempt instead of
+        # permanently falling back to likely_vegetation=True for tens of
+        # thousands of detections.
+        results = None
+        last_error = None
+        for attempt in range(2):
+            try:
+                r = requests.post(
+                    f"{LANDCOVER_INDEX_URL}/classify-landcover",
+                    json={"points": points, "window_size": WORLDCOVER_WINDOW_SIZE},
+                    timeout=LANDCOVER_BATCH_TIMEOUT_SEC,
+                )
+                r.raise_for_status()
+                results = r.json()["results"]
+                break
+            except Exception as e:
+                last_error = e
+                if attempt == 0:
+                    time.sleep(5)
+
+        if results is None:
+            print(f"  WARNING: land cover batch {batch_start}-{batch_start + len(batch)} failed after retry: {last_error}")
             for f in batch:
                 f["properties"]["likely_vegetation"] = True
                 failed += 1

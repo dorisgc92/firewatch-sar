@@ -112,7 +112,7 @@ class LandcoverBatchRequest(BaseModel):
 
 
 @app.post("/classify-landcover")
-def classify_landcover(req: LandcoverBatchRequest, max_workers: int = 40):
+def classify_landcover(req: LandcoverBatchRequest, max_workers: int = 25):
     """
     Returns one {category, class_code} per input point, same order.
     category is one of forestal/urbano/agricola/otro, or null if the
@@ -124,6 +124,12 @@ def classify_landcover(req: LandcoverBatchRequest, max_workers: int = 40):
     "don't touch SQLite from multiple threads" split used everywhere else
     in this file, not just within one call but reused as the persistent
     cross-run cache fetch_firms.py depends on to stay fast hour over hour.
+
+    max_workers dialed back from 40 to 25 after a real run showed 40
+    concurrent outbound S3 connections through a residential connection +
+    quick Cloudflare Tunnel was enough to destabilize the tunnel itself
+    (502/530 errors mid-run) -- a run that finishes reliably at a
+    moderate pace beats one that goes faster and then partially fails.
     """
     conn = store.get_connection()
     keys = [wc._grid_key(p.lat, p.lon, req.window_size) for p in req.points]
