@@ -288,7 +288,7 @@ WORLDCOVER_WINDOW_SIZE = 3  # matches what ml/evaluate.py's comparison run settl
 # cuts that to ~125, which is where most of a cold-cache run's wall-clock
 # time was actually going.
 LANDCOVER_BATCH_SIZE = 2000
-LANDCOVER_BATCH_TIMEOUT_SEC = 120  # generous: a cold-cache batch does real S3 reads, not just a lookup
+LANDCOVER_BATCH_TIMEOUT_SEC = 200  # a real cold-cache batch of 2000 at 25 concurrent workers hit the old 120s ceiling exactly
 
 
 def classify_vegetation_likelihood(features):
