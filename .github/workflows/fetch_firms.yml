@@ -27,6 +27,7 @@ jobs:
         env:
           FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
           INFRA_LANDCOVER_URL: ${{ secrets.INFRA_LANDCOVER_URL }}
+          PYTHONUNBUFFERED: "1"
         run: python scripts/fetch_firms.py
 
       - name: Commit updated hotspots data
