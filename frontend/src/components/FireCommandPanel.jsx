@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import useZoneLandCover from "../hooks/useZoneLandCover"
 import { GROUP_KEYS, GROUP_META, candidatesForGroup } from "../utils/responderGroups"
 import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
@@ -94,10 +95,21 @@ export default function FireCommandPanel({ selectedFire, incidents, requestRespo
   const [showAssign, setShowAssign] = useState(false)
 
   const [lon, lat] = selectedFire.geometry.coordinates
-  const { frp, intensity, source, acq_datetime, fire_type, fire_type_label, likely_vegetation, non_vegetation_reason } = selectedFire.properties || {}
-  const isNonVegetation = (fire_type != null && fire_type !== 0) || likely_vegetation === false
+  const { frp, intensity, source, acq_datetime, fire_type, fire_type_label } = selectedFire.properties || {}
   const fireKey = fireKeyFromLatLon(lat, lon)
   const incident = incidents?.[fireKey]
+
+  // Just this one selected fire — cheap to classify on demand regardless
+  // of whether "Solo focos forestales" is toggled on elsewhere, since
+  // it's a single point, not the whole viewport (see useZoneLandCover's
+  // own comment for why that distinction matters at scale). Memoized on
+  // fireKey so this doesn't rebuild (and re-trigger the hook's effect)
+  // on every render — only when the selected fire itself changes.
+  const singleFirePoints = useMemo(() => [{ fireKey, lat, lon }], [fireKey, lat, lon])
+  const { classifications: singleFireLandCover } = useZoneLandCover(singleFirePoints, true)
+  const landCoverCategory = singleFireLandCover[fireKey]
+  const isNonVegetation = (fire_type != null && fire_type !== 0)
+    || landCoverCategory === "urbano" || landCoverCategory === "otro"
 
   useEffect(() => {
     let cancelled = false
@@ -111,7 +123,7 @@ export default function FireCommandPanel({ selectedFire, incidents, requestRespo
   const fireTypeDisplay = {
     volcano: t("fireTypeVolcano"), static_land_source: t("fireTypeStatic"),
     urban_area: t("fireTypeUrban"), offshore: t("fireTypeOffshore"), unknown: t("fireTypeUnknown"),
-  }[fire_type_label]
+  }[fire_type_label || (landCoverCategory === "urbano" ? "urban_area" : landCoverCategory === "otro" ? "static_land_source" : "unknown")]
 
   return (
     <div style={{

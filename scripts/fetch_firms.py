@@ -254,11 +254,11 @@ def row_to_feature(row, source_label, resolution_m):
     }
     # fire_type/fire_type_label are null for the overwhelming majority of
     # detections (NRT sources rarely populate NASA's `type` column at
-    # all -- see classify_vegetation_likelihood's docstring for the full
-    # story). Writing "fire_type":null on every single feature was pure
-    # wasted bytes across tens of thousands of detections -- omitted
-    # entirely instead when there's nothing there; still written when a
-    # real value exists.
+    # all -- populated mainly by MODIS_SP, the delayed reprocessed
+    # product, not the near-real-time one this script uses). Writing
+    # "fire_type":null on every single feature was pure wasted bytes
+    # across tens of thousands of detections -- omitted entirely instead
+    # when there's nothing there; still written when a real value exists.
     if fire_type is not None:
         props["fire_type"] = fire_type
         props["fire_type_label"] = fire_type_label
@@ -272,130 +272,6 @@ def row_to_feature(row, source_label, resolution_m):
         "properties": props
     }
 
-
-# Set as a GitHub Actions secret pointing at the same Cloudflare Tunnel URL
-# used for INFRA_API_URL on Vercel (see remote_server/README.md). Reused
-# here for /classify-landcover -- same secret, same server, one more
-# endpoint on it. Optional on purpose: this workflow must keep working
-# even if that machine is off or the secret was never configured.
-LANDCOVER_INDEX_URL = os.environ.get("INFRA_LANDCOVER_URL")
-WORLDCOVER_WINDOW_SIZE = 3  # matches what ml/evaluate.py's comparison run settled on
-
-# Batching keeps any single request to the remote server reasonably sized
-# while cutting down the NUMBER of round trips. Bigger batches sounded
-# better for throughput, but real runs hit a hard external ceiling: the
-# free/quick Cloudflare Tunnel's own edge times out an unanswered request
-# at ~100s (a 524 error FROM CLOUDFLARE, not from this script or the
-# origin server) -- no client-side timeout value changes that, since
-# Cloudflare cuts the connection before this script's own timeout is ever
-# reached. 1000/batch at 25 concurrent workers finishes comfortably under
-# that ceiling for a cold-cache batch; 2000/batch didn't.
-LANDCOVER_BATCH_SIZE = 1000
-LANDCOVER_BATCH_TIMEOUT_SEC = 90  # kept just under Cloudflare's own ~100s edge timeout -- no point waiting past it
-
-
-def classify_vegetation_likelihood(features):
-    """Adds a `likely_vegetation` boolean (True/False) and a
-    `land_cover` category (forestal/urbano/agricola/otro/None) to every
-    feature's properties, via Doris's remote server's /classify-landcover
-    (ESA WorldCover lookup -- see ml/worldcover_classifier.py and
-    ml/evaluate.py for how this was chosen and validated: ~92% accuracy
-    on the vegetation-vs-not distinction against a real labeled FIRMS
-    sample, no training required, doesn't touch anything user-facing in
-    real time since this whole step runs here in the hourly batch fetch).
-
-    likely_vegetation is kept as a plain boolean (forestal or agricola ->
-    True, urbano/otro -> False) specifically so the existing frontend
-    filter (`properties.likely_vegetation === false` in FireMap.jsx /
-    Sidebar.jsx / FireCommandPanel.jsx) needs zero changes -- forestal and
-    agricola are both real vegetation/biomass fires that behave and need
-    a response the same way a classic wildfire does, unlike an
-    industrial/urban heat signature.
-
-    If the remote server is unreachable (machine off, network issue), every
-    hotspot falls back to likely_vegetation=True with no reason -- the
-    exact same "fail open" behavior the old OSM-proximity heuristic had,
-    so a down classification service degrades the "Solo focos forestales"
-    filter's precision, but never hides real fires or crashes the run.
-    """
-    if not LANDCOVER_INDEX_URL:
-        print("  INFRA_LANDCOVER_URL not configured — skipping land cover classification "
-              "(every hotspot defaults to likely_vegetation=True).")
-        for f in features:
-            f["properties"]["likely_vegetation"] = True
-        return features
-
-    classified = 0
-    failed = 0
-    total_batches = (len(features) + LANDCOVER_BATCH_SIZE - 1) // LANDCOVER_BATCH_SIZE
-    start_time = time.time()
-    for batch_num, batch_start in enumerate(range(0, len(features), LANDCOVER_BATCH_SIZE), start=1):
-        batch = features[batch_start:batch_start + LANDCOVER_BATCH_SIZE]
-        points = [{"lat": f["geometry"]["coordinates"][1], "lon": f["geometry"]["coordinates"][0]} for f in batch]
-
-        # One retry after a short pause, not just a straight failure. A
-        # real run showed a stretch of 502/530 errors (the quick
-        # Cloudflare Tunnel destabilizing under sustained load) that
-        # cleared up on their own a few minutes later -- most of those
-        # batches would have succeeded on a second attempt instead of
-        # permanently falling back to likely_vegetation=True for tens of
-        # thousands of detections.
-        results = None
-        last_error = None
-        for attempt in range(2):
-            try:
-                r = requests.post(
-                    f"{LANDCOVER_INDEX_URL}/classify-landcover",
-                    json={"points": points, "window_size": WORLDCOVER_WINDOW_SIZE},
-                    timeout=LANDCOVER_BATCH_TIMEOUT_SEC,
-                )
-                r.raise_for_status()
-                results = r.json()["results"]
-                break
-            except Exception as e:
-                last_error = e
-                if attempt == 0:
-                    time.sleep(5)
-
-        if results is None:
-            print(f"  WARNING: land cover batch {batch_start}-{batch_start + len(batch)} failed after retry: {last_error}")
-            for f in batch:
-                f["properties"]["likely_vegetation"] = True
-                failed += 1
-            print(f"  Batch {batch_num}/{total_batches} — {classified} classified, {failed} fell back so far "
-                  f"({time.time() - start_time:.0f}s elapsed)")
-            continue
-
-        for f, result in zip(batch, results):
-            category = result.get("category")
-            if category is None:
-                f["properties"]["likely_vegetation"] = True
-            else:
-                is_vegetation = category in ("forestal", "agricola")
-                f["properties"]["likely_vegetation"] = is_vegetation
-                f["properties"]["land_cover"] = category
-                # Reuses the existing frontend translation keys
-                # (fireTypeUrban/fireTypeStatic) rather than adding new
-                # ones -- "otro" (bare soil/water/snow/ice) doesn't have a
-                # perfect existing label, "static_land_source" is the
-                # closest available approximation. Only written when
-                # non-vegetation -- omitted (not set to null) for the
-                # ~93% of detections that ARE vegetation, since that's
-                # where nearly all the per-feature byte savings are:
-                # tens of thousands of "non_vegetation_reason":null pairs
-                # that were never going to be read by anything.
-                if category == "urbano":
-                    f["properties"]["non_vegetation_reason"] = "urban_area"
-                elif category == "otro":
-                    f["properties"]["non_vegetation_reason"] = "static_land_source"
-                classified += 1
-
-        print(f"  Batch {batch_num}/{total_batches} — {classified} classified, {failed} fell back so far "
-              f"({time.time() - start_time:.0f}s elapsed)")
-
-    print(f"  Land cover classification: {classified} classified via WorldCover, {failed} fell back to likely_vegetation=True "
-          f"({time.time() - start_time:.0f}s total).")
-    return features
 
 
 def build_geojson(all_features):
@@ -533,7 +409,18 @@ def main():
               f"should self-correct if that's what's happening.")
         print("=" * 70)
 
-    deduped = classify_vegetation_likelihood(deduped)
+    # Vegetation/land-cover classification USED to run right here, batch-
+    # style, over every one of these detections before saving. Moved to
+    # on-demand, per-zone classification in the frontend instead (see
+    # frontend/src/hooks/useZoneLandCover.js) — classifying ~150k global
+    # detections every hour meant hundreds of round trips to the remote
+    # server, and the free Cloudflare Tunnel this app uses has a hard,
+    # non-configurable ~100s edge timeout per request that a global batch
+    # this size kept colliding with, however the batch size/concurrency
+    # got tuned. A zone only ever has dozens to a few hundred visible
+    # fires at once, comfortably inside that ceiling, and classification
+    # now only happens when someone actually turns on "Solo focos
+    # forestales" — not unconditionally for fires nobody's looking at.
 
     geojson = build_geojson(deduped)
     geojson = stabilize_generated_at(geojson, OUTPUT_PATH)

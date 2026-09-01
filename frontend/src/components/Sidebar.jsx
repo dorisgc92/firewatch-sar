@@ -210,19 +210,22 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
   const { t } = useLanguage()
   const rawDetections = layers.hotspots?.data?.features || []
   // Mirrors the "Wildfires only" toggle in the map's layer panel
   // (FireMap.jsx), kept in sync via the hideNonVegetation prop from
-  // App.jsx. likely_vegetation is precomputed server-side by
-  // fetch_firms.py (industrial/urban proximity, computed once per FIRMS
-  // fetch) — this is just a property filter, not a distance calculation,
-  // so it's cheap even over the full global dataset and every toggle.
-  const allDetections = useMemo(() => {
-    if (!hideNonVegetation) return rawDetections
-    return rawDetections.filter((f) => f.properties.likely_vegetation !== false)
-  }, [rawDetections, hideNonVegetation])
+  // App.jsx. Land cover classification is now on-demand and viewport-
+  // scoped (see FireMap's useZoneLandCover) rather than a precomputed
+  // property on every feature, so it isn't practical to apply the same
+  // filter here for a country/zone-wide stat count without re-running
+  // that same on-demand classification over a much larger, unbounded set
+  // just to produce a number — the exact scale problem that approach was
+  // built to avoid. These stats intentionally stay unfiltered by
+  // vegetation for now; only the map's own rendered markers respect the
+  // toggle. Worth revisiting if the stat count itself becomes something
+  // people rely on being filtered too.
+  const allDetections = rawDetections
   const fwiPoints = layers.fwi?.data?.features || []
 
   const zoneHotspots = useMemo(

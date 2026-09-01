@@ -4,6 +4,7 @@ import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot, pointInPolygonGeometry, nearestFeatures } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import useZoneLandCover from "../hooks/useZoneLandCover"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -375,16 +376,40 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   // down here (and to the EOC assignment panel) as zoneInfrastructure/
   // zoneInfrastructureLoading props, so every consumer sees the same data.
 
+  // Land cover ("Solo focos forestales") classification is now on-demand,
+  // per-viewport, instead of precomputed for all ~150k global detections
+  // every hour in fetch_firms.py — see useZoneLandCover's own comment for
+  // why that batch approach hit a hard wall. Only classifies while the
+  // toggle is actually on, and only a prioritized (by FRP), capped subset
+  // of what's in view — matches the same MAX_RENDERED_MARKERS ceiling the
+  // map itself already renders to, since anything beyond that wouldn't
+  // have been drawn anyway.
+  const landCoverCandidates = useMemo(() => {
+    const capped = viewportHotspots.length <= MAX_RENDERED_MARKERS
+      ? viewportHotspots
+      : [...viewportHotspots].sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0)).slice(0, MAX_RENDERED_MARKERS)
+    return capped.map((f) => {
+      const [lon, lat] = f.geometry.coordinates
+      return { fireKey: fireKeyFromLatLon(lat, lon), lat, lon }
+    })
+  }, [viewportHotspots])
+  const { classifications: landCoverByFireKey } = useZoneLandCover(landCoverCandidates, visibleLayers.hideNonVegetation)
+
   const visibleViewportHotspots = useMemo(() => {
     const filtered = viewportHotspots.filter(f => {
       if (visibleIntensities[f.properties.intensity] === false) return false
-      // likely_vegetation is precomputed server-side (fetch_firms.py) —
-      // this is just a property read, not a distance calculation, so it's
-      // safe to run on every filter/toggle regardless of dataset size.
-      // Missing/undefined (older cached data, or a feature that predates
-      // this field) defaults to "keep it" — same fail-open safety
-      // principle as everywhere else this heuristic is used.
-      if (visibleLayers.hideNonVegetation && f.properties.likely_vegetation === false) return false
+      // Classified on demand (see landCoverByFireKey above), not read
+      // from a precomputed property anymore. A fire that hasn't been
+      // classified yet (still in flight, or beyond the capped candidate
+      // list above) comes back undefined here — treated as "keep it",
+      // same fail-open safety principle as everywhere else this
+      // heuristic is used, so a slow/unavailable classifier never hides
+      // a real fire.
+      if (visibleLayers.hideNonVegetation) {
+        const [lon, lat] = f.geometry.coordinates
+        const category = landCoverByFireKey[fireKeyFromLatLon(lat, lon)]
+        if (category === "urbano" || category === "otro") return false
+      }
       return true
     })
     if (filtered.length <= MAX_RENDERED_MARKERS) return filtered
@@ -394,7 +419,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     return [...filtered]
       .sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0))
       .slice(0, MAX_RENDERED_MARKERS)
-  }, [viewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation])
+  }, [viewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation, landCoverByFireKey])
   const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
 
   const center = zoneInfo?.center || [23, -102]
@@ -446,20 +471,25 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
         {activeModule === 2 && visibleLayers.hotspots &&
           visibleViewportHotspots.map((feat, i) => {
-              const { frp, intensity, source, acq_datetime, fire_type, fire_type_label, likely_vegetation, non_vegetation_reason } = feat.properties
+              const { frp, intensity, source, acq_datetime, fire_type, fire_type_label } = feat.properties
               const [lon, lat] = feat.geometry.coordinates
               // FIRMS classifies each thermal anomaly itself: 0 = presumed
               // vegetation fire (a real wildfire), 1 = volcano, 2 = other
               // static/industrial source (gas flares, plants — this is the
               // "not actually a wildfire" case), 3 = offshore. That field
-              // isn't available on the NRT endpoint we use though, so
-              // fetch_firms.py fills in likely_vegetation/
-              // non_vegetation_reason server-side (industrial/urban
-              // proximity, same heuristic this used to run live in the
-              // browser) — any of these signals is enough to style this as
-              // a muted, dashed grey marker instead of a normal intensity
-              // color, so it doesn't read as a confirmed wildfire on the map.
-              const isNonVegetation = (fire_type != null && fire_type !== 0) || likely_vegetation === false
+              // isn't available on the NRT endpoint we use though, so this
+              // also checks the on-demand land cover classification (see
+              // useZoneLandCover above) — populated only while "Solo focos
+              // forestales" is on, since that's the only time this
+              // distinction is worth an API call. Either signal is enough
+              // to style this as a muted, dashed grey marker instead of a
+              // normal intensity color, so it doesn't read as a confirmed
+              // wildfire on the map.
+              const landCoverCategory = landCoverByFireKey[fireKeyFromLatLon(lat, lon)]
+              const isNonVegetation = (fire_type != null && fire_type !== 0)
+                || landCoverCategory === "urbano" || landCoverCategory === "otro"
+              const nonVegetationReason = fire_type_label
+                || (landCoverCategory === "urbano" ? "urban_area" : landCoverCategory === "otro" ? "static_land_source" : null)
               const color = isNonVegetation ? "#888888" : (INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown)
               const stroke = isNonVegetation ? "#555555" : (INTENSITY_STROKE[intensity] || INTENSITY_STROKE.unknown)
               const r = hotspotRadius(frp, mapZoom)
@@ -482,7 +512,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                   <Popup autoClose={false}>
                     <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                       acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
-                      fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
+                      fireTypeLabel={isNonVegetation ? (nonVegetationReason || "unknown") : null}
                       onZoomToLocation={() => onFireClick?.(feat)}
                       incidents={incidents} />
                   </Popup>
@@ -492,11 +522,15 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
 
         {activeModule === 2 && selectedFire && (() => {
           const [lon, lat] = selectedFire.geometry.coordinates
-          const { frp, intensity, source, acq_datetime, fire_type, fire_type_label, likely_vegetation, non_vegetation_reason } = selectedFire.properties
+          const { frp, intensity, source, acq_datetime, fire_type, fire_type_label } = selectedFire.properties
           const color = INTENSITY_COLORS[intensity] || INTENSITY_COLORS.unknown
           const r = hotspotRadius(frp, mapZoom) + 6
           const linkedPerimeter = linkedPerimeterForFire(selectedFire, viewportPerimeters)
-          const isNonVegetation = (fire_type != null && fire_type !== 0) || likely_vegetation === false
+          const selectedLandCoverCategory = landCoverByFireKey[fireKeyFromLatLon(lat, lon)]
+          const isNonVegetation = (fire_type != null && fire_type !== 0)
+            || selectedLandCoverCategory === "urbano" || selectedLandCoverCategory === "otro"
+          const selectedNonVegetationReason = fire_type_label
+            || (selectedLandCoverCategory === "urbano" ? "urban_area" : selectedLandCoverCategory === "otro" ? "static_land_source" : null)
 
           return (
             <>
@@ -520,7 +554,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                 <Popup autoClose={false}>
                   <FirePopupContent lat={lat} lon={lon} frp={frp} intensity={intensity} source={source}
                     acq_datetime={acq_datetime} linkedPerimeter={linkedPerimeter}
-                    fireTypeLabel={isNonVegetation ? (fire_type_label || non_vegetation_reason || "unknown") : null}
+                    fireTypeLabel={isNonVegetation ? (selectedNonVegetationReason || "unknown") : null}
                     onZoomToLocation={() => onFireClick?.(selectedFire)}
                     incidents={incidents} />
                 </Popup>
