@@ -47,7 +47,7 @@ import store  # noqa: E402
 ALL_TYPES = CORE_WORLD_TYPES + ZONE_ONLY_TYPES
 MAX_WORKERS = int(os.environ.get("CRAWLER_WORKERS", "5"))
 PAUSE_BETWEEN_BATCHES_SEC = float(os.environ.get("CRAWLER_BATCH_PAUSE", "2"))
-PAUSE_BETWEEN_LAPS_HOURS = float(os.environ.get("CRAWLER_LAP_PAUSE_HOURS", "6"))
+PAUSE_BETWEEN_LAPS_HOURS = float(os.environ.get("CRAWLER_LAP_PAUSE_HOURS", "1"))
 
 
 def fetch_one_tile(tile):
