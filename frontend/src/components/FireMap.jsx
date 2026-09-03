@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot, pointInPolygonGeometry, nearestFeatures } from "../utils/spatial"
+import { computeEstimatedPerimeters } from "../utils/fireClusters"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
 import useIsNarrow from "../hooks/useIsNarrow"
@@ -407,6 +408,18 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   }, [viewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation, landCoverByFireKey])
   const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
 
+  // Estimated perimeters: groups nearby detections (already filtered to
+  // what's actually being shown -- same fires the markers themselves
+  // reflect) into a polygon, purely client-side. See fireClusters.js's
+  // own comment for why -- official agency perimeters (CONAFOR/NIFC/
+  // CWFIS, rendered separately below) are frequently not published yet
+  // for a fresh detection, which is most of the time in practice; this
+  // gives an always-available shape instead of nothing.
+  const estimatedPerimeters = useMemo(
+    () => computeEstimatedPerimeters(visibleViewportHotspots),
+    [visibleViewportHotspots]
+  )
+
   const center = zoneInfo?.center || [23, -102]
 
   return (
@@ -589,6 +602,37 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                   }
                 }
                 if (repFire) onFireClick?.(repFire)
+              })
+            }} />
+        )}
+
+        {/* Estimated perimeters: our own client-side polygon from
+            clustering nearby detections — always available, unlike the
+            official layer above which depends on an agency having
+            published something. Distinct violet/dashed style (never the
+            same color as an official perimeter) so nobody mistakes an
+            estimate for a surveyed boundary. */}
+        {activeModule === 2 && estimatedPerimeters.length > 0 && (
+          <GeoJSON key={"estimated-" + estimatedPerimeters.length + "-" + visibleViewportHotspots.length}
+            data={{ type: "FeatureCollection", features: estimatedPerimeters }}
+            style={{ color: "#8855DD", fillColor: "#9966EE", fillOpacity: 0.12, weight: 1.5, dashArray: "4 3" }}
+            onEachFeature={(feature, layer) => {
+              layer.bindPopup(
+                `<div style="font-size:12px;max-width:220px">`
+                + `<strong>${t("estimatedPerimeterTitle")}</strong><br/>`
+                + `${t("estimatedPerimeterNote")}<br/>`
+                + `<span style="color:#6b7280">${t("estimatedPerimeterCount", { count: feature.properties.pointCount })}</span>`
+                + `</div>`
+              )
+              layer.on("click", () => {
+                const candidates = visibleViewportHotspots.filter((h) => {
+                  const [hlon, hlat] = h.geometry.coordinates
+                  return pointInPolygonGeometry(hlat, hlon, feature.geometry)
+                })
+                if (candidates.length > 0) {
+                  const repFire = candidates.reduce((best, h) => (h.properties.frp || 0) > (best.properties.frp || 0) ? h : best)
+                  onFireClick?.(repFire)
+                }
               })
             }} />
         )}
