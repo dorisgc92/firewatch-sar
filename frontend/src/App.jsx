@@ -305,7 +305,8 @@ function AppInner() {
 
       <IncidentStatusBar activeModule={activeModule} layers={layers} zoneInfo={zoneInfo}
         incidents={incidents} releaseIncident={releaseIncident} onSelectFire={handleSelectFire}
-        responderType={responderType} myFacility={myFacility} />
+        responderType={responderType} myFacility={myFacility}
+        hideNonVegetation={hideNonVegetation} landCoverByFireKey={landCoverByFireKey} />
 
       <ResponderRequestOverlay activeModule={activeModule} responderType={responderType}
         incidents={incidents} respondToRequest={respondToRequest} onSelectFire={handleSelectFire}

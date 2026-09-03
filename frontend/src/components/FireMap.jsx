@@ -4,7 +4,6 @@ import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot, pointInPolygonGeometry, nearestFeatures } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
-import useZoneLandCover from "../hooks/useZoneLandCover"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -307,7 +306,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading, landCoverByFireKey = {} }) {
   const { t } = useLanguage()
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
@@ -375,24 +374,16 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   // down here (and to the EOC assignment panel) as zoneInfrastructure/
   // zoneInfrastructureLoading props, so every consumer sees the same data.
 
-  // Land cover ("Solo focos forestales") classification is now on-demand,
-  // per-viewport, instead of precomputed for all ~150k global detections
-  // every hour in fetch_firms.py — see useZoneLandCover's own comment for
-  // why that batch approach hit a hard wall. Only classifies while the
-  // toggle is actually on, and only a prioritized (by FRP), capped subset
-  // of what's in view — matches the same MAX_RENDERED_MARKERS ceiling the
-  // map itself already renders to, since anything beyond that wouldn't
-  // have been drawn anyway.
-  const landCoverCandidates = useMemo(() => {
-    const capped = viewportHotspots.length <= MAX_RENDERED_MARKERS
-      ? viewportHotspots
-      : [...viewportHotspots].sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0)).slice(0, MAX_RENDERED_MARKERS)
-    return capped.map((f) => {
-      const [lon, lat] = f.geometry.coordinates
-      return { fireKey: fireKeyFromLatLon(lat, lon), lat, lon }
-    })
-  }, [viewportHotspots])
-  const { classifications: landCoverByFireKey } = useZoneLandCover(landCoverCandidates, visibleLayers.hideNonVegetation)
+  // Land cover ("Solo focos forestales") classification arrives as a
+  // prop (landCoverByFireKey), computed ONCE in App.jsx and shared with
+  // Sidebar too — used to be computed independently here via its own
+  // useZoneLandCover call, but that hook's cache is a per-call-site
+  // useRef, not a truly shared one; with FireMap and Sidebar each
+  // calling it separately, a zoomed-out view (their candidate lists
+  // heavily overlapping) meant both fired their own classification
+  // requests for essentially the same points at the same time —
+  // needlessly doubling load on an already-fragile free tunnel right
+  // when it mattered least to duplicate work.
 
   const visibleViewportHotspots = useMemo(() => {
     const filtered = viewportHotspots.filter(f => {

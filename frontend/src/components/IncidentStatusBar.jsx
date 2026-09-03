@@ -93,7 +93,7 @@ function IncidentRow({ feature, fireKey, matchingGroups, onSelectFire, releaseIn
   )
 }
 
-export default function IncidentStatusBar({ activeModule, layers, zoneInfo, incidents, releaseIncident, onSelectFire, responderType, myFacility }) {
+export default function IncidentStatusBar({ activeModule, layers, zoneInfo, incidents, releaseIncident, onSelectFire, responderType, myFacility, hideNonVegetation, landCoverByFireKey = {} }) {
   const { t } = useLanguage()
   const [countryFeature, setCountryFeature] = useState(null)
   const [openGroup, setOpenGroup] = useState(null)
@@ -113,11 +113,26 @@ export default function IncidentStatusBar({ activeModule, layers, zoneInfo, inci
   // separate component so Sidebar.jsx itself didn't need to change, but
   // deliberately reusing the exact same helpers/logic rather than
   // approximating it differently here.
-  const countryHotspots = useMemo(() => {
+  const countryHotspotsRaw = useMemo(() => {
     const byPolygon = filterFeaturesByCountry(allDetections, countryFeature)
     if (byPolygon !== null) return byPolygon
     return filterFeaturesByBbox(allDetections, zoneInfo?.countryBbox)
   }, [allDetections, countryFeature, zoneInfo])
+
+  // landCoverByFireKey arrives as a prop (computed once in App.jsx,
+  // shared with FireMap and Sidebar too) — this bar used to build its
+  // "Sin asignar/Asignado/..." buckets from the unfiltered country list
+  // with no connection to "Solo focos forestales" at all, which is why
+  // toggling that filter changed the map and Sidebar's counts but left
+  // this bar's numbers exactly the same.
+  const countryHotspots = useMemo(() => {
+    if (!hideNonVegetation) return countryHotspotsRaw
+    return countryHotspotsRaw.filter((f) => {
+      const [lon, lat] = f.geometry.coordinates
+      const category = landCoverByFireKey[fireKeyFromLatLon(lat, lon)]
+      return category !== "urbano" && category !== "otro"
+    })
+  }, [countryHotspotsRaw, hideNonVegetation, landCoverByFireKey])
 
   // The expensive part (building a fireKey string for every fire in the
   // country — up to 20k+ for somewhere like Canada in an active season) is
