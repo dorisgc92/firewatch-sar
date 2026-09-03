@@ -256,16 +256,12 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
             </label>
           ))}
 
-          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer",
-            marginTop: "8px", paddingTop: "8px", borderTop: `1px solid ${theme.border}` }}>
-            <input type="checkbox" checked={layers.hideNonVegetation === true}
-              onChange={e => onChange("hideNonVegetation", e.target.checked)}
-              style={{ width: "14px", height: "14px" }} />
-            <span style={{ color: theme.textPrimary, fontSize: "12px" }}>{t("hideNonVegetationLabel")}</span>
-          </label>
-          <div style={{ color: theme.textMuted, fontSize: "10px", marginTop: "3px", marginBottom: "8px", fontStyle: "italic" }}>
-            {t("hideNonVegetationNote")}
-          </div>
+          {/* "Solo focos forestales" is no longer an optional toggle —
+              it's the app's normal, always-on behavior now (see App.jsx's
+              hideNonVegetation, defaulted to true with no checkbox left
+              to turn it off). Non-vegetation detections are filtered out
+              everywhere by default; nothing here needs to ask the user
+              to opt in. */}
 
           <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold",
             marginTop: "12px", marginBottom: "6px", borderTop: `1px solid ${theme.border}`, paddingTop: "8px", letterSpacing: "0.04em" }}>
@@ -308,7 +304,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
 
 export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading, landCoverByFireKey = {} }) {
   const { t } = useLanguage()
-  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: false })
+  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: true })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
 
   const toggleLayer = (key, value) => {

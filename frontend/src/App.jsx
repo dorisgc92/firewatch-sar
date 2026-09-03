@@ -53,7 +53,12 @@ function AppInner() {
   // Mirrors FireMap's internal "Wildfires only" toggle (FireMap owns the
   // actual UI checkbox and its own visibleLayers state) — lifted here only
   // so Sidebar's world/country/state/zone counts can react to it too.
-  const [hideNonVegetation, setHideNonVegetation] = useState(false)
+  // Always on now, not an opt-in toggle — see FireMap's LayerToggle for
+  // why the checkbox was removed. Kept as real state (not a hardcoded
+  // constant) since FireMap's own layer panel still owns the underlying
+  // mechanism and reports changes up via onHideNonVegetationChange, even
+  // though nothing in the UI can flip it to false anymore.
+  const [hideNonVegetation, setHideNonVegetation] = useState(true)
   const isNarrow = useIsNarrow(700)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mapZoom, setMapZoom] = useState(9)
