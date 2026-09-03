@@ -160,6 +160,97 @@ URBAN_TYPES = [
     ("place", "suburb", "Urban Area", "#888888", "city"),
 ]
 
+# Actual polygon boundaries (not point markers) of built-up land use --
+# the override signal for the specific failure mode this was built to
+# catch: a WorldCover pixel reading "vegetation" (a big backyard tree
+# canopy, an undeveloped lot) sitting squarely inside a residential
+# neighborhood, which a human looking at the same spot on a map would
+# unambiguously call "urban". WorldCover answers "what covers this exact
+# 10m pixel"; this answers "is this pixel inside a neighborhood's
+# boundary" -- a genuinely different question, which is why tuning
+# WorldCover's own read (window size 1x1 through 7x7, all tried earlier)
+# never closed this gap on its own.
+URBAN_LANDUSE_TYPES = [
+    ("landuse", "residential", "Urban Landuse", "#888888", "home"),
+    ("landuse", "commercial",  "Urban Landuse", "#888888", "store"),
+    ("landuse", "retail",      "Urban Landuse", "#888888", "store"),
+]
+
+
+def build_polygon_query(bbox, types):
+    """
+    Same idea as build_overpass_query, but requests full boundary
+    geometry (`out geom;`) instead of just a way's center point --
+    point-in-polygon needs the actual ring, not a centroid. Only queries
+    `way` (landuse polygons are essentially never simple point nodes) and
+    deliberately skips `relation` (OSM multipolygon relations, used for
+    landuse areas with holes or multiple disjoint parts) -- the added
+    parsing complexity isn't worth it for what's fundamentally still just
+    a helpful override signal, not the primary classification.
+    """
+    west, south, east, north = bbox.split(",")
+    bbox_str = f"{south},{west},{north},{east}"
+    tag_queries = [f'  way["{key}"="{value}"]({bbox_str});' for key, value, *_ in types]
+    return f"""
+[out:json][timeout:60];
+(
+{chr(10).join(tag_queries)}
+);
+out geom;
+"""
+
+
+def parse_polygon_response(data):
+    """
+    Converts an `out geom;` Overpass response into a list of
+    {osm_id, bbox: (west, south, east, north), ring: [(lat, lon), ...]}
+    dicts, ready for remote_server/store.py's landuse_polygons table.
+    Ways with fewer than 3 vertices (degenerate/incomplete geometry) are
+    skipped -- not a valid polygon.
+    """
+    polygons = []
+    for el in data.get("elements", []):
+        if el.get("type") != "way":
+            continue
+        geometry = el.get("geometry")
+        if not geometry or len(geometry) < 3:
+            continue
+        ring = [(pt["lat"], pt["lon"]) for pt in geometry]
+        lats = [p[0] for p in ring]
+        lons = [p[1] for p in ring]
+        polygons.append({
+            "osm_id": el["id"],
+            "bbox": (min(lons), min(lats), max(lons), max(lats)),
+            "ring": ring,
+        })
+    return polygons
+
+
+def fetch_urban_polygons(bbox, max_retries_per_server=2):
+    """Same retry/mirror-fallback pattern as fetch_overpass, but for
+    polygon boundary data via build_polygon_query/parse_polygon_response.
+    Returns None (not an empty list) if every attempt failed outright --
+    same "don't trust this, don't overwrite good data with it" signal
+    fetch_overpass uses."""
+    query = build_polygon_query(bbox, URBAN_LANDUSE_TYPES)
+    headers = {"User-Agent": "FireWatchSAR/1.0 (IEEE Response Quest 2026; contact: dorisgc92@github.com)"}
+
+    for server_url in OVERPASS_URLS:
+        for attempt in range(1, max_retries_per_server + 1):
+            try:
+                r = requests.post(server_url, data={"data": query}, timeout=90, headers=headers)
+                r.raise_for_status()
+                polygons = parse_polygon_response(r.json())
+                print(f"  Got {len(polygons)} urban landuse polygons (via {server_url})")
+                return polygons
+            except Exception as e:
+                print(f"  urban landuse polygons attempt {attempt}/{max_retries_per_server} on {server_url} failed: {e}")
+                if attempt < max_retries_per_server:
+                    time.sleep(5)
+
+    print("  ERROR: all Overpass mirrors failed for urban landuse polygons.")
+    return None
+
 
 def build_overpass_query(bbox, types):
     """Build Overpass QL query for the given infrastructure types within bbox."""
@@ -220,6 +311,80 @@ def fetch_overpass(bbox, types, label, max_retries_per_server=2):
                     time.sleep(5)
 
     print(f"  ERROR: all Overpass mirrors failed for {label}.")
+    return None
+
+
+# landuse polygons for the "is this point inside a residential/commercial
+# area" check (see api.py's classify-landcover). Separate from
+# fetch_overpass above because these need FULL way geometry (out geom;)
+# to do real point-in-polygon testing, not just a centroid (out center;)
+# -- a centroid can't tell you whether a point is inside a large,
+# irregularly-shaped neighborhood or just somewhere in its general
+# vicinity, which is exactly the failure mode a plain proximity check
+# already had before (see the original OSM-heuristic post-mortem this
+# replaced).
+URBAN_LANDUSE_TYPES = [("landuse", "residential"), ("landuse", "commercial"), ("landuse", "retail")]
+
+
+def build_urban_polygon_query(bbox):
+    west, south, east, north = bbox.split(",")
+    bbox_str = f"{south},{west},{north},{east}"
+    tag_queries = [f'  way["{key}"="{value}"]({bbox_str});' for key, value in URBAN_LANDUSE_TYPES]
+    return f"""
+[out:json][timeout:60];
+(
+{chr(10).join(tag_queries)}
+);
+out geom;
+"""
+
+
+def parse_urban_polygons(data):
+    """Each OSM way becomes one polygon ring: a list of [lat, lon] points,
+    plus its own bounding box (stored alongside so the DB can filter
+    candidates fast before doing the more expensive point-in-polygon
+    test -- see store.py's query_polygons_near)."""
+    polygons = []
+    for el in data.get("elements", []):
+        if el.get("type") != "way":
+            continue
+        geom = el.get("geometry")
+        if not geom or len(geom) < 3:
+            continue
+        ring = [[pt["lat"], pt["lon"]] for pt in geom]
+        lats = [p[0] for p in ring]
+        lons = [p[1] for p in ring]
+        polygons.append({
+            "osm_id": el.get("id"),
+            "ring": ring,
+            "bbox": (min(lats), min(lons), max(lats), max(lons)),
+        })
+    return polygons
+
+
+def fetch_urban_polygons(bbox, max_retries_per_server=2):
+    """Same multi-mirror retry pattern as fetch_overpass, but for landuse
+    polygons instead of point features -- kept separate since the query
+    shape (out geom; vs out center;) and the parsed result shape (rings
+    vs points) are different enough that sharing one function would need
+    a branch at every step anyway."""
+    query = build_urban_polygon_query(bbox)
+    headers = {"User-Agent": "FireWatchSAR/1.0 (IEEE Response Quest 2026; contact: dorisgc92@github.com)"}
+
+    for server_url in OVERPASS_URLS:
+        for attempt in range(1, max_retries_per_server + 1):
+            try:
+                r = requests.post(server_url, data={"data": query}, timeout=90, headers=headers)
+                r.raise_for_status()
+                polygons = parse_urban_polygons(r.json())
+                print(f"  Got {len(polygons)} urban landuse polygons (via {server_url})")
+                return polygons
+            except Exception as e:
+                print(f"  urban polygons attempt {attempt}/{max_retries_per_server} on {server_url} failed: {e}")
+                if attempt < max_retries_per_server:
+                    time.sleep(5)
+
+    print("  ERROR: all Overpass mirrors failed for urban polygons.")
     return None
 
 

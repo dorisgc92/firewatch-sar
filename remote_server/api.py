@@ -42,11 +42,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 import store
+import geometry
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "ml"))
 import worldcover_classifier as wc  # noqa: E402
 
 app = FastAPI(title="FireWatch SAR - Infrastructure API")
+
+# ONE shared thread pool for the whole process, not one per request. The
+# on-demand frontend classification (useZoneLandCover) can easily fire
+# several overlapping /classify-landcover calls in quick succession as
+# someone pans/zooms the map -- each request spinning up its OWN
+# ThreadPoolExecutor(max_workers=40) meant 3 concurrent requests could
+# spawn 120 threads all doing blocking GDAL/S3 reads at once, which is
+# almost certainly what was hanging this whole server (even /health
+# stopped responding) under real map-panning traffic today. Capping the
+# GLOBAL concurrent WorldCover fetch count, shared across every request,
+# fixes that at the root instead of just tuning the per-request number
+# again.
+LANDCOVER_POOL = ThreadPoolExecutor(max_workers=20)
 
 # Server-to-server calls (Vercel's serverless function -> this API) aren't
 # subject to browser CORS at all, so this is only relevant if someone
@@ -112,24 +126,22 @@ class LandcoverBatchRequest(BaseModel):
 
 
 @app.post("/classify-landcover")
-def classify_landcover(req: LandcoverBatchRequest, max_workers: int = 25):
+def classify_landcover(req: LandcoverBatchRequest):
     """
     Returns one {category, class_code} per input point, same order.
     category is one of forestal/urbano/agricola/otro, or null if the
     point couldn't be classified (tile unavailable, network error).
 
     Cache lookups happen sequentially first (fast, local, not the
-    bottleneck); only cache-miss S3 reads run in parallel threads, then
-    get written back through a single connection afterward -- same
-    "don't touch SQLite from multiple threads" split used everywhere else
-    in this file, not just within one call but reused as the persistent
-    cross-run cache fetch_firms.py depends on to stay fast hour over hour.
-
-    max_workers dialed back from 40 to 25 after a real run showed 40
-    concurrent outbound S3 connections through a residential connection +
-    quick Cloudflare Tunnel was enough to destabilize the tunnel itself
-    (502/530 errors mid-run) -- a run that finishes reliably at a
-    moderate pace beats one that goes faster and then partially fails.
+    bottleneck); only cache-miss S3 reads run in parallel, submitted to
+    the single shared LANDCOVER_POOL (see its own comment above) rather
+    than a fresh pool per call -- caps total concurrent WorldCover
+    fetches across every simultaneous request, not just within one.
+    Results get written back through a single connection afterward --
+    same "don't touch SQLite from multiple threads" split used everywhere
+    else in this file, not just within one call but reused as the
+    persistent cross-run cache fetch_firms.py depends on to stay fast
+    hour over hour.
     """
     conn = store.get_connection()
     keys = [wc._grid_key(p.lat, p.lon, req.window_size) for p in req.points]
@@ -143,17 +155,17 @@ def classify_landcover(req: LandcoverBatchRequest, max_workers: int = 25):
     to_fetch = [(i, p.lat, p.lon) for i, p in enumerate(req.points) if keys[i] not in cached]
     fetched = {}
     if to_fetch:
-        with ThreadPoolExecutor(max_workers=max_workers) as pool:
-            futures = {pool.submit(wc._fetch_pixel_code, lat, lon, req.window_size): i for i, lat, lon in to_fetch}
-            for future in as_completed(futures):
-                i = futures[future]
-                try:
-                    fetched[i] = future.result(timeout=30)
-                except Exception:
-                    fetched[i] = None
+        futures = {LANDCOVER_POOL.submit(wc._fetch_pixel_code, lat, lon, req.window_size): i for i, lat, lon in to_fetch}
+        for future in as_completed(futures):
+            i = futures[future]
+            try:
+                fetched[i] = future.result(timeout=30)
+            except Exception:
+                fetched[i] = None
 
     results = []
     for i, key in enumerate(keys):
+        p = req.points[i]
         if key in cached:
             category, class_code = cached[key]
         else:
@@ -161,6 +173,27 @@ def classify_landcover(req: LandcoverBatchRequest, max_workers: int = 25):
             category = wc.CLASS_MAP.get(class_code, "otro") if class_code is not None else None
             if class_code is not None:
                 store.set_landcover(conn, key, category, class_code)
+
+        # Residential/commercial polygon override: WorldCover's raw
+        # per-pixel answer sometimes reads a genuine backyard tree canopy
+        # or an undeveloped lot as vegetation even though it sits inside
+        # a mapped neighborhood -- a real case found in Mazatlan testing
+        # (a point WorldCover called "forestal" that's visibly a
+        # residential block on satellite imagery, just with a lot of
+        # tree cover). If the point falls inside a landuse=residential/
+        # commercial/retail polygon, treat it as urbano regardless of
+        # what the pixel said. Only checked when WorldCover DIDN'T
+        # already say urbano (no point overriding an answer that already
+        # agrees), and applied on every request -- cached or freshly
+        # fetched -- rather than baked into the cached value, so newly-
+        # crawled polygon coverage improves already-cached points
+        # automatically on their next lookup, with no cache invalidation
+        # needed.
+        if category != "urbano":
+            candidates = store.query_polygons_near(conn, p.lat, p.lon)
+            if any(geometry.point_in_ring(p.lat, p.lon, ring) for ring in candidates):
+                category = "urbano"
+
         results.append({"category": category, "class_code": class_code})
     conn.close()
     return {"results": results}

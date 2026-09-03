@@ -39,7 +39,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 from fetch_infrastructure import (  # noqa: E402
-    fetch_overpass, CORE_WORLD_TYPES, ZONE_ONLY_TYPES, INDUSTRIAL_TYPES, URBAN_TYPES, WORLD_TILES,
+    fetch_overpass, fetch_urban_polygons, CORE_WORLD_TYPES, ZONE_ONLY_TYPES, INDUSTRIAL_TYPES, URBAN_TYPES, WORLD_TILES,
 )
 
 import store  # noqa: E402
@@ -55,14 +55,20 @@ def fetch_one_tile(tile):
     bbox_str = f"{west},{south},{east},{north}"
     features = fetch_overpass(bbox_str, ALL_TYPES, f"infrastructure {bbox_str}")
     if features is None:
-        return bbox_str, None
+        return bbox_str, None, None
     industrial = fetch_overpass(bbox_str, INDUSTRIAL_TYPES, f"industrial {bbox_str}")
     if industrial:
         features = features + industrial
     urban = fetch_overpass(bbox_str, URBAN_TYPES, f"urban {bbox_str}")
     if urban:
         features = features + urban
-    return bbox_str, features
+    # Landuse polygons (see api.py's /classify-landcover residential-
+    # override) fetched alongside the point features for this same tile --
+    # one more Overpass call per tile, not a separate crawl pass, so
+    # polygon coverage grows in lockstep with everything else instead of
+    # needing its own multi-hour lap to catch up.
+    polygons = fetch_urban_polygons(bbox_str)
+    return bbox_str, features, polygons
 
 
 def run_forever():
@@ -81,7 +87,7 @@ def run_forever():
             for future in as_completed(futures):
                 idx = futures[future]
                 try:
-                    bbox_str, features = future.result()
+                    bbox_str, features, polygons = future.result()
                 except Exception as e:
                     print(f"  tile {idx}: raised {e!r} -- skipping this pass, will retry next lap")
                     continue
@@ -89,7 +95,8 @@ def run_forever():
                     print(f"  tile {idx} ({bbox_str}): fetch failed on every mirror -- keeping existing data for this tile")
                     continue
                 count = store.upsert_tile_features(conn, bbox_str, features)
-                print(f"  tile {idx} ({bbox_str}): {count} features stored")
+                poly_count = store.upsert_landuse_polygons(conn, bbox_str, polygons) if polygons else 0
+                print(f"  tile {idx} ({bbox_str}): {count} features, {poly_count} landuse polygons stored")
 
         next_index = (start_index + MAX_WORKERS) % len(WORLD_TILES)
         wrapped = next_index <= start_index

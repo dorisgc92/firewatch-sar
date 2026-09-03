@@ -39,7 +39,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 from fetch_infrastructure import (  # noqa: E402
-    fetch_overpass, CORE_WORLD_TYPES, ZONE_ONLY_TYPES, INDUSTRIAL_TYPES, WORLD_TILES,
+    fetch_overpass, fetch_urban_polygons, CORE_WORLD_TYPES, ZONE_ONLY_TYPES, INDUSTRIAL_TYPES, WORLD_TILES,
 )
 
 import store  # noqa: E402
@@ -66,7 +66,12 @@ def fetch_and_store(conn, bbox_str, label):
     if industrial:
         features = features + industrial
     count = store.upsert_tile_features(conn, bbox_str, features)
-    print(f"  Stored {count} features for {bbox_str}.")
+    # Landuse polygons too (see api.py's residential-override) -- so a
+    # zone primed this way gets the SAME classification quality as one
+    # the crawler already reached on its own, not a lesser version.
+    polygons = fetch_urban_polygons(bbox_str)
+    poly_count = store.upsert_landuse_polygons(conn, bbox_str, polygons) if polygons else 0
+    print(f"  Stored {count} features, {poly_count} landuse polygons for {bbox_str}.")
 
 
 def main():

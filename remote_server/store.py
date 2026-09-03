@@ -77,6 +77,28 @@ def init_db(db_path=DB_PATH):
             class_code INTEGER
         )
     """)
+    # Urban landuse polygon boundaries (landuse=residential/commercial/
+    # retail) -- the override signal for a specific, real failure mode:
+    # a fire that WorldCover's raw 10m pixel reads as "vegetation" (a
+    # backyard tree canopy, an undeveloped lot) but that sits squarely
+    # inside a mapped neighborhood boundary. bbox_* columns exist purely
+    # so /classify-landcover can cheaply pre-filter candidates with a
+    # plain indexed range query before running the more expensive exact
+    # point-in-polygon test (see geometry.py) on just the handful of
+    # polygons whose bbox could plausibly contain the point.
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS landuse_polygons (
+            osm_id INTEGER PRIMARY KEY,
+            tile TEXT NOT NULL,
+            bbox_west REAL NOT NULL,
+            bbox_south REAL NOT NULL,
+            bbox_east REAL NOT NULL,
+            bbox_north REAL NOT NULL,
+            ring_json TEXT NOT NULL
+        )
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_landuse_tile ON landuse_polygons(tile)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_landuse_bbox ON landuse_polygons(bbox_west, bbox_east, bbox_south, bbox_north)")
     conn.commit()
     return conn
 
@@ -111,6 +133,50 @@ def upsert_tile_features(conn, tile_bbox_str, features):
     )
     conn.commit()
     return len(rows)
+
+
+def upsert_landuse_polygons(conn, tile_bbox_str, polygons):
+    """
+    Same "wipe this tile's rows, insert the fresh set" pattern as
+    upsert_tile_features -- a re-crawled tile cleanly replaces its own
+    polygons without touching any other tile's. polygons: list of
+    {"osm_id", "ring", "bbox": (west, south, east, north)} dicts, as
+    returned by fetch_infrastructure.py's parse_urban_polygons.
+    """
+    cur = conn.cursor()
+    cur.execute("DELETE FROM landuse_polygons WHERE tile = ?", (tile_bbox_str,))
+    rows = [
+        (p["osm_id"], tile_bbox_str, *p["bbox"], json.dumps(p["ring"]))
+        for p in polygons
+    ]
+    cur.executemany(
+        "INSERT OR REPLACE INTO landuse_polygons "
+        "(osm_id, tile, bbox_west, bbox_south, bbox_east, bbox_north, ring_json) "
+        "VALUES (?,?,?,?,?,?,?)",
+        rows,
+    )
+    conn.commit()
+    return len(rows)
+
+
+def query_polygons_near(conn, lat, lon, margin=0.02):
+    """
+    Cheap bbox pre-filter (indexed range query) for candidate polygons
+    that MIGHT contain (lat, lon) -- exact point-in-polygon (see
+    geometry.point_in_ring) only needs to run against these few
+    candidates, not every landuse polygon on the planet. margin=0.02deg
+    (~2km) is generous relative to a typical neighborhood polygon's size,
+    so a polygon whose bbox merely overlaps the point's small search
+    window still gets a chance at the real test -- false candidates get
+    filtered out by point_in_ring itself, which is what actually decides.
+    """
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT ring_json FROM landuse_polygons "
+        "WHERE bbox_west <= ? AND bbox_east >= ? AND bbox_south <= ? AND bbox_north >= ?",
+        (lon + margin, lon - margin, lat + margin, lat - margin),
+    )
+    return [json.loads(row[0]) for row in cur.fetchall()]
 
 
 def query_bbox(conn, west, south, east, north):
