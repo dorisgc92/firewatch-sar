@@ -4,6 +4,7 @@ import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } fr
 import { buildCommandBrief, findThreatenedInfrastructure, windDirLabel } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import useZoneLandCover from "../hooks/useZoneLandCover"
 import FireCommandPanel from "./FireCommandPanel"
 import { theme } from "../utils/theme"
 import { INTENSITY_COLORS } from "../utils/fireColors"
@@ -210,25 +211,13 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
   const { t } = useLanguage()
   const rawDetections = layers.hotspots?.data?.features || []
-  // Mirrors the "Wildfires only" toggle in the map's layer panel
-  // (FireMap.jsx), kept in sync via the hideNonVegetation prop from
-  // App.jsx. Land cover classification is now on-demand and viewport-
-  // scoped (see FireMap's useZoneLandCover) rather than a precomputed
-  // property on every feature, so it isn't practical to apply the same
-  // filter here for a country/zone-wide stat count without re-running
-  // that same on-demand classification over a much larger, unbounded set
-  // just to produce a number — the exact scale problem that approach was
-  // built to avoid. These stats intentionally stay unfiltered by
-  // vegetation for now; only the map's own rendered markers respect the
-  // toggle. Worth revisiting if the stat count itself becomes something
-  // people rely on being filtered too.
   const allDetections = rawDetections
   const fwiPoints = layers.fwi?.data?.features || []
 
-  const zoneHotspots = useMemo(
+  const zoneHotspotsRaw = useMemo(
     () => filterFeaturesByBbox(allDetections, zoneInfo?.zoneBbox),
     [allDetections, zoneInfo]
   )
@@ -244,7 +233,7 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     return () => { cancelled = true }
   }, [zoneInfo?.country])
 
-  const countryHotspots = useMemo(() => {
+  const countryHotspotsRaw = useMemo(() => {
     // Prefer the real country polygon (accurate at borders) — a padded box
     // around the searched point will happily include the neighboring
     // country if the search point is near a border (e.g. Boston -> Quebec).
@@ -254,10 +243,46 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     if (byPolygon !== null) return byPolygon
     return filterFeaturesByBbox(allDetections, zoneInfo?.countryBbox)
   }, [allDetections, countryFeature, zoneInfo])
-  const stateHotspots = useMemo(
+  const stateHotspotsRaw = useMemo(
     () => filterFeaturesByBbox(allDetections, zoneInfo?.stateBbox),
     [allDetections, zoneInfo]
   )
+
+  // Classifies the country-scoped list (the widest of the three — state
+  // and zone are subsets of it almost always) and reuses one classification
+  // pass for all three displayed counts instead of firing it three times
+  // over overlapping point sets. Capped at 1500 candidates (prioritized by
+  // FRP, matching the same ceiling FireMap's own on-demand classification
+  // uses) — a country's active-fire count is usually well under that, but
+  // a very active country on a bad day could exceed it; anything past the
+  // cap just doesn't get classified this pass and stays fail-open (shown,
+  // not hidden) rather than the request itself failing outright.
+  const landCoverCandidates = useMemo(() => {
+    const capped = countryHotspotsRaw.length <= 1500
+      ? countryHotspotsRaw
+      : [...countryHotspotsRaw].sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0)).slice(0, 1500)
+    return capped.map((f) => {
+      const [lon, lat] = f.geometry.coordinates
+      return { fireKey: fireKeyFromLatLon(lat, lon), lat, lon }
+    })
+  }, [countryHotspotsRaw])
+  const { classifications: landCoverByFireKey } = useZoneLandCover(landCoverCandidates, hideNonVegetation)
+
+  const applyVegetationFilter = (features) => {
+    if (!hideNonVegetation) return features
+    return features.filter((f) => {
+      const [lon, lat] = f.geometry.coordinates
+      const category = landCoverByFireKey[fireKeyFromLatLon(lat, lon)]
+      // Not yet classified (still fetching, or beyond the 1500 cap above)
+      // -> undefined -> falls through to "keep it", same fail-open
+      // principle used everywhere else this heuristic appears.
+      return category !== "urbano" && category !== "otro"
+    })
+  }
+
+  const zoneHotspots = useMemo(() => applyVegetationFilter(zoneHotspotsRaw), [zoneHotspotsRaw, hideNonVegetation, landCoverByFireKey])
+  const countryHotspots = useMemo(() => applyVegetationFilter(countryHotspotsRaw), [countryHotspotsRaw, hideNonVegetation, landCoverByFireKey])
+  const stateHotspots = useMemo(() => applyVegetationFilter(stateHotspotsRaw), [stateHotspotsRaw, hideNonVegetation, landCoverByFireKey])
   // zoneInfrastructure now arrives as a prop from App.jsx's
   // useZoneInfrastructure — bundled world-crawl data if it covers this
   // zone, live Overpass fallback otherwise. Used to just be bbox-filtered

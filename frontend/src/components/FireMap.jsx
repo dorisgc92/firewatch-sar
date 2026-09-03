@@ -193,7 +193,6 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   const [collapsed, setCollapsed] = useState(isNarrow)
   const m2 = [
     { key: "hotspots",       label: t("layer.hotspots"), color: "#FF4400" },
-    { key: "perimeters",     label: t("layer.perimeters"), color: "#FF8800" },
     { key: "infrastructure", label: t("layer.infrastructure"), color: "#4488FF" },
   ]
   const m1 = [
@@ -310,7 +309,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
 
 export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading }) {
   const { t } = useLanguage()
-  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, perimeters: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: false })
+  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: false })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
 
   const toggleLayer = (key, value) => {
@@ -564,7 +563,10 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         })()}
 
 
-        {activeModule === 2 && visibleLayers.perimeters && viewportPerimeters.length > 0 && (
+        {/* Perimeters always render (no toggle) — official fire boundaries
+            are core situational awareness for an EOC, not an optional
+            layer someone might reasonably want to hide. */}
+        {activeModule === 2 && viewportPerimeters.length > 0 && (
           <GeoJSON key={layers.perimeters.generatedAt + "-" + viewportPerimeters.length}
             data={{ type: "FeatureCollection", features: viewportPerimeters }}
             style={(feature) => feature?.properties?.estimated
