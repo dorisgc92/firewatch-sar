@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { useFireData } from "./hooks/useFireData"
-import useIncidents from "./hooks/useIncidents"
+import useIncidents, { fireKeyFromLatLon } from "./hooks/useIncidents"
 import useIsNarrow from "./hooks/useIsNarrow"
 import useZoneInfrastructure from "./hooks/useZoneInfrastructure"
+import useZoneLandCover from "./hooks/useZoneLandCover"
+import { filterFeaturesByBbox } from "./utils/spatial"
 import FireMap from "./components/FireMap"
 import FreshnessPanel from "./components/FreshnessPanel"
 import Sidebar from "./components/Sidebar"
@@ -76,6 +78,36 @@ function AppInner() {
   // station" always means "nearest within the zone actually being
   // viewed", never "nearest among whatever happens to be loaded globally".
   const zoneInfrastructure = useZoneInfrastructure(session?.zoneInfo)
+
+  // Vegetation classification computed ONCE here and shared down to both
+  // FireMap (map markers) and Sidebar (country/state/zone counts) as a
+  // prop, instead of each calling useZoneLandCover independently. They
+  // used to each keep their own in-memory cache (a useRef inside the
+  // hook, per call site) that only synced through sessionStorage on
+  // mount -- so at a zoomed-out view where their candidate lists heavily
+  // overlap (most of a country's fires), both would independently
+  // request classification for the same few hundred points at the same
+  // time, roughly doubling real load on an already-fragile free tunnel
+  // right when it mattered least to duplicate work.
+  // Bbox-based (not the precise country-polygon filter Sidebar itself
+  // still uses for the actual displayed count) -- fine for candidate
+  // SELECTION, since classifying a few extra border points is harmless;
+  // precision only matters for what gets counted/shown, which each
+  // consumer still filters for itself using this shared result.
+  const landCoverBboxHotspots = useMemo(() => {
+    const features = layers.hotspots?.data?.features || []
+    return filterFeaturesByBbox(features, session?.zoneInfo?.countryBbox)
+  }, [layers.hotspots?.data, session?.zoneInfo])
+  const landCoverCandidates = useMemo(() => {
+    const capped = landCoverBboxHotspots.length <= 1500
+      ? landCoverBboxHotspots
+      : [...landCoverBboxHotspots].sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0)).slice(0, 1500)
+    return capped.map((f) => {
+      const [lon, lat] = f.geometry.coordinates
+      return { fireKey: fireKeyFromLatLon(lat, lon), lat, lon }
+    })
+  }, [landCoverBboxHotspots])
+  const { classifications: landCoverByFireKey } = useZoneLandCover(landCoverCandidates, hideNonVegetation)
 
   const [zoneLoading, setZoneLoading] = useState(false)
   // Bumped on every new zone-resolution request; a request only gets to
@@ -287,7 +319,7 @@ function AppInner() {
             mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire}
             onFireClick={handleSelectFire} zoneLoading={zoneLoading}
             onHideNonVegetationChange={setHideNonVegetation}
-            incidents={incidents}
+            incidents={incidents} landCoverByFireKey={landCoverByFireKey}
             zoneInfrastructure={zoneInfrastructure.features} zoneInfrastructureLoading={zoneInfrastructure.loading} />
         </div>
         {(!isNarrow || sidebarOpen) && (
@@ -301,7 +333,7 @@ function AppInner() {
               : undefined}>
               <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
                 zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire}
-                hideNonVegetation={hideNonVegetation}
+                hideNonVegetation={hideNonVegetation} landCoverByFireKey={landCoverByFireKey}
                 incidents={incidents} requestResponder={requestResponder}
                 selectedFire={selectedFire} onClearSelection={() => setSelectedFire(null)}
                 zoneInfrastructure={zoneInfrastructure.features}

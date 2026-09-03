@@ -4,7 +4,6 @@ import { loadCountryBoundaries, findCountryFeature, filterFeaturesByCountry } fr
 import { buildCommandBrief, findThreatenedInfrastructure, windDirLabel } from "../utils/commandAnalysis"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
-import useZoneLandCover from "../hooks/useZoneLandCover"
 import FireCommandPanel from "./FireCommandPanel"
 import { theme } from "../utils/theme"
 import { INTENSITY_COLORS } from "../utils/fireColors"
@@ -211,7 +210,7 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, landCoverByFireKey = {}, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
   const { t } = useLanguage()
   const rawDetections = layers.hotspots?.data?.features || []
   const allDetections = rawDetections
@@ -248,25 +247,10 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     [allDetections, zoneInfo]
   )
 
-  // Classifies the country-scoped list (the widest of the three — state
-  // and zone are subsets of it almost always) and reuses one classification
-  // pass for all three displayed counts instead of firing it three times
-  // over overlapping point sets. Capped at 1500 candidates (prioritized by
-  // FRP, matching the same ceiling FireMap's own on-demand classification
-  // uses) — a country's active-fire count is usually well under that, but
-  // a very active country on a bad day could exceed it; anything past the
-  // cap just doesn't get classified this pass and stays fail-open (shown,
-  // not hidden) rather than the request itself failing outright.
-  const landCoverCandidates = useMemo(() => {
-    const capped = countryHotspotsRaw.length <= 1500
-      ? countryHotspotsRaw
-      : [...countryHotspotsRaw].sort((a, b) => (b.properties.frp || 0) - (a.properties.frp || 0)).slice(0, 1500)
-    return capped.map((f) => {
-      const [lon, lat] = f.geometry.coordinates
-      return { fireKey: fireKeyFromLatLon(lat, lon), lat, lon }
-    })
-  }, [countryHotspotsRaw])
-  const { classifications: landCoverByFireKey } = useZoneLandCover(landCoverCandidates, hideNonVegetation)
+  // landCoverByFireKey arrives as a prop, computed once in App.jsx and
+  // shared with FireMap too — see App.jsx's own comment for why this
+  // used to be computed independently here (duplicate classification
+  // requests for the same overlapping points at zoomed-out views).
 
   const applyVegetationFilter = (features) => {
     if (!hideNonVegetation) return features
