@@ -9,7 +9,6 @@ const LAYER_KEYS = {
   hotspots:   { i18nKey: 'freshness.hotspots', expected: '< 3 hrs' },
   weather:    { i18nKey: 'freshness.weather',  expected: 'Hourly' },
   fwi:        { i18nKey: 'freshness.fwi',      expected: 'Hourly' },
-  perimeters: { i18nKey: 'freshness.perimeters', expected: '< 6 hrs' },
 }
 const FRESHNESS_COLORS = {
   green:   { bg: '#eaf7ea', dot: '#2e7d32', text: '#1b5e20' },

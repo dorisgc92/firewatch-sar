@@ -191,7 +191,6 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   // wider screens, same as before this existed.
   const [collapsed, setCollapsed] = useState(isNarrow)
   const m2 = [
-    { key: "hotspots",       label: t("layer.hotspots"), color: "#FF4400" },
     { key: "infrastructure", label: t("layer.infrastructure"), color: "#4488FF" },
   ]
   const m1 = [
