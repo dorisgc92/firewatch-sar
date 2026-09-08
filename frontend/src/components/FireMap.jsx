@@ -433,6 +433,17 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   const displayedPerimeters =
     !cellPerimetersLoading && cellPerimeters.length > 0 ? cellPerimeters : estimatedPerimeters
 
+  // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,
+  // pre-computed GeoJSON per fire (not automated -- SAR can't run in
+  // near-real-time due to Sentinel-1's ~6-12 day revisit). Loaded once
+  // on mount; grows as more fires get curated over time.
+  const [sarBurnedAreas, setSarBurnedAreas] = useState(null)
+  useEffect(() => {
+    fetch("/data/sar_burned_areas/juarez_2026-08-03.geojson")
+      .then((r) => r.json())
+      .then(setSarBurnedAreas)
+      .catch(() => setSarBurnedAreas(null)) // fail open -- layer just doesn't show
+  }, [])
   const center = zoneInfo?.center || [23, -102]
 
   return (
@@ -578,6 +589,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         {/* Perimeters always render (no toggle) — official fire boundaries
             are core situational awareness for an EOC, not an optional
             layer someone might reasonably want to hide. */}
+
         {activeModule === 2 && viewportPerimeters.length > 0 && (
           <GeoJSON key={layers.perimeters.generatedAt + "-" + viewportPerimeters.length}
             data={{ type: "FeatureCollection", features: viewportPerimeters }}
@@ -625,6 +637,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             published something. Distinct violet/dashed style (never the
             same color as an official perimeter) so nobody mistakes an
             estimate for a surveyed boundary. */}
+
           {activeModule === 2 && displayedPerimeters.length > 0 && (
           <GeoJSON key={"estimated-" + displayedPerimeters.length + "-" + visibleViewportHotspots.length}
             data={{ type: "FeatureCollection", features: displayedPerimeters }}
@@ -649,6 +662,23 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               })
             }} />
         )}
+
+	{/* Module 3: curated Sentinel-1 SAR-confirmed burned area. Solid
+            red fill -- deliberately distinct from the violet dashed
+            estimated perimeter above, so nobody mistakes a measured SAR
+            result for a live geometric estimate. */}
+        {activeModule === 3 && sarBurnedAreas && (
+          <GeoJSON
+            key="sar-burned-juarez"
+            data={sarBurnedAreas}
+            style={{ color: "#CC0000", fillColor: "#DD3333", fillOpacity: 0.35, weight: 2 }}
+            onEachFeature={(feature, layer) => {
+              layer.bindPopup(
+                "<div style=\"font-size:12px;max-width:220px\"><strong>Sentinel-1 SAR-confirmed burned area</strong><br/>Fire: Ju\u00e1rez, Tabasco (Aug 3\u20134, 2026)<br/>Pre/post-event change detection</div>"
+              )
+            }}
+          />
+        )}	
 
         {activeModule === 2 && visibleLayers.infrastructure && mapZoom >= 10 &&
           zoneInfrastructure

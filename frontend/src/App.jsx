@@ -244,6 +244,14 @@ function AppInner() {
             borderBottom: activeModule === 2 ? `2px solid ${theme.orange}` : "2px solid transparent" }}>
             {t("module2")}
           </button>
+          <button onClick={() => setActiveModule(3)} style={{
+            padding: "5px 10px", borderRadius: "6px", border: "none", cursor: "pointer",
+            fontWeight: "bold", fontSize: "12px",
+            background: activeModule === 3 ? "#FFE0E0" : "transparent",
+            color: activeModule === 3 ? "#CC0000" : theme.textSecondary,
+            borderBottom: activeModule === 3 ? "2px solid #CC0000" : "2px solid transparent" }}>
+            {t("module3")}
+          </button>
         </div>
 
         <div style={{ flex: 1, minWidth: "200px", maxWidth: "380px", position: "relative" }}>

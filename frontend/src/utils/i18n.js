@@ -20,6 +20,7 @@ export function detectLanguage() {
 const en = {
   "module1": "Module 1: Pre-Fire Risk",
   "module2": "Module 2: Active Fire",
+  "module3": "Module 3: Post-Event Damage Assessment",
   "searchPlaceholder": "Search any region, city or country...",
   "changeButton": "Change",
   "togglePanel": "Panel",
@@ -46,6 +47,7 @@ const en = {
   "activeFireView": "Active Fire View",
   "module1Sub": "Module 1 - FWI Forecast",
   "module2Sub": "Module 2 - Command Center",
+  "module3Sub": "Module 3 - SAR Burned Area",
 
   "activeFiresTitle": "ACTIVE FIRES",
   "totalWorldwide": "Total detections (worldwide)",
@@ -201,6 +203,7 @@ const en = {
 const es = {
   "module1": "Módulo 1: Riesgo Pre-Incendio",
   "module2": "Módulo 2: Incendio Activo",
+  "module3": "Módulo 3: Evaluación Post-Incendio",
   "searchPlaceholder": "Buscar región, ciudad o país...",
   "changeButton": "Cambiar",
   "togglePanel": "Panel",
@@ -227,6 +230,7 @@ const es = {
   "activeFireView": "Vista de Incendio Activo",
   "module1Sub": "Módulo 1 - Pronóstico FWI",
   "module2Sub": "Módulo 2 - Centro de Comando",
+  "module3Sub": "Módulo 3 - Área Quemada SAR",
 
   "activeFiresTitle": "INCENDIOS ACTIVOS",
   "totalWorldwide": "Total de detecciones (mundial)",
@@ -382,6 +386,7 @@ const es = {
 const de = {
   "module1": "Modul 1: Vorbrand-Risiko",
   "module2": "Modul 2: Aktiver Brand",
+  "module3": "Modul 3: Schadensbewertung nach dem Ereignis",
   "searchPlaceholder": "Region, Stadt oder Land suchen...",
   "changeButton": "Ändern",
   "togglePanel": "Panel",
@@ -408,6 +413,7 @@ const de = {
   "activeFireView": "Ansicht Aktiver Brand",
   "module1Sub": "Modul 1 - FWI-Prognose",
   "module2Sub": "Modul 2 - Einsatzzentrale",
+  "module3Sub": "Modul 3 - SAR-Brandfläche",
 
   "activeFiresTitle": "AKTIVE BRÄNDE",
   "totalWorldwide": "Gesamt (weltweit)",
@@ -563,6 +569,7 @@ const de = {
 const fr = {
   "module1": "Module 1 : Risque Pré-incendie",
   "module2": "Module 2 : Incendie Actif",
+  "module3": "Module 3 : Évaluation post-événement",
   "searchPlaceholder": "Rechercher une région, ville ou pays...",
   "changeButton": "Changer",
   "togglePanel": "Panneau",
@@ -589,6 +596,7 @@ const fr = {
   "activeFireView": "Vue Incendie Actif",
   "module1Sub": "Module 1 - Prévision FWI",
   "module2Sub": "Module 2 - Centre de Commandement",
+  "module3Sub": "Module 3 - Zone brûlée SAR",
 
   "activeFiresTitle": "INCENDIES ACTIFS",
   "totalWorldwide": "Total des détections (mondial)",
@@ -744,6 +752,7 @@ const fr = {
 const pt = {
   "module1": "Módulo 1: Risco Pré-incêndio",
   "module2": "Módulo 2: Incêndio Ativo",
+  "module3": "Módulo 3: Avaliação Pós-Incêndio",
   "searchPlaceholder": "Buscar região, cidade ou país...",
   "changeButton": "Alterar",
   "togglePanel": "Painel",
@@ -770,6 +779,7 @@ const pt = {
   "activeFireView": "Visão de Incêndio Ativo",
   "module1Sub": "Módulo 1 - Previsão FWI",
   "module2Sub": "Módulo 2 - Centro de Comando",
+  "module3Sub": "Módulo 3 - Área Queimada SAR",
 
   "activeFiresTitle": "INCÊNDIOS ATIVOS",
   "totalWorldwide": "Total de detecções (mundial)",
@@ -925,6 +935,7 @@ const pt = {
 const it = {
   "module1": "Modulo 1: Rischio Pre-incendio",
   "module2": "Modulo 2: Incendio Attivo",
+  "module3": "Modulo 3: Valutazione Post-Evento",
   "searchPlaceholder": "Cerca regione, città o paese...",
   "changeButton": "Cambia",
   "togglePanel": "Pannello",
@@ -951,6 +962,7 @@ const it = {
   "activeFireView": "Vista Incendio Attivo",
   "module1Sub": "Modulo 1 - Previsione FWI",
   "module2Sub": "Modulo 2 - Centro di Comando",
+  "module3Sub": "Modulo 3 - Area Bruciata SAR",
 
   "activeFiresTitle": "INCENDI ATTIVI",
   "totalWorldwide": "Totale rilevazioni (mondiale)",
