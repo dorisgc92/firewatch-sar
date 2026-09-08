@@ -210,22 +210,32 @@ def classify_batch(points, max_workers=20, window_size=5):
         print(f"  {len(points) - len(to_fetch)} cached, fetching {len(to_fetch)} new points "
               f"({max_workers} parallel, window_size={window_size})...")
         progress_every = max(1, len(to_fetch) // 20)
-        with ThreadPoolExecutor(max_workers=max_workers) as pool:
-            futures = {pool.submit(_fetch_pixel_code, lat, lon, window_size): i for i, lat, lon in to_fetch}
-            done = 0
-            for future in as_completed(futures):
-                i = futures[future]
-                try:
-                    # Belt-and-suspenders on top of GDAL_HTTP_TIMEOUT: if a
-                    # future somehow still doesn't resolve, don't let it
-                    # block the whole batch forever waiting on it.
-                    fetched_codes[i] = future.result(timeout=30)
-                except Exception:
-                    fetched_codes[i] = None
-                done += 1
-                if done % progress_every == 0 or done == len(to_fetch):
-                    print(f"    {done}/{len(to_fetch)} fetched...")
+        # Deliberadamente NO uso "with ThreadPoolExecutor(...) as pool:" --
+        # ese context manager espera (bloqueando) a que TODOS los hilos
+        # terminen de verdad al salir. Si un hilo queda atorado en una
+        # llamada de red nativa de GDAL que ignora el timeout configurado,
+        # el proceso entero se cuelga para siempre sin poder interrumpirse.
+        # Cierro el pool sin esperar, ya al final, cuando lo que importa
+        # (los resultados) ya está en mano.
+        pool = ThreadPoolExecutor(max_workers=max_workers)
+        futures = {pool.submit(_fetch_pixel_code, lat, lon, window_size): i for i, lat, lon in to_fetch}
+        done = 0
+        errors_shown = 0
+        for future in as_completed(futures):
+            i = futures[future]
+            try:
+                fetched_codes[i] = future.result(timeout=30)
+            except Exception as e:
+                fetched_codes[i] = None
+                if errors_shown < 5:
+                    print(f"    ERROR (point index {i}): {type(e).__name__}: {e}", flush=True)
+                    errors_shown += 1
+            done += 1
+            if done % progress_every == 0 or done == len(to_fetch):
+                print(f"    {done}/{len(to_fetch)} fetched...", flush=True)
+        pool.shutdown(wait=False)
 
+    print("  [CHECKPOINT] Empezando a guardar resultados en cache...", flush=True)
     results = []
     for i, key in enumerate(keys):
         if key in cached_codes:
@@ -235,8 +245,13 @@ def classify_batch(points, max_workers=20, window_size=5):
             if code is not None:
                 conn.execute("INSERT OR REPLACE INTO lookups (grid_key, class_code) VALUES (?, ?)", (key, code))
         results.append((CLASS_MAP.get(code, "otro") if code is not None else None, code))
+        if (i + 1) % 5000 == 0:
+            print(f"  [CHECKPOINT] {i + 1}/{len(keys)} guardados en memoria...", flush=True)
+    print("  [CHECKPOINT] Terminado el loop de guardado, haciendo commit()...", flush=True)
     conn.commit()
+    print("  [CHECKPOINT] Commit hecho, cerrando conexion...", flush=True)
     conn.close()
+    print("  [CHECKPOINT] Conexion cerrada, retornando resultados.", flush=True)
     return results
 
 
