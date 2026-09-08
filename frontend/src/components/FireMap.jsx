@@ -5,6 +5,7 @@ import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot
 import { computeEstimatedPerimeters } from "../utils/fireClusters"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import useCellPerimeters from "../hooks/useCellPerimeters"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -415,10 +416,22 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   // CWFIS, rendered separately below) are frequently not published yet
   // for a fresh detection, which is most of the time in practice; this
   // gives an always-available shape instead of nothing.
-  const estimatedPerimeters = useMemo(
+    const estimatedPerimeters = useMemo(
     () => computeEstimatedPerimeters(visibleViewportHotspots),
     [visibleViewportHotspots]
   )
+
+  // Cell-based perimeters (WorldCover grid, stepped edges) are the
+  // preferred shape when available -- see cellPerimeter.js's own
+  // comment. Async and can fail (network/backend down), so the
+  // synchronous hull-based estimatedPerimeters above always computes
+  // too, as a fail-open fallback: whichever is ready wins, per the same
+  // philosophy as landCoverApi.js's classifyPointsBatch.
+  const { perimeters: cellPerimeters, loading: cellPerimetersLoading } =
+    useCellPerimeters(visibleViewportHotspots, true)
+
+  const displayedPerimeters =
+    !cellPerimetersLoading && cellPerimeters.length > 0 ? cellPerimeters : estimatedPerimeters
 
   const center = zoneInfo?.center || [23, -102]
 
@@ -612,9 +625,9 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             published something. Distinct violet/dashed style (never the
             same color as an official perimeter) so nobody mistakes an
             estimate for a surveyed boundary. */}
-        {activeModule === 2 && estimatedPerimeters.length > 0 && (
-          <GeoJSON key={"estimated-" + estimatedPerimeters.length + "-" + visibleViewportHotspots.length}
-            data={{ type: "FeatureCollection", features: estimatedPerimeters }}
+          {activeModule === 2 && displayedPerimeters.length > 0 && (
+          <GeoJSON key={"estimated-" + displayedPerimeters.length + "-" + visibleViewportHotspots.length}
+            data={{ type: "FeatureCollection", features: displayedPerimeters }}
             style={{ color: "#8855DD", fillColor: "#9966EE", fillOpacity: 0.12, weight: 1.5, dashArray: "4 3" }}
             onEachFeature={(feature, layer) => {
               layer.bindPopup(
