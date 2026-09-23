@@ -284,7 +284,7 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
       .catch(() => setSarSites([]))
   }, [])
 
- const [countryFeature, setCountryFeature] = useState(null)
+const [countryFeature, setCountryFeature] = useState(null)
   useEffect(() => {
     if (!zoneInfo?.country) { setCountryFeature(null); return }
     let cancelled = false
@@ -296,7 +296,7 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     return () => { cancelled = true }
   }, [zoneInfo?.country])
 
-  const countryHotspotsRaw = useMemo(() => {
+ const countryHotspotsRaw = useMemo(() => {
     // Prefer the real country polygon (accurate at borders) — a padded box
     // around the searched point will happily include the neighboring
     // country if the search point is near a border (e.g. Boston -> Quebec).
@@ -329,7 +329,6 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
   }
 
   const zoneHotspots = useMemo(() => applyVegetationFilter(zoneHotspotsRaw), [zoneHotspotsRaw, hideNonVegetation, landCoverByFireKey])
-
   const sarCountrySites = useMemo(() => {
     const byPolygon = filterFeaturesByCountry(sarSites, countryFeature)
     if (byPolygon !== null) return byPolygon
@@ -342,7 +341,7 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
   const sarZoneSites = useMemo(
     () => filterFeaturesByBbox(sarSites, zoneInfo?.bbox),
     [sarSites, zoneInfo]
-  )reKey])
+  )
   const countryHotspots = useMemo(() => applyVegetationFilter(countryHotspotsRaw), [countryHotspotsRaw, hideNonVegetation, landCoverByFireKey])
   const stateHotspots = useMemo(() => applyVegetationFilter(stateHotspotsRaw), [stateHotspotsRaw, hideNonVegetation, landCoverByFireKey])
   // zoneInfrastructure now arrives as a prop from App.jsx's
