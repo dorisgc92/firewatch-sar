@@ -45,6 +45,7 @@ const en = {
 
   "preFireView": "Pre-Fire Risk View",
   "activeFireView": "Active Fire View",
+  "postEventView": "Post-Event View",
   "module1Sub": "Module 1 - FWI Forecast",
   "module2Sub": "Module 2 - Command Center",
   "module3Sub": "Module 3 - SAR Burned Area",
@@ -228,6 +229,7 @@ const es = {
 
   "preFireView": "Vista de Riesgo Pre-Incendio",
   "activeFireView": "Vista de Incendio Activo",
+  "postEventView": "Vista de Evaluación Post-Incendio",
   "module1Sub": "Módulo 1 - Pronóstico FWI",
   "module2Sub": "Módulo 2 - Centro de Comando",
   "module3Sub": "Módulo 3 - Área Quemada SAR",
@@ -411,6 +413,7 @@ const de = {
 
   "preFireView": "Vorbrand-Risikoansicht",
   "activeFireView": "Ansicht Aktiver Brand",
+  "postEventView": "Ansicht Nachereignis-Bewertung",
   "module1Sub": "Modul 1 - FWI-Prognose",
   "module2Sub": "Modul 2 - Einsatzzentrale",
   "module3Sub": "Modul 3 - SAR-Brandfläche",
@@ -594,6 +597,7 @@ const fr = {
 
   "preFireView": "Vue Risque Pré-incendie",
   "activeFireView": "Vue Incendie Actif",
+  "postEventView": "Vue Post-événement",
   "module1Sub": "Module 1 - Prévision FWI",
   "module2Sub": "Module 2 - Centre de Commandement",
   "module3Sub": "Module 3 - Zone brûlée SAR",
@@ -777,6 +781,7 @@ const pt = {
 
   "preFireView": "Visão de Risco Pré-incêndio",
   "activeFireView": "Visão de Incêndio Ativo",
+  "postEventView": "Visão de Avaliação Pós-Incêndio",
   "module1Sub": "Módulo 1 - Previsão FWI",
   "module2Sub": "Módulo 2 - Centro de Comando",
   "module3Sub": "Módulo 3 - Área Queimada SAR",
@@ -920,7 +925,7 @@ const pt = {
   "windPushingToward": "Vento de {dir} a {wind} km/h empurra o fogo para este local.",
   "closeToFire": "Dentro do alcance imediato de um foco ativo.",
   "markersCapped": "Mostrando os {shown} focos mais graves de {total} — aproxime o zoom para ver todos.",
-  "coordinates": "Coordenadas",
+  "coordenadas": "Coordenadas",
   "showingTop": "Mostrando os {n} primeiros de {total}",
   "intensity": "Intensidade",
   "sensor": "Sensor",
@@ -960,6 +965,7 @@ const it = {
 
   "preFireView": "Vista Rischio Pre-incendio",
   "activeFireView": "Vista Incendio Attivo",
+  "postEventView": "Vista Valutazione Post-Evento",
   "module1Sub": "Modulo 1 - Previsione FWI",
   "module2Sub": "Modulo 2 - Centro di Comando",
   "module3Sub": "Modulo 3 - Area Bruciata SAR",
@@ -1103,7 +1109,7 @@ const it = {
   "windPushingToward": "Vento da {dir} a {wind} km/h spinge il fuoco verso questo sito.",
   "closeToFire": "Nel raggio immediato di un incendio attivo.",
   "markersCapped": "Mostrando i {shown} incendi più gravi su {total} — ingrandisci per vederli tutti.",
-  "coordinates": "Coordinate",
+  "coordinate": "Coordinate",
   "showingTop": "Mostrando i primi {n} di {total}",
   "intensity": "Intensità",
   "sensor": "Sensore",
