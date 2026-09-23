@@ -4,6 +4,7 @@ import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot, pointInPolygonGeometry, nearestFeatures } from "../utils/spatial"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import useCellPerimeters from "../hooks/useCellPerimeters"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -406,7 +407,13 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   }, [viewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation, landCoverByFireKey])
   const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
 
-   // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,
+  // Cell-based perimeters (WorldCover grid, stepped edges) -- the real
+  // vegetation shape for the challenge's perimeter requirement, distinct
+  // from the smooth geometric hull we removed. Computed from actual
+  // land-cover data, not just connecting the outermost detection points.
+  const { perimeters: cellPerimeters } = useCellPerimeters(visibleViewportHotspots, true)
+
+   // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,   
   // pre-computed GeoJSON per fire (not automated -- SAR can't run in
   // near-real-time due to Sentinel-1's ~6-12 day revisit). Loaded once
   // on mount; grows as more fires get curated over time.
@@ -604,6 +611,27 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             }} />
         )}
       
+
+	      
+        {/* Cell-based perimeter: union of 500m WorldCover vegetation
+            cells around each detection -- stepped edges, follows real
+            land cover instead of an abstract geometric hull. Green so
+            it's visually distinct from the official orange/red layer
+            above and the SAR red layer below. */}
+        {activeModule === 2 && cellPerimeters.length > 0 && (
+          <GeoJSON key={"cell-" + cellPerimeters.length + "-" + visibleViewportHotspots.length}
+            data={{ type: "FeatureCollection", features: cellPerimeters }}
+            style={{ color: "#1CA09D", fillColor: "#2ECC8E", fillOpacity: 0.18, weight: 1.5 }}
+            onEachFeature={(feature, layer) => {
+              layer.bindPopup(
+                `<div style="font-size:12px;max-width:220px">`
+                + `<strong>${t("estimatedPerimeterTitle")}</strong><br/>`
+                + `Based on WorldCover vegetation cells<br/>`
+                + `<span style="color:#6b7280">${t("estimatedPerimeterCount", { count: feature.properties.pointCount })}</span>`
+                + `</div>`
+              )
+            }} />
+        )}
 
 	{/* Module 3: curated Sentinel-1 SAR-confirmed burned area. Solid
             red fill -- deliberately distinct from the violet dashed
