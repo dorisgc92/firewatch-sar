@@ -16,7 +16,7 @@ import * as turf from "@turf/turf"
 import { clusterPoints } from "./fireClusters"
 
 const CELL_SIZE_METERS = 500
-const RING_COUNT = 2
+const RING_COUNT = 1
 const METERS_PER_DEGREE_LAT = 111320
 
 function metersToDegreesLon(meters, atLatitude) {
