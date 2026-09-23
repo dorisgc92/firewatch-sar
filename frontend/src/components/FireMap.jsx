@@ -2,10 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot, pointInPolygonGeometry, nearestFeatures } from "../utils/spatial"
-import { computeEstimatedPerimeters } from "../utils/fireClusters"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
-import useCellPerimeters from "../hooks/useCellPerimeters"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -197,8 +195,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   ]
   const m1 = [
     { key: "fwi",     label: t("layer.fwi"), color: "#FF4400" },
-    { key: "weather", label: t("layer.weather"),  color: "#44AAFF" },
-  ]
+    ]
   const active = activeModule === 1 ? m1 : m2
 
   if (collapsed) {
@@ -305,7 +302,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
 
 export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading, landCoverByFireKey = {} }) {
   const { t } = useLanguage()
-  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: true })
+  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, hideNonVegetation: true })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
 
   const toggleLayer = (key, value) => {
@@ -409,31 +406,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   }, [viewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation, landCoverByFireKey])
   const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
 
-  // Estimated perimeters: groups nearby detections (already filtered to
-  // what's actually being shown -- same fires the markers themselves
-  // reflect) into a polygon, purely client-side. See fireClusters.js's
-  // own comment for why -- official agency perimeters (CONAFOR/NIFC/
-  // CWFIS, rendered separately below) are frequently not published yet
-  // for a fresh detection, which is most of the time in practice; this
-  // gives an always-available shape instead of nothing.
-    const estimatedPerimeters = useMemo(
-    () => computeEstimatedPerimeters(visibleViewportHotspots),
-    [visibleViewportHotspots]
-  )
-
-  // Cell-based perimeters (WorldCover grid, stepped edges) are the
-  // preferred shape when available -- see cellPerimeter.js's own
-  // comment. Async and can fail (network/backend down), so the
-  // synchronous hull-based estimatedPerimeters above always computes
-  // too, as a fail-open fallback: whichever is ready wins, per the same
-  // philosophy as landCoverApi.js's classifyPointsBatch.
-  const { perimeters: cellPerimeters, loading: cellPerimetersLoading } =
-    useCellPerimeters(visibleViewportHotspots, true)
-
-  const displayedPerimeters =
-    !cellPerimetersLoading && cellPerimeters.length > 0 ? cellPerimeters : estimatedPerimeters
-
-  // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,
+   // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,
   // pre-computed GeoJSON per fire (not automated -- SAR can't run in
   // near-real-time due to Sentinel-1's ~6-12 day revisit). Loaded once
   // on mount; grows as more fires get curated over time.
@@ -630,38 +603,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               })
             }} />
         )}
-
-        {/* Estimated perimeters: our own client-side polygon from
-            clustering nearby detections — always available, unlike the
-            official layer above which depends on an agency having
-            published something. Distinct violet/dashed style (never the
-            same color as an official perimeter) so nobody mistakes an
-            estimate for a surveyed boundary. */}
-
-          {activeModule === 2 && displayedPerimeters.length > 0 && (
-          <GeoJSON key={"estimated-" + displayedPerimeters.length + "-" + visibleViewportHotspots.length}
-            data={{ type: "FeatureCollection", features: displayedPerimeters }}
-            style={{ color: "#8855DD", fillColor: "#9966EE", fillOpacity: 0.12, weight: 1.5, dashArray: "4 3" }}
-            onEachFeature={(feature, layer) => {
-              layer.bindPopup(
-                `<div style="font-size:12px;max-width:220px">`
-                + `<strong>${t("estimatedPerimeterTitle")}</strong><br/>`
-                + `${t("estimatedPerimeterNote")}<br/>`
-                + `<span style="color:#6b7280">${t("estimatedPerimeterCount", { count: feature.properties.pointCount })}</span>`
-                + `</div>`
-              )
-              layer.on("click", () => {
-                const candidates = visibleViewportHotspots.filter((h) => {
-                  const [hlon, hlat] = h.geometry.coordinates
-                  return pointInPolygonGeometry(hlat, hlon, feature.geometry)
-                })
-                if (candidates.length > 0) {
-                  const repFire = candidates.reduce((best, h) => (h.properties.frp || 0) > (best.properties.frp || 0) ? h : best)
-                  onFireClick?.(repFire)
-                }
-              })
-            }} />
-        )}
+      
 
 	{/* Module 3: curated Sentinel-1 SAR-confirmed burned area. Solid
             red fill -- deliberately distinct from the violet dashed
