@@ -162,6 +162,60 @@ function SarExpandableStatRow({ label, value, color, sites, onSelect, t }) {
   )
 }
 
+function FwiZoneListItem({ feature, onSelect }) {
+  const [lon, lat] = feature.geometry.coordinates
+  const { fwi, risk_label } = feature.properties
+  return (
+    <div onClick={() => onSelect(feature)}
+      style={{ padding: "6px 8px", fontSize: "11px", cursor: "pointer", borderBottom: `1px solid ${theme.border}`,
+        display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      onMouseEnter={e => e.currentTarget.style.background = theme.orangeSoft}
+      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+      <span style={{ color: theme.textPrimary }}>{lat.toFixed(3)}, {lon.toFixed(3)}</span>
+      <span style={{ color: theme.textMuted }}>FWI {fwi} · {risk_label}</span>
+    </div>
+  )
+}
+
+function FwiExpandableStatRow({ label, value, color, points, onSelect, t }) {
+  const [open, setOpen] = useState(false)
+  const CAP = 30
+  const sorted = useMemo(
+    () => [...points].sort((a, b) => (b.properties.fwi || 0) - (a.properties.fwi || 0)),
+    [points]
+  )
+  const shown = sorted.slice(0, CAP)
+  const hasItems = points.length > 0
+
+  return (
+    <div style={{ marginBottom: "5px" }}>
+      <div
+        onClick={() => hasItems && setOpen(o => !o)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: hasItems ? "pointer" : "default" }}>
+        <span style={{ color: theme.textSecondary, fontSize: "12px", display: "flex", alignItems: "center", gap: "5px" }}>
+          {hasItems && (
+            <span style={{ fontSize: "9px", color: theme.textMuted, display: "inline-block",
+              transform: open ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▸</span>
+          )}
+          {label}
+        </span>
+        <span style={{ color: color || theme.textPrimary, fontSize: "12px", fontWeight: "bold" }}>{value}</span>
+      </div>
+      {open && hasItems && (
+        <div style={{ marginTop: "4px", marginBottom: "4px", maxHeight: "170px", overflowY: "auto",
+          background: "#faf9f6", border: `1px solid ${theme.border}`, borderRadius: "6px" }}>
+          {shown.map((f, i) => <FwiZoneListItem key={i} feature={f} onSelect={onSelect} />)}
+          {sorted.length > CAP && (
+            <div style={{ padding: "5px 8px", fontSize: "10px", color: theme.textMuted }}>
+              {t("showingTop", { n: CAP, total: sorted.length })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const FWI_LABELS = {
   low: { label: "LOW", color: "#38A800" },
   moderate: { label: "MODERATE", color: "#a8a800" },
@@ -391,12 +445,14 @@ const [countryFeature, setCountryFeature] = useState(null)
     zoneHotspots: selectedFire ? [selectedFire] : zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints,
   }), [zoneHotspots, zoneInfrastructure, fwiPoints, selectedFire])
 
-  const maxFWI = fwiPoints.reduce((max, f) =>
+    const maxFWI = fwiPoints.reduce((max, f) =>
     (f.properties.fwi || 0) > (max?.properties?.fwi || 0) ? f : max, null)
-  const escalatingZones = fwiPoints.filter(f => f.properties.trend === "escalating").length
-  const extremeZones = fwiPoints.filter(f => f.properties.risk_class === "extreme").length
-  const veryHighZones = fwiPoints.filter(f => f.properties.risk_class === "very_high").length
-
+  const escalatingZonesList = fwiPoints.filter(f => f.properties.trend === "escalating")
+  const extremeZonesList = fwiPoints.filter(f => f.properties.risk_class === "extreme")
+  const veryHighZonesList = fwiPoints.filter(f => f.properties.risk_class === "very_high")
+  const escalatingZones = escalatingZonesList.length
+  const extremeZones = extremeZonesList.length
+  const veryHighZones = veryHighZonesList.length
   return (
     <div style={{
       width: "270px", maxWidth: "90vw", height: "100%", flexShrink: 0, background: theme.panelBg,
@@ -553,22 +609,18 @@ const [countryFeature, setCountryFeature] = useState(null)
             </div>
           )}
 
-          <StatRow
-            label={t("extremeRiskZones")}
-            value={extremeZones}
+          <FwiExpandableStatRow
+            label={t("extremeRiskZones")} value={extremeZones}
             color={extremeZones > 0 ? theme.danger : "#38A800"}
-          />
-          <StatRow
-            label={t("veryHighRiskZones")}
-            value={veryHighZones}
+            points={extremeZonesList} onSelect={flyTo} t={t} />
+          <FwiExpandableStatRow
+            label={t("veryHighRiskZones")} value={veryHighZones}
             color={veryHighZones > 0 ? "#FF4400" : "#38A800"}
-          />
-          <StatRow
-            label={t("escalatingZones")}
-            value={escalatingZones}
+            points={veryHighZonesList} onSelect={flyTo} t={t} />
+          <FwiExpandableStatRow
+            label={t("escalatingZones")} value={escalatingZones}
             color={escalatingZones > 0 ? theme.orange : "#38A800"}
-          />
-
+            points={escalatingZonesList} onSelect={flyTo} t={t} />
           <SectionTitle>{t("forecastAlertTitle")}</SectionTitle>
           <div style={{
             background: extremeZones > 0 ? theme.dangerSoft : theme.greenSoft,
