@@ -618,18 +618,21 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             land cover instead of an abstract geometric hull. Green so
             it's visually distinct from the official orange/red layer
             above and the SAR red layer below. */}
-        {activeModule === 2 && cellPerimeters.length > 0 && (
+                {activeModule === 2 && cellPerimeters.length > 0 && (
           <GeoJSON key={"cell-" + cellPerimeters.length + "-" + visibleViewportHotspots.length}
             data={{ type: "FeatureCollection", features: cellPerimeters }}
             style={{ color: "#1CA09D", fillColor: "#2ECC8E", fillOpacity: 0.18, weight: 1.5 }}
             onEachFeature={(feature, layer) => {
-              layer.bindPopup(
-                `<div style="font-size:12px;max-width:220px">`
-                + `<strong>${t("estimatedPerimeterTitle")}</strong><br/>`
-                + `Based on WorldCover vegetation cells<br/>`
-                + `<span style="color:#6b7280">${t("estimatedPerimeterCount", { count: feature.properties.pointCount })}</span>`
-                + `</div>`
-              )
+              layer.on("click", () => {
+                const candidates = visibleViewportHotspots.filter((h) => {
+                  const [hlon, hlat] = h.geometry.coordinates
+                  return pointInPolygonGeometry(hlat, hlon, feature.geometry)
+                })
+                if (candidates.length > 0) {
+                  const repFire = candidates.reduce((best, h) => (h.properties.frp || 0) > (best.properties.frp || 0) ? h : best)
+                  onFireClick?.(repFire)
+                }
+              })
             }} />
         )}
 
