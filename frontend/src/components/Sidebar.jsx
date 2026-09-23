@@ -67,6 +67,7 @@ function FireListItem({ feature, showName, onSelect }) {
 
 // A StatRow with a caret that expands into the list of fires behind that
 // number. Clicking a fire in the list flies the map to it.
+
 function ExpandableStatRow({ label, value, color, features, showNames, onSelect, t }) {
   const [open, setOpen] = useState(false)
   const CAP = 30
@@ -95,6 +96,61 @@ function ExpandableStatRow({ label, value, color, features, showNames, onSelect,
         <div style={{ marginTop: "4px", marginBottom: "4px", maxHeight: "170px", overflowY: "auto",
           background: "#faf9f6", border: `1px solid ${theme.border}`, borderRadius: "6px" }}>
           {shown.map((f, i) => <FireListItem key={i} feature={f} showName={showNames} onSelect={onSelect} />)}
+          {sorted.length > CAP && (
+            <div style={{ padding: "5px 8px", fontSize: "10px", color: theme.textMuted }}>
+              {t("showingTop", { n: CAP, total: sorted.length })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+function SarSiteListItem({ feature, onSelect }) {
+  const { name, date, hectares } = feature.properties
+  return (
+    <div onClick={() => onSelect(feature)}
+      style={{ padding: "6px 8px", fontSize: "11px", cursor: "pointer", borderBottom: `1px solid ${theme.border}` }}
+      onMouseEnter={e => e.currentTarget.style.background = theme.orangeSoft}
+      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+      <div style={{ color: theme.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {name}
+      </div>
+      <div style={{ color: theme.textMuted, fontSize: "10px" }}>
+        {date} · {hectares?.toLocaleString()} ha
+      </div>
+    </div>
+  )
+}
+
+function SarExpandableStatRow({ label, value, color, sites, onSelect, t }) {
+  const [open, setOpen] = useState(false)
+  const CAP = 30
+  const sorted = useMemo(
+    () => [...sites].sort((a, b) => (b.properties.hectares || 0) - (a.properties.hectares || 0)),
+    [sites]
+  )
+  const shown = sorted.slice(0, CAP)
+  const hasItems = sites.length > 0
+
+  return (
+    <div style={{ marginBottom: "5px" }}>
+      <div
+        onClick={() => hasItems && setOpen(o => !o)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: hasItems ? "pointer" : "default" }}>
+        <span style={{ color: theme.textSecondary, fontSize: "12px", display: "flex", alignItems: "center", gap: "5px" }}>
+          {hasItems && (
+            <span style={{ fontSize: "9px", color: theme.textMuted, display: "inline-block",
+              transform: open ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▸</span>
+          )}
+          {label}
+        </span>
+        <span style={{ color: color || theme.textPrimary, fontSize: "12px", fontWeight: "bold" }}>{value}</span>
+      </div>
+      {open && hasItems && (
+        <div style={{ marginTop: "4px", marginBottom: "4px", maxHeight: "170px", overflowY: "auto",
+          background: "#faf9f6", border: `1px solid ${theme.border}`, borderRadius: "6px" }}>
+          {shown.map((f, i) => <SarSiteListItem key={i} feature={f} onSelect={onSelect} />)}
           {sorted.length > CAP && (
             <div style={{ padding: "5px 8px", fontSize: "10px", color: theme.textMuted }}>
               {t("showingTop", { n: CAP, total: sorted.length })}
@@ -220,7 +276,15 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     () => filterFeaturesByBbox(allDetections, zoneInfo?.zoneBbox),
     [allDetections, zoneInfo]
   )
-  const [countryFeature, setCountryFeature] = useState(null)
+ const [sarSites, setSarSites] = useState([])
+  useEffect(() => {
+    fetch("/data/sar_burned_areas/index.json")
+      .then((r) => r.json())
+      .then(setSarSites)
+      .catch(() => setSarSites([]))
+  }, [])
+
+ const [countryFeature, setCountryFeature] = useState(null)
   useEffect(() => {
     if (!zoneInfo?.country) { setCountryFeature(null); return }
     let cancelled = false
@@ -265,6 +329,20 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
   }
 
   const zoneHotspots = useMemo(() => applyVegetationFilter(zoneHotspotsRaw), [zoneHotspotsRaw, hideNonVegetation, landCoverByFireKey])
+
+  const sarCountrySites = useMemo(() => {
+    const byPolygon = filterFeaturesByCountry(sarSites, countryFeature)
+    if (byPolygon !== null) return byPolygon
+    return filterFeaturesByBbox(sarSites, zoneInfo?.countryBbox)
+  }, [sarSites, countryFeature, zoneInfo])
+  const sarStateSites = useMemo(
+    () => filterFeaturesByBbox(sarSites, zoneInfo?.stateBbox),
+    [sarSites, zoneInfo]
+  )
+  const sarZoneSites = useMemo(
+    () => filterFeaturesByBbox(sarSites, zoneInfo?.bbox),
+    [sarSites, zoneInfo]
+  )reKey])
   const countryHotspots = useMemo(() => applyVegetationFilter(countryHotspotsRaw), [countryHotspotsRaw, hideNonVegetation, landCoverByFireKey])
   const stateHotspots = useMemo(() => applyVegetationFilter(stateHotspotsRaw), [stateHotspotsRaw, hideNonVegetation, landCoverByFireKey])
   // zoneInfrastructure now arrives as a prop from App.jsx's
@@ -400,13 +478,31 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
                   <PriorityFireCard key={i} fire={fire} index={i} t={t} incidents={incidents}
                     onSelectFire={flyTo} />
                 ))}
-              </>
+                            </>
             )}
           </div>
         </>
       )}
 
-      {activeModule === 2 && selectedFire && (
+     {activeModule === 3 && (
+        <>
+          <SectionTitle>{t("burnedArea")}</SectionTitle>
+          <SarExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.country || "—" })}
+            value={sarCountrySites.length.toLocaleString()}
+            sites={sarCountrySites} onSelect={flyTo} t={t} />
+          <SarExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.state || "—" })}
+            value={sarStateSites.length.toLocaleString()}
+            sites={sarStateSites} onSelect={flyTo} t={t} />
+          <SarExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.name || "—" })}
+            value={sarZoneSites.length.toLocaleString()} color={theme.orange}
+            sites={sarZoneSites} onSelect={flyTo} t={t} />
+        </>
+      )}
+
+     {activeModule === 2 && selectedFire && (
         <>
           <SectionTitle>{t("situationSummaryTitle")}</SectionTitle>
           <FireCommandPanel selectedFire={selectedFire} incidents={incidents}
