@@ -340,10 +340,10 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
         borderRadius: "6px", padding: "8px", marginBottom: "4px", textAlign: "center",
       }}>
         <div style={{ fontSize: "13px", fontWeight: "bold", color: theme.textPrimary }}>
-          {activeModule === 1 ? t("preFireView") : t("activeFireView")}
+        	{activeModule === 1 ? t("preFireView") : activeModule === 3 ? t("postEventView") : t("activeFireView")}
         </div>
         <div style={{ fontSize: "11px", color: theme.textSecondary, marginTop: "2px" }}>
-          {activeModule === 1 ? t("module1Sub") : t("module2Sub")}
+        	{activeModule === 1 ? t("module1Sub") : activeModule === 3 ? t("module3Sub") : t("module2Sub")}
         </div>
       </div>
 
