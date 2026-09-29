@@ -418,7 +418,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   // demand -- supplements the coarse global point layer below with
   // neighborhood-level detail once the responder has zoomed into a
   // specific area, rather than replacing the global view.
-  const { cells: localFwiCells } = useLocalFWI(viewportBbox || zoneInfo?.zoneBbox, mapZoom, activeModule === 1 && mapZoom >= 8)
+  const { cells: localFwiCells } = useLocalFWI(viewportBbox || zoneInfo?.zoneBbox, mapZoom, activeModule === 1)
 
    // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,   
   // pre-computed GeoJSON per fire (not automated -- SAR can't run in

@@ -142,22 +142,22 @@ def compute_fwi(isi, bui):
         fwi = b
     return round(max(0.0, fwi), 1)
 
-LOCAL_FWI_MAX_POINTS = 200  # safety cap, tighter now that resolution can go finer
+LOCAL_FWI_MAX_POINTS = 200  # safety cap on total cells per request
+LOCAL_FWI_TARGET_CELLS_PER_SIDE = 12  # aim for a ~12x12 grid regardless of zoom
+LOCAL_FWI_MIN_STEP_DEG = 0.02  # ~2km floor -- Open-Meteo's own model resolution is
+                                # roughly 1-11km, so going finer doesn't add real
+                                # meteorological detail, just interpolates the same data
+LOCAL_FWI_MAX_STEP_DEG = 0.5   # ~55km ceiling -- zoomed out to country level, keep
+                                # cells coarse rather than trying to cover a huge area finely
 
-def step_for_zoom(zoom):
-    """Finer cells the closer the responder has zoomed in -- ~2km is the
-    practical floor: Open-Meteo's own weather model resolution is roughly
-    1-11km depending on model, so going finer than this doesn't add real
-    meteorological detail, just interpolates the same underlying data."""
-    if zoom is None:
-        return 0.15
-    if zoom >= 13:
-        return 0.02   # ~2km -- closest to "monitoring individual fields"
-    if zoom >= 11:
-        return 0.05   # ~5km
-    if zoom >= 9:
-        return 0.1    # ~11km
-    return 0.15        # ~16km, zoomed-out fallback
+def step_for_bbox(west, south, east, north):
+    """Always covers the FULL visible viewport, at whatever zoom -- sizes
+    the cell to the viewport's own span (aiming for ~12 cells per side)
+    instead of a fixed zoom lookup, which could stop partway through a
+    large viewport and leave gaps (as a fixed-resolution grid did before)."""
+    span = max(east - west, north - south, 0.001)
+    step = span / LOCAL_FWI_TARGET_CELLS_PER_SIDE
+    return max(LOCAL_FWI_MIN_STEP_DEG, min(LOCAL_FWI_MAX_STEP_DEG, step))
 
 class LocalFwiRequest(BaseModel):
     west: float
@@ -175,7 +175,7 @@ def local_fwi(req: LocalFwiRequest):
     neighborhood-level detail. Returns filled grid-cell polygons (not
     points), ready to render directly.
     """
-    step_deg = step_for_zoom(req.zoom)
+    step_deg = step_for_bbox(req.west, req.south, req.east, req.north)
     points = []
     lat = req.south
     while lat < req.north and len(points) < LOCAL_FWI_MAX_POINTS:
