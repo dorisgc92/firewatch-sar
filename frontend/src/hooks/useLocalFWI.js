@@ -26,8 +26,13 @@ export default function useLocalFWI(bbox, zoom, enabled = true) {
         }),
       })
         .then((r) => r.json())
-        .then((data) => setCells(data.features || []))
-        .catch(() => setCells([])) // fail open -- caller falls back to the global point layer
+        .then((data) => {
+          // Keep showing the last good result on failure/empty response
+          // instead of flickering to nothing -- a transient tunnel hiccup
+          // shouldn't make the whole grid disappear while panning.
+          if (data.features && data.features.length > 0) setCells(data.features)
+        })
+        .catch(() => {}) // keep last good cells; don't clear on a transient failure
         .finally(() => setLoading(false))
     }, 400)
     return () => clearTimeout(timer)

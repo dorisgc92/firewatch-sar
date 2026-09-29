@@ -184,7 +184,7 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
   )
 }
 
-function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter, onInfraFilter, mapZoom, infraLoading }) {
+function LayerToggle({ layers, onChange, activeModule, intensities, fwiRisk, infraFilter, onInfraFilter, mapZoom, infraLoading }) {
   const { t } = useLanguage()
   const isNarrow = useIsNarrow(900)
   // Starts collapsed on narrow screens (this panel is an overlay ON TOP of
@@ -232,6 +232,29 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
           <span style={{ color: theme.textPrimary, fontSize: "13px" }}>{label}</span>
         </label>
       ))}
+
+      {activeModule === 1 && (
+        <>
+          <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold",
+            marginTop: "12px", marginBottom: "6px", borderTop: `1px solid ${theme.border}`, paddingTop: "8px", letterSpacing: "0.04em" }}>
+            {t("intensityFilterTitle")}
+          </div>
+          {[
+            { key: "extreme",   label: t("intensity.extreme"), color: FWI_COLORS.extreme },
+            { key: "very_high", label: t("veryHighRiskZones"), color: FWI_COLORS.very_high },
+            { key: "high",      label: t("intensity.high"),    color: FWI_COLORS.high },
+            { key: "moderate",  label: t("intensity.moderate"),color: FWI_COLORS.moderate },
+            { key: "low",       label: t("intensity.low"),     color: FWI_COLORS.low },
+          ].map(({ key, label, color }) => (
+            <label key={key} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", marginBottom: "5px" }}>
+              <input type="checkbox" checked={fwiRisk?.[key] !== false}
+                onChange={e => onChange("fwirisk_" + key, e.target.checked)}
+                style={{ accentColor: color, width: "14px", height: "14px" }} />
+              <span style={{ color: theme.textPrimary, fontSize: "13px" }}>{label}</span>
+            </label>
+          ))}
+        </>
+      )}
 
       {activeModule === 2 && (
         <>
@@ -306,6 +329,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   const { t } = useLanguage()
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, hideNonVegetation: true })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
+  const [visibleFwiRisk, setVisibleFwiRisk] = useState({ extreme: true, very_high: true, high: true, moderate: true, low: true })
 
   const toggleLayer = (key, value) => {
     if (key.startsWith("intensity_")) {
@@ -483,7 +507,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             neighborhood-level detail once zoomed in enough to matter. */}
         {activeModule === 1 && visibleLayers.fwi && localFwiCells.length > 0 && (
           <GeoJSON key={"local-fwi-" + localFwiCells.length + "-" + (zoneInfo?.name || "")}
-            data={{ type: "FeatureCollection", features: localFwiCells }}
+            data={{ type: "FeatureCollection", features: localFwiCells.filter(f => visibleFwiRisk[f.properties.risk_class] !== false) }}
             style={(feature) => {
               const color = FWI_COLORS[feature.properties.risk_class] || FWI_COLORS.unknown
               return { color, fillColor: color, fillOpacity: 0.45, weight: 0.5 }
