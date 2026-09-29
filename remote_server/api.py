@@ -142,7 +142,7 @@ def compute_fwi(isi, bui):
         fwi = b
     return round(max(0.0, fwi), 1)
 
-LOCAL_FWI_STEP_DEG = 0.1  # ~11km at the equator -- neighborhood/rural-zone scale
+LOCAL_FWI_STEP_DEG = 0.15  # ~16km at the equator -- fewer points per request, faster response over the free tunnel
 LOCAL_FWI_MAX_POINTS = 400  # safety cap so an accidentally huge bbox can't hang the server
 
 class LocalFwiRequest(BaseModel):

@@ -1,4 +1,4 @@
-export const config = { maxDuration: 30 }
+export const config = { maxDuration: 60 }
 
 // Same server as landcover.js/infrastructure.js -- calls /local-fwi for a
 // fine-grained (~11km) FWI grid scoped to whatever zone the user is
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 25000)
+    const timeout = setTimeout(() => controller.abort(), 45000)
     const r = await fetch(`${INFRA_API_URL}/local-fwi`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
