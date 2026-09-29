@@ -40,6 +40,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import requests
 
 import store
 import geometry
@@ -60,6 +61,182 @@ app = FastAPI(title="FireWatch SAR - Infrastructure API")
 # GLOBAL concurrent WorldCover fetch count, shared across every request,
 # fixes that at the root instead of just tuning the per-request number
 # again.
+import math
+
+# ── Local FWI (on-demand, fine-grained) ──────────────────────────────────────
+# Same simplified Canadian FWI formula as scripts/fetch_weather.py's global
+# 10-degree grid (duplicated here, not imported, to avoid cross-directory
+# import issues between scripts/ and remote_server/ on the deployed server).
+# Note: BUI uses fixed defaults (dmc=20.0, dc=200.0) rather than true
+# multi-day-accumulated moisture codes -- same simplification as the global
+# grid, so there's no "cold start" problem for a zone queried for the first
+# time; this endpoint is exactly as accurate (and exactly as simplified) as
+# the existing global FWI layer, just at a much finer spatial resolution.
+FWI_CLASSES = [
+    (0, 5,   "low",       "#38A800", "Low"),
+    (5, 12,  "moderate",  "#FFFF00", "Moderate"),
+    (12, 20, "high",      "#FFAA00", "High"),
+    (20, 30, "very_high", "#FF0000", "Very High"),
+    (30, 999,"extreme",   "#7A0000", "Extreme"),
+]
+
+def classify_fwi(fwi_value):
+    for low, high, cls, color, label in FWI_CLASSES:
+        if low <= fwi_value < high:
+            return cls, color, label
+    return "extreme", "#7A0000", "Extreme"
+
+def compute_ffmc(temp_c, rh_pct, wind_kmh, rain_mm, prev_ffmc=85.0):
+    mo = 147.2 * (101.0 - prev_ffmc) / (59.5 + prev_ffmc)
+    if rain_mm > 0.5:
+        rf = rain_mm - 0.5
+        if mo <= 150:
+            mo = mo + 42.5 * rf * math.exp(-100.0 / (251.0 - mo)) * (1.0 - math.exp(-6.93 / rf))
+        else:
+            mo = mo + 42.5 * rf * math.exp(-100.0 / (251.0 - mo)) * (1.0 - math.exp(-6.93 / rf))
+            if mo > 250:
+                mo = 250.0
+    ed = 0.942 * (rh_pct ** 0.679) + (11.0 * math.exp((rh_pct - 100.0) / 10.0)) + \
+         0.18 * (21.1 - temp_c) * (1.0 - math.exp(-0.115 * rh_pct))
+    ew = 0.618 * (rh_pct ** 0.753) + (10.0 * math.exp((rh_pct - 100.0) / 10.0)) + \
+         0.18 * (21.1 - temp_c) * (1.0 - math.exp(-0.115 * rh_pct))
+    if mo > ed:
+        ko = 0.424 * (1.0 - ((100.0 - rh_pct) / 100.0) ** 1.7) + \
+             0.0694 * math.sqrt(wind_kmh) * (1.0 - ((100.0 - rh_pct) / 100.0) ** 8)
+        kd = ko * 0.581 * math.exp(0.0365 * temp_c)
+        m = ed + (mo - ed) * math.exp(-2.303 * kd)
+    elif mo < ew:
+        kl = 0.424 * (1.0 - (rh_pct / 100.0) ** 1.7) + \
+             0.0694 * math.sqrt(wind_kmh) * (1.0 - (rh_pct / 100.0) ** 8)
+        kw = kl * 0.581 * math.exp(0.0365 * temp_c)
+        m = ew - (ew - mo) * math.exp(-2.303 * kw)
+    else:
+        m = mo
+    m = max(0.0, min(250.0, m))
+    ffmc = 59.5 * (250.0 - m) / (147.2 + m)
+    return max(0.0, min(101.0, ffmc))
+
+def compute_isi(wind_kmh, ffmc):
+    fm = 147.2 * (101.0 - ffmc) / (59.5 + ffmc)
+    fw = math.exp(0.05039 * wind_kmh)
+    ff = 91.9 * math.exp(-0.1386 * fm) * (1.0 + fm ** 5.31 / 49300000.0)
+    return 0.208 * fw * ff
+
+def compute_bui(dmc=20.0, dc=200.0):
+    if dmc <= 0.4 * dc:
+        bui = 0.8 * dmc * dc / (dmc + 0.4 * dc)
+    else:
+        bui = dmc - (1.0 - 0.8 * dc / (dmc + 0.4 * dc)) * \
+              (0.92 + (0.0114 * dmc) ** 1.7)
+    return bui
+
+def compute_fwi(isi, bui):
+    if bui <= 80:
+        fd = 0.626 * (bui ** 0.809) + 2.0
+    else:
+        fd = 1000.0 / (25.0 + 108.64 * math.exp(-0.023 * bui))
+    b = 0.1 * isi * fd
+    if b > 1.0:
+        fwi = math.exp(2.72 * (0.434 * math.log(b)) ** 0.647)
+    else:
+        fwi = b
+    return round(max(0.0, fwi), 1)
+
+LOCAL_FWI_STEP_DEG = 0.1  # ~11km at the equator -- neighborhood/rural-zone scale
+LOCAL_FWI_MAX_POINTS = 400  # safety cap so an accidentally huge bbox can't hang the server
+
+class LocalFwiRequest(BaseModel):
+    west: float
+    south: float
+    east: float
+    north: float
+
+@app.post("/local-fwi")
+def local_fwi(req: LocalFwiRequest):
+    """
+    Fine-grained (~11km) FWI grid for a single zoomed-in zone, computed
+    on-demand -- contrast with scripts/fetch_weather.py's coarse (10-degree,
+    ~1000km) global grid, which is meant for a world-at-a-glance view, not
+    neighborhood-level detail. Returns filled grid-cell polygons (not
+    points), ready to render directly.
+    """
+    points = []
+    lat = req.south
+    while lat < req.north and len(points) < LOCAL_FWI_MAX_POINTS:
+        lon = req.west
+        while lon < req.east and len(points) < LOCAL_FWI_MAX_POINTS:
+            points.append((round(lat, 3), round(lon, 3)))
+            lon += LOCAL_FWI_STEP_DEG
+        lat += LOCAL_FWI_STEP_DEG
+
+    if not points:
+        return {"type": "FeatureCollection", "features": []}
+
+    url = "https://api.open-meteo.com/v1/forecast"
+    weather_by_point = {}
+    batch_size = 50
+    for i in range(0, len(points), batch_size):
+        chunk = points[i:i + batch_size]
+        params = {
+            "latitude": ",".join(str(lat) for lat, lon in chunk),
+            "longitude": ",".join(str(lon) for lat, lon in chunk),
+            "current": [
+                "temperature_2m", "relative_humidity_2m", "wind_speed_10m",
+                "wind_direction_10m", "precipitation",
+            ],
+            "timezone": "auto",
+            "wind_speed_unit": "kmh",
+        }
+        try:
+            r = requests.get(url, params=params, timeout=60)
+            r.raise_for_status()
+            data = r.json()
+            if isinstance(data, dict):
+                data = [data]
+            for (lat, lon), point_data in zip(chunk, data):
+                weather_by_point[(lat, lon)] = point_data
+        except Exception:
+            for (lat, lon) in chunk:
+                weather_by_point[(lat, lon)] = None
+
+    features = []
+    half = LOCAL_FWI_STEP_DEG / 2
+    for (lat, lon) in points:
+        data = weather_by_point.get((lat, lon))
+        if not data or "current" not in data:
+            continue
+        c = data["current"]
+        temp_c = c.get("temperature_2m")
+        rh_pct = c.get("relative_humidity_2m")
+        wind_kmh = c.get("wind_speed_10m")
+        rain_mm = c.get("precipitation") or 0.0
+        if temp_c is None or rh_pct is None or wind_kmh is None:
+            continue
+
+        ffmc = compute_ffmc(temp_c, rh_pct, wind_kmh, rain_mm)
+        isi = compute_isi(wind_kmh, ffmc)
+        bui = compute_bui()
+        fwi = compute_fwi(isi, bui)
+        risk_class, color, risk_label = classify_fwi(fwi)
+
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[
+                    [lon - half, lat - half], [lon + half, lat - half],
+                    [lon + half, lat + half], [lon - half, lat + half],
+                    [lon - half, lat - half],
+                ]],
+            },
+            "properties": {
+                "fwi": fwi, "risk_class": risk_class, "risk_label": risk_label,
+                "temp_c": temp_c, "rh_pct": rh_pct, "wind_kmh": wind_kmh,
+                "lat": lat, "lon": lon,
+            },
+        })
+
+    return {"type": "FeatureCollection", "features": features}
 LANDCOVER_POOL = ThreadPoolExecutor(max_workers=20)
 
 # Server-to-server calls (Vercel's serverless function -> this API) aren't

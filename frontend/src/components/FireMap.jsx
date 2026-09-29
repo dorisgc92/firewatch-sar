@@ -5,6 +5,7 @@ import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
 import useCellPerimeters from "../hooks/useCellPerimeters"
+import useLocalFWI from "../hooks/useLocalFWI"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -413,6 +414,12 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   // land-cover data, not just connecting the outermost detection points.
   const { perimeters: cellPerimeters } = useCellPerimeters(visibleViewportHotspots, true)
 
+  // Fine-grained (~11km) FWI cells for the currently-viewed zone, on
+  // demand -- supplements the coarse global point layer below with
+  // neighborhood-level detail once the responder has zoomed into a
+  // specific area, rather than replacing the global view.
+  const { cells: localFwiCells } = useLocalFWI(zoneInfo?.zoneBbox, activeModule === 1 && mapZoom >= 8)
+
    // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,   
   // pre-computed GeoJSON per fire (not automated -- SAR can't run in
   // near-real-time due to Sentinel-1's ~6-12 day revisit). Loaded once
@@ -470,6 +477,24 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             </CircleMarker>
           )
         })}
+
+        {/* Local FWI cells: fine (~11km) grid for the zoomed-in zone,
+            supplementing the coarse global points above with real
+            neighborhood-level detail once zoomed in enough to matter. */}
+        {activeModule === 1 && visibleLayers.fwi && localFwiCells.length > 0 && (
+          <GeoJSON key={"local-fwi-" + localFwiCells.length + "-" + (zoneInfo?.name || "")}
+            data={{ type: "FeatureCollection", features: localFwiCells }}
+            style={(feature) => {
+              const color = FWI_COLORS[feature.properties.risk_class] || FWI_COLORS.unknown
+              return { color, fillColor: color, fillOpacity: 0.45, weight: 0.5 }
+            }}
+            onEachFeature={(feature, layer) => {
+              const { fwi, risk_label, temp_c, rh_pct, wind_kmh } = feature.properties
+              layer.bindPopup(
+                `<strong>FWI: ${fwi}</strong> - ${risk_label}<br/>Temp: ${temp_c}\u00b0C | Humidity: ${rh_pct}% | Wind: ${wind_kmh} km/h`
+              )
+            }} />
+        )}
 
         {activeModule === 2 && visibleLayers.hotspots &&
           visibleViewportHotspots.map((feat, i) => {
