@@ -143,7 +143,7 @@ def compute_fwi(isi, bui):
     return round(max(0.0, fwi), 1)
 
 LOCAL_FWI_MAX_POINTS = 200  # safety cap on total cells per request
-LOCAL_FWI_TARGET_CELLS_PER_SIDE = 12  # aim for a ~12x12 grid regardless of zoom
+LOCAL_FWI_TARGET_CELLS_PER_SIDE = 8  # aim for a ~8x8 grid -- fewer points per request, gentler on Open-Meteo's free-tier rate limit
 LOCAL_FWI_MIN_STEP_DEG = 0.02  # ~2km floor -- Open-Meteo's own model resolution is
                                 # roughly 1-11km, so going finer doesn't add real
                                 # meteorological detail, just interpolates the same data
@@ -211,10 +211,10 @@ def local_fwi(req: LocalFwiRequest):
                 data = [data]
             for (lat, lon), point_data in zip(chunk, data):
                 weather_by_point[(lat, lon)] = point_data
-        except Exception:
+        except Exception as e:
+            print(f"  local-fwi: Open-Meteo batch failed: {type(e).__name__}: {e}")
             for (lat, lon) in chunk:
                 weather_by_point[(lat, lon)] = None
-
     features = []
     half = step_deg / 2
     for (lat, lon) in points:

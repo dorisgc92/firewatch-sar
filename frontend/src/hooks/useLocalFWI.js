@@ -34,7 +34,7 @@ export default function useLocalFWI(bbox, zoom, enabled = true) {
         })
         .catch(() => {}) // keep last good cells; don't clear on a transient failure
         .finally(() => setLoading(false))
-    }, 400)
+    }, 1200)
     return () => clearTimeout(timer)
   }, [enabled, bbox?.minLon, bbox?.minLat, bbox?.maxLon, bbox?.maxLat, zoom])
 
