@@ -19,8 +19,11 @@ export default function useVegetationFwiRegions(bbox, coarseFwiCells, enabled = 
     let cancelled = false
     const timer = setTimeout(() => {
       buildVegetationFwiRegions(bbox, coarseFwiCells, classifyPointsBatch)
-        .then((r) => { if (!cancelled && r.length > 0) setRegions(r) })
-        .catch(() => {}) // keep last good regions on a transient failure
+        .then((r) => {
+          console.log("[vegetation-fwi] regions built:", r.length)
+          if (!cancelled && r.length > 0) setRegions(r)
+        })
+        .catch((e) => console.error("[vegetation-fwi] failed:", e))
     }, 600)
     return () => { cancelled = true; clearTimeout(timer) }
   }, [bbox?.minLon, bbox?.minLat, bbox?.maxLon, bbox?.maxLat, coarseFwiCells])
