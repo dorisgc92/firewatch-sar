@@ -240,11 +240,11 @@ function LayerToggle({ layers, onChange, activeModule, intensities, fwiRisk, inf
             {t("intensityFilterTitle")}
           </div>
           {[
-            { key: "extreme",   label: t("intensity.extreme"), color: FWI_COLORS.extreme },
-            { key: "very_high", label: t("veryHighRiskZones"), color: FWI_COLORS.very_high },
-            { key: "high",      label: t("intensity.high"),    color: FWI_COLORS.high },
-            { key: "moderate",  label: t("intensity.moderate"),color: FWI_COLORS.moderate },
-            { key: "low",       label: t("intensity.low"),     color: FWI_COLORS.low },
+            { key: "extreme",   label: "Extreme",   color: FWI_COLORS.extreme },
+            { key: "very_high", label: "Very High",color: FWI_COLORS.very_high },
+            { key: "high",      label: "High",       color: FWI_COLORS.high },
+            { key: "moderate",  label: "Moderate",   color: FWI_COLORS.moderate },
+            { key: "low",       label: "Low",        color: FWI_COLORS.low },
           ].map(({ key, label, color }) => (
             <label key={key} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", marginBottom: "5px" }}>
               <input type="checkbox" checked={fwiRisk?.[key] !== false}
@@ -335,6 +335,9 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
     if (key.startsWith("intensity_")) {
       const k = key.replace("intensity_", "")
       setVisibleIntensities(prev => ({ ...prev, [k]: value }))
+    } else if (key.startsWith("fwirisk_")) {
+      const k = key.replace("fwirisk_", "")
+      setVisibleFwiRisk(prev => ({ ...prev, [k]: value }))
     } else {
       setVisibleLayers(prev => ({ ...prev, [key]: value }))
       if (key === "hideNonVegetation") onHideNonVegetationChange?.(value)
