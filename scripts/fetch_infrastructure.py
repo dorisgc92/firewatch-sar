@@ -51,8 +51,8 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 # welcomes use "for any project" (wiki.openstreetmap.org/wiki/Overpass_API).
 # Tried in order; falls through to the next only if the previous one fails.
 OVERPASS_URLS = [
-    OVERPASS_URL,
     "https://overpass.kumi.systems/api/interpreter",
+    OVERPASS_URL,
 ]
 
 # Default bbox — covers Mexico + US border region (used only for manual
@@ -454,7 +454,7 @@ def parse_overpass_response(data, types):
 def load_progress():
     if os.path.exists(PROGRESS_PATH):
         try:
-            with open(PROGRESS_PATH, "r") as f:
+            with open(PROGRESS_PATH, "r", encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError:
             pass
@@ -462,7 +462,7 @@ def load_progress():
 
 
 def save_progress(progress):
-    with open(PROGRESS_PATH, "w") as f:
+    with open(PROGRESS_PATH, "w", encoding="utf-8") as f:
         json.dump(progress, f, indent=2)
 
 
@@ -529,7 +529,7 @@ def main():
     previous_total = 0
     if os.path.exists(OUTPUT_PATH):
         try:
-            with open(OUTPUT_PATH, "r") as f:
+            with open(OUTPUT_PATH, "r", encoding="utf-8") as f:
                 existing = json.load(f)
             existing_features = existing.get("features", [])
             previous_total = existing.get("metadata", {}).get("total", 0) or 0
@@ -613,7 +613,7 @@ def main():
     # per-feature fields above, this is what keeps the world crawl under
     # GitHub's 100MB push limit -- see the note above parse_overpass_response
     # for the incident this fixes.
-    with open(OUTPUT_PATH, "w") as f:
+    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         json.dump(geojson, f, separators=(",", ":"))
     update_manifest("infrastructure", OUTPUT_PATH)
 
