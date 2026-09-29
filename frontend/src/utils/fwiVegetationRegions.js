@@ -5,41 +5,39 @@ import * as turf from "@turf/turf"
 // visible viewport (not just a ring around detection points), so the
 // step is a bit coarser (~1.1km) to keep the point count from exploding
 // over a city-wide view.
-const FINE_STEP_DEG = 0.01
-const FINE_MAX_POINTS = 500 // safety cap on a huge/zoomed-out viewport
+const FINE_TARGET_CELLS_PER_SIDE = 22 // aim for a ~22x22 grid regardless of viewport size
+const FINE_MIN_STEP_DEG = 0.003  // ~330m floor -- finer than this is well past
+                                   // WorldCover's own 10m pixels' practical value
+                                   // for a live, per-pan classification pass
+const FINE_MAX_STEP_DEG = 0.05   // ~5.5km ceiling when zoomed way out
+const FINE_MAX_POINTS = 500      // hard safety cap regardless of target
 
 function buildFineGrid(bbox) {
   const { minLon, minLat, maxLon, maxLat } = bbox
-  const rows = Math.min(Math.ceil((maxLat - minLat) / FINE_STEP_DEG), 30)
-  const cols = Math.min(Math.ceil((maxLon - minLon) / FINE_STEP_DEG), 30)
+  const span = Math.max(maxLat - minLat, maxLon - minLon, 0.001)
+  const step = Math.max(FINE_MIN_STEP_DEG, Math.min(FINE_MAX_STEP_DEG, span / FINE_TARGET_CELLS_PER_SIDE))
+  const rows = Math.min(Math.ceil((maxLat - minLat) / step), 25)
+  const cols = Math.min(Math.ceil((maxLon - minLon) / step), 25)
   const points = []
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      if (points.length >= FINE_MAX_POINTS) return points
+      if (points.length >= FINE_MAX_POINTS) return { points, step }
       points.push({
         row: r, col: c,
-        lat: minLat + (r + 0.5) * FINE_STEP_DEG,
-        lon: minLon + (c + 0.5) * FINE_STEP_DEG,
+        lat: minLat + (r + 0.5) * step,
+        lon: minLon + (c + 0.5) * step,
       })
     }
   }
-  return points
+  return { points, step }
 }
 
-function fineCellPolygon(row, col, bbox) {
+function fineCellPolygon(row, col, bbox, step) {
   const { minLon, minLat } = bbox
-  // Computed directly from origin + index*step (never by repeatedly
-  // adding step in a loop) -- two adjacent cells' shared edge is the
-  // exact same expression evaluated the same way, so floating-point
-  // rounding can never make them disagree. Same technique already
-  // proven in cellPerimeter.js; the earlier accumulation-based version
-  // let adjacent cells drift apart by fractions of a degree, which was
-  // enough for Turf to treat them as non-touching and never actually
-  // dissolve the grid lines between them.
-  const lat0 = minLat + row * FINE_STEP_DEG
-  const lon0 = minLon + col * FINE_STEP_DEG
-  const lat1 = lat0 + FINE_STEP_DEG
-  const lon1 = lon0 + FINE_STEP_DEG
+  const lat0 = minLat + row * step
+  const lon0 = minLon + col * step
+  const lat1 = lat0 + step
+  const lon1 = lon0 + step
   return turf.polygon([[[lon0, lat0], [lon1, lat0], [lon1, lat1], [lon0, lat1], [lon0, lat0]]])
 }
 
@@ -56,7 +54,7 @@ function fineCellPolygon(row, col, bbox) {
 export async function buildVegetationFwiRegions(bbox, coarseFwiCells, classifyPoints) {
   if (!bbox || !coarseFwiCells.length) return []
 
-  const finePoints = buildFineGrid(bbox)
+  const { points: finePoints, step: fineStep } = buildFineGrid(bbox)
   if (!finePoints.length) return []
 
   const classified = await classifyPoints(finePoints.map((p) => ({ lat: p.lat, lon: p.lon })))
@@ -73,7 +71,7 @@ export async function buildVegetationFwiRegions(bbox, coarseFwiCells, classifyPo
     const match = coarsePolys.find((c) => turf.booleanPointInPolygon(pt, c.poly))
     if (!match) return
     if (!byRisk[match.risk]) byRisk[match.risk] = []
-    byRisk[match.risk].push(fineCellPolygon(p.row, p.col, bbox))
+    byRisk[match.risk].push(fineCellPolygon(p.row, p.col, bbox, fineStep))
   })
 
   const regions = []
