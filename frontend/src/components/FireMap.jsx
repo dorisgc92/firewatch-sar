@@ -453,7 +453,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   // square grid when available (fail-open to the grid if classification
   // is slow/unavailable, same philosophy as everywhere else this pattern
   // appears).
-  const vegetationFwiRegions = useVegetationFwiRegions(localFwiCells, activeModule === 1)
+  const vegetationFwiRegions = useVegetationFwiRegions(viewportBbox || zoneInfo?.zoneBbox, localFwiCells, activeModule === 1)
 
    // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,   
   // pre-computed GeoJSON per fire (not automated -- SAR can't run in

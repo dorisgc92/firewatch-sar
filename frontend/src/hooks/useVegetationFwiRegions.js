@@ -3,24 +3,27 @@ import { buildVegetationFwiRegions } from "../utils/fwiVegetationRegions"
 import { classifyPointsBatch } from "../utils/landCoverApi"
 
 /**
- * Forest-only, risk-merged FWI regions -- derived from the raw local-fwi
- * grid cells by cross-referencing WorldCover vegetation classification.
- * See fwiVegetationRegions.js for the actual classify+filter+union logic.
+ * Forest-shaped, risk-colored regions -- see fwiVegetationRegions.js for
+ * the two-resolution logic (fine vegetation shape, coarse weather color).
+ * Debounced since panning the map re-triggers both the coarse FWI fetch
+ * and this fine classification pass.
  */
-export default function useVegetationFwiRegions(fwiCells, enabled = true) {
+export default function useVegetationFwiRegions(bbox, coarseFwiCells, enabled = true) {
   const [regions, setRegions] = useState([])
 
   useEffect(() => {
-    if (!enabled || !fwiCells.length) {
+    if (!enabled || !bbox || !coarseFwiCells.length) {
       setRegions([])
       return
     }
     let cancelled = false
-    buildVegetationFwiRegions(fwiCells, classifyPointsBatch)
-      .then((r) => { if (!cancelled && r.length > 0) setRegions(r) })
-      .catch(() => {}) // keep last good regions on a transient failure
-    return () => { cancelled = true }
-  }, [fwiCells])
+    const timer = setTimeout(() => {
+      buildVegetationFwiRegions(bbox, coarseFwiCells, classifyPointsBatch)
+        .then((r) => { if (!cancelled && r.length > 0) setRegions(r) })
+        .catch(() => {}) // keep last good regions on a transient failure
+    }, 600)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [bbox?.minLon, bbox?.minLat, bbox?.maxLon, bbox?.maxLat, coarseFwiCells])
 
   return regions
 }
