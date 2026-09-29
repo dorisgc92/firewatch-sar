@@ -142,14 +142,29 @@ def compute_fwi(isi, bui):
         fwi = b
     return round(max(0.0, fwi), 1)
 
-LOCAL_FWI_STEP_DEG = 0.15  # ~16km at the equator -- fewer points per request, faster response over the free tunnel
-LOCAL_FWI_MAX_POINTS = 400  # safety cap so an accidentally huge bbox can't hang the server
+LOCAL_FWI_MAX_POINTS = 200  # safety cap, tighter now that resolution can go finer
+
+def step_for_zoom(zoom):
+    """Finer cells the closer the responder has zoomed in -- ~2km is the
+    practical floor: Open-Meteo's own weather model resolution is roughly
+    1-11km depending on model, so going finer than this doesn't add real
+    meteorological detail, just interpolates the same underlying data."""
+    if zoom is None:
+        return 0.15
+    if zoom >= 13:
+        return 0.02   # ~2km -- closest to "monitoring individual fields"
+    if zoom >= 11:
+        return 0.05   # ~5km
+    if zoom >= 9:
+        return 0.1    # ~11km
+    return 0.15        # ~16km, zoomed-out fallback
 
 class LocalFwiRequest(BaseModel):
     west: float
     south: float
     east: float
     north: float
+    zoom: float | None = None
 
 @app.post("/local-fwi")
 def local_fwi(req: LocalFwiRequest):
@@ -160,14 +175,15 @@ def local_fwi(req: LocalFwiRequest):
     neighborhood-level detail. Returns filled grid-cell polygons (not
     points), ready to render directly.
     """
+    step_deg = step_for_zoom(req.zoom)
     points = []
     lat = req.south
     while lat < req.north and len(points) < LOCAL_FWI_MAX_POINTS:
         lon = req.west
         while lon < req.east and len(points) < LOCAL_FWI_MAX_POINTS:
             points.append((round(lat, 3), round(lon, 3)))
-            lon += LOCAL_FWI_STEP_DEG
-        lat += LOCAL_FWI_STEP_DEG
+            lon += step_deg
+        lat += step_deg
 
     if not points:
         return {"type": "FeatureCollection", "features": []}
@@ -200,7 +216,7 @@ def local_fwi(req: LocalFwiRequest):
                 weather_by_point[(lat, lon)] = None
 
     features = []
-    half = LOCAL_FWI_STEP_DEG / 2
+    half = step_deg / 2
     for (lat, lon) in points:
         data = weather_by_point.get((lat, lon))
         if not data or "current" not in data:

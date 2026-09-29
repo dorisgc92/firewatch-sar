@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end()
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" })
 
-  const { west, south, east, north } = req.body || {}
+  const { west, south, east, north, zoom } = req.body || {}
   if ([west, south, east, north].some((v) => typeof v !== "number")) {
     return res.status(400).json({ error: "west, south, east, north must all be numbers" })
   }
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     const r = await fetch(`${INFRA_API_URL}/local-fwi`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ west, south, east, north }),
+      body: JSON.stringify({ west, south, east, north, zoom }),
       signal: controller.signal,
     })
     clearTimeout(timeout)

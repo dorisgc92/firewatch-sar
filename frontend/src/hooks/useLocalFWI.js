@@ -7,7 +7,7 @@ import { useState, useEffect } from "react"
  * useZoneLandCover is, since panning/zooming while exploring Module 1
  * can fire several zone changes in quick succession.
  */
-export default function useLocalFWI(bbox, enabled = true) {
+export default function useLocalFWI(bbox, zoom, enabled = true) {
   const [cells, setCells] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -22,7 +22,7 @@ export default function useLocalFWI(bbox, enabled = true) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          west: bbox.minLon, south: bbox.minLat, east: bbox.maxLon, north: bbox.maxLat,
+          west: bbox.minLon, south: bbox.minLat, east: bbox.maxLon, north: bbox.maxLat, zoom,
         }),
       })
         .then((r) => r.json())
@@ -31,7 +31,7 @@ export default function useLocalFWI(bbox, enabled = true) {
         .finally(() => setLoading(false))
     }, 400)
     return () => clearTimeout(timer)
-  }, [enabled, bbox?.minLon, bbox?.minLat, bbox?.maxLon, bbox?.maxLat])
+  }, [enabled, bbox?.minLon, bbox?.minLat, bbox?.maxLon, bbox?.maxLat, zoom])
 
   return { cells, loading }
 }
