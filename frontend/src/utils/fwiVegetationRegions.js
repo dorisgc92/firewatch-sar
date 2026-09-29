@@ -10,26 +10,37 @@ const FINE_MAX_POINTS = 500 // safety cap on a huge/zoomed-out viewport
 
 function buildFineGrid(bbox) {
   const { minLon, minLat, maxLon, maxLat } = bbox
+  const rows = Math.min(Math.ceil((maxLat - minLat) / FINE_STEP_DEG), 30)
+  const cols = Math.min(Math.ceil((maxLon - minLon) / FINE_STEP_DEG), 30)
   const points = []
-  let lat = minLat
-  while (lat < maxLat && points.length < FINE_MAX_POINTS) {
-    let lon = minLon
-    while (lon < maxLon && points.length < FINE_MAX_POINTS) {
-      points.push({ lat: Math.round(lat * 1000) / 1000, lon: Math.round(lon * 1000) / 1000 })
-      lon += FINE_STEP_DEG
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (points.length >= FINE_MAX_POINTS) return points
+      points.push({
+        row: r, col: c,
+        lat: minLat + (r + 0.5) * FINE_STEP_DEG,
+        lon: minLon + (c + 0.5) * FINE_STEP_DEG,
+      })
     }
-    lat += FINE_STEP_DEG
   }
   return points
 }
 
-function fineCellPolygon(lat, lon) {
-  const half = FINE_STEP_DEG / 2
-  return turf.polygon([[
-    [lon - half, lat - half], [lon + half, lat - half],
-    [lon + half, lat + half], [lon - half, lat + half],
-    [lon - half, lat - half],
-  ]])
+function fineCellPolygon(row, col, bbox) {
+  const { minLon, minLat } = bbox
+  // Computed directly from origin + index*step (never by repeatedly
+  // adding step in a loop) -- two adjacent cells' shared edge is the
+  // exact same expression evaluated the same way, so floating-point
+  // rounding can never make them disagree. Same technique already
+  // proven in cellPerimeter.js; the earlier accumulation-based version
+  // let adjacent cells drift apart by fractions of a degree, which was
+  // enough for Turf to treat them as non-touching and never actually
+  // dissolve the grid lines between them.
+  const lat0 = minLat + row * FINE_STEP_DEG
+  const lon0 = minLon + col * FINE_STEP_DEG
+  const lat1 = lat0 + FINE_STEP_DEG
+  const lon1 = lon0 + FINE_STEP_DEG
+  return turf.polygon([[[lon0, lat0], [lon1, lat0], [lon1, lat1], [lon0, lat1], [lon0, lat0]]])
 }
 
 /**
@@ -48,7 +59,7 @@ export async function buildVegetationFwiRegions(bbox, coarseFwiCells, classifyPo
   const finePoints = buildFineGrid(bbox)
   if (!finePoints.length) return []
 
-  const classified = await classifyPoints(finePoints)
+  const classified = await classifyPoints(finePoints.map((p) => ({ lat: p.lat, lon: p.lon })))
 
   const coarsePolys = coarseFwiCells.map((f) => ({
     poly: turf.feature(f.geometry),
@@ -62,7 +73,7 @@ export async function buildVegetationFwiRegions(bbox, coarseFwiCells, classifyPo
     const match = coarsePolys.find((c) => turf.booleanPointInPolygon(pt, c.poly))
     if (!match) return
     if (!byRisk[match.risk]) byRisk[match.risk] = []
-    byRisk[match.risk].push(fineCellPolygon(p.lat, p.lon))
+    byRisk[match.risk].push(fineCellPolygon(p.row, p.col, bbox))
   })
 
   const regions = []
