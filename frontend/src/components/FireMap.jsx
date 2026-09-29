@@ -6,6 +6,7 @@ import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
 import useCellPerimeters from "../hooks/useCellPerimeters"
 import useLocalFWI from "../hooks/useLocalFWI"
+import useVegetationFwiRegions from "../hooks/useVegetationFwiRegions"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -447,6 +448,13 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   // specific area, rather than replacing the global view.
   const { cells: localFwiCells } = useLocalFWI(viewportBbox || zoneInfo?.zoneBbox, mapZoom, activeModule === 1)
 
+  // Forest-only, risk-merged regions derived from the raw FWI grid cells
+  // above -- see useVegetationFwiRegions.js. Prefer these over the flat
+  // square grid when available (fail-open to the grid if classification
+  // is slow/unavailable, same philosophy as everywhere else this pattern
+  // appears).
+  const vegetationFwiRegions = useVegetationFwiRegions(localFwiCells, activeModule === 1)
+
    // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,   
   // pre-computed GeoJSON per fire (not automated -- SAR can't run in
   // near-real-time due to Sentinel-1's ~6-12 day revisit). Loaded once
@@ -508,7 +516,16 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         {/* Local FWI cells: fine (~11km) grid for the zoomed-in zone,
             supplementing the coarse global points above with real
             neighborhood-level detail once zoomed in enough to matter. */}
-        {activeModule === 1 && visibleLayers.fwi && localFwiCells.length > 0 && (
+        {activeModule === 1 && visibleLayers.fwi && vegetationFwiRegions.length > 0 && (
+          <GeoJSON key={"veg-fwi-" + vegetationFwiRegions.length + "-" + (zoneInfo?.name || "")}
+            data={{ type: "FeatureCollection", features: vegetationFwiRegions.filter(f => visibleFwiRisk[f.properties.risk_class] !== false) }}
+            style={(feature) => {
+              const color = FWI_COLORS[feature.properties.risk_class] || FWI_COLORS.unknown
+              return { color, fillColor: color, fillOpacity: 0.5, weight: 1.5 }
+            }} />
+        )}
+
+        {activeModule === 1 && visibleLayers.fwi && vegetationFwiRegions.length === 0 && localFwiCells.length > 0 && (
           <GeoJSON key={"local-fwi-" + localFwiCells.length + "-" + (zoneInfo?.name || "")}
             data={{ type: "FeatureCollection", features: localFwiCells.filter(f => visibleFwiRisk[f.properties.risk_class] !== false) }}
             style={(feature) => {
