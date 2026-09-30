@@ -8,6 +8,7 @@ import useCellPerimeters from "../hooks/useCellPerimeters"
 import useLocalFWI from "../hooks/useLocalFWI"
 import useVegetationFwiRegions from "../hooks/useVegetationFwiRegions"
 import useLocalPopulation from "../hooks/useLocalPopulation"
+import { estimatePopulationInPolygon } from "../utils/populationEstimate"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
@@ -729,21 +730,28 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           />
         )}	
 
-        {activeModule === 2 && visibleLayers.population && localPopulationCells.length > 0 && (
-          <GeoJSON key={"local-pop-" + localPopulationCells.length + "-" + (zoneInfo?.name || "")}
-            data={{ type: "FeatureCollection", features: localPopulationCells }}
-            style={(feature) => {
-              const color = POP_COLORS[feature.properties.density_class] || "#888888"
-              return { color, fillColor: color, fillOpacity: 0.35, weight: 0.5 }
-            }}
-            onEachFeature={(feature, layer) => {
-              const { density, density_label } = feature.properties
-              layer.bindPopup(
-                `<strong>${density_label}</strong><br/>~${density.toLocaleString()} people/km\u00b2`
-              )
-            }} />
-        )}
-
+        {activeModule === 2 && visibleLayers.population && localPopulationCells.length > 0 &&
+          viewportPerimeters.map((perimeter, i) => {
+            const estimate = estimatePopulationInPolygon(perimeter, localPopulationCells)
+            if (estimate <= 0) return null
+            const ring = perimeter.geometry.type === "Polygon" ? perimeter.geometry.coordinates[0]
+              : perimeter.geometry.type === "MultiPolygon" ? perimeter.geometry.coordinates[0][0] : null
+            if (!ring?.length) return null
+            const cLat = ring.reduce((s, [, lt]) => s + lt, 0) / ring.length
+            const cLon = ring.reduce((s, [ln]) => s + ln, 0) / ring.length
+            const divIcon = L.divIcon({
+              html: `<div style="font-size:18px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">\u{1F465}</div>`,
+              className: "", iconSize: [22, 22], iconAnchor: [11, 11],
+            })
+            return (
+              <Marker key={"pop-" + i} position={[cLat, cLon]} icon={divIcon}>
+                <Popup>
+                  <strong>~{estimate.toLocaleString()} people</strong><br/>
+                  estimated within this fire perimeter
+                </Popup>
+              </Marker>
+            )
+          })}
         {activeModule === 2 && visibleLayers.infrastructure && mapZoom >= 10 &&
           zoneInfrastructure
           .filter(f => {
