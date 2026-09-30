@@ -32,7 +32,7 @@ workflow calling these are the only intended callers anyway.
 Run with:
     uvicorn api:app --host 0.0.0.0 --port 8000
 """
-
+import json
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -149,7 +149,115 @@ LOCAL_FWI_MIN_STEP_DEG = 0.02  # ~2km floor -- Open-Meteo's own model resolution
                                 # meteorological detail, just interpolates the same data
 LOCAL_FWI_MAX_STEP_DEG = 0.5   # ~55km ceiling -- zoomed out to country level, keep
                                 # cells coarse rather than trying to cover a huge area finely
+# ── Local population density (Module 2) ──────────────────────────────────────
+# WorldPop's 100m global population-density raster, served by Esri as a
+# public, cloud-optimized ArcGIS ImageServer -- point/grid queries via its
+# REST "getSamples" operation, no need to download or self-host the
+# raster (same spirit as WorldCover's S3+rasterio approach, but here the
+# provider already exposes a point-query API directly).
+WORLDPOP_SERVICE_URL = "https://worldpop.arcgis.com/arcgis/rest/services/WorldPop_Population_Density_100m/ImageServer/getSamples"
 
+POP_DENSITY_CLASSES = [
+    (0, 1,      "uninhabited",  "#CCCCCC", "Uninhabited"),
+    (1, 10,     "rural",        "#38A800", "Rural"),
+    (10, 100,   "low_density",  "#A8CC00", "Low Density"),
+    (100, 1000, "moderate",     "#FFAA00", "Moderate Density"),
+    (1000, 5000,"high_density", "#FF4400", "High Density"),
+    (5000, 10**9,"very_high",   "#AA0000", "Very High Density"),
+]
+
+def classify_pop_density(value):
+    for low, high, cls, color, label in POP_DENSITY_CLASSES:
+        if low <= value < high:
+            return cls, color, label
+    return "very_high", "#AA0000", "Very High Density"
+
+LOCAL_POP_TARGET_CELLS_PER_SIDE = 10
+LOCAL_POP_MIN_STEP_DEG = 0.01   # ~1.1km floor
+LOCAL_POP_MAX_STEP_DEG = 0.3    # ~33km ceiling
+LOCAL_POP_MAX_POINTS = 150      # keep the single getSamples call small/fast
+
+class LocalPopulationRequest(BaseModel):
+    west: float
+    south: float
+    east: float
+    north: float
+
+@app.post("/local-population")
+def local_population(req: LocalPopulationRequest):
+    """
+    Population-density grid for the currently-viewed Module 2 zone --
+    "who's near the active fires shown right now", not a global layer.
+    Queries WorldPop's public ArcGIS ImageServer in a single batched
+    getSamples call (all points at once), rather than one request per
+    point -- keeps this well within the free tunnel's request budget.
+    """
+    span = max(req.east - req.west, req.north - req.south, 0.001)
+    step = max(LOCAL_POP_MIN_STEP_DEG, min(LOCAL_POP_MAX_STEP_DEG, span / LOCAL_POP_TARGET_CELLS_PER_SIDE))
+
+    points = []
+    lat = req.south
+    while lat < req.north and len(points) < LOCAL_POP_MAX_POINTS:
+        lon = req.west
+        while lon < req.east and len(points) < LOCAL_POP_MAX_POINTS:
+            points.append((round(lat, 4), round(lon, 4)))
+            lon += step
+        lat += step
+
+    if not points:
+        return {"type": "FeatureCollection", "features": []}
+
+    geometry = {
+        "points": [[lon, lat] for (lat, lon) in points],
+        "spatialReference": {"wkid": 4326},
+    }
+    params = {
+        "geometry": json.dumps(geometry),
+        "geometryType": "esriGeometryMultipoint",
+        "returnFirstValueOnly": "true",
+        "f": "json",
+    }
+
+    try:
+        r = requests.get(WORLDPOP_SERVICE_URL, params=params, timeout=30)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        print(f"  local-population: WorldPop request failed: {type(e).__name__}: {e}")
+        return {"type": "FeatureCollection", "features": []}
+
+    samples = data.get("samples")
+    if samples is None:
+        print(f"  local-population: unexpected WorldPop response shape: {data}")
+        return {"type": "FeatureCollection", "features": []}
+
+    half = step / 2
+    features = []
+    for (lat, lon), sample in zip(points, samples):
+        try:
+            value = float(sample.get("value"))
+        except (TypeError, ValueError):
+            continue
+        if value < 0:
+            continue
+        cls, color, label = classify_pop_density(value)
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[
+                    [lon - half, lat - half], [lon + half, lat - half],
+                    [lon + half, lat + half], [lon - half, lat + half],
+                    [lon - half, lat - half],
+                ]],
+            },
+            "properties": {
+                "density": round(value, 1), "density_class": cls,
+                "density_label": label, "lat": lat, "lon": lon,
+            },
+        })
+
+    return {"type": "FeatureCollection", "features": features}
 def step_for_bbox(west, south, east, north):
     """Always covers the FULL visible viewport, at whatever zoom -- sizes
     the cell to the viewport's own span (aiming for ~12 cells per side)

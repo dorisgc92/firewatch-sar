@@ -7,12 +7,14 @@ import { fireKeyFromLatLon } from "../hooks/useIncidents"
 import useCellPerimeters from "../hooks/useCellPerimeters"
 import useLocalFWI from "../hooks/useLocalFWI"
 import useVegetationFwiRegions from "../hooks/useVegetationFwiRegions"
+import useLocalPopulation from "../hooks/useLocalPopulation"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
 
 const FWI_COLORS = { low: "#38A800", moderate: "#FFFF00", high: "#FFAA00", very_high: "#FF0000", extreme: "#7A0000", unknown: "#888888" }
+const POP_COLORS = { uninhabited: "#CCCCCC", rural: "#38A800", low_density: "#A8CC00", moderate: "#FFAA00", high_density: "#FF4400", very_high: "#AA0000" }
 
 
 
@@ -195,6 +197,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, fwiRisk, inf
   const [collapsed, setCollapsed] = useState(isNarrow)
   const m2 = [
     { key: "infrastructure", label: t("layer.infrastructure"), color: "#4488FF" },
+    { key: "population", label: "Population Density", color: "#FF4400" },
   ]
   const m1 = [
     { key: "fwi",     label: t("layer.fwi"), color: "#FF4400" },
@@ -447,6 +450,10 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   // neighborhood-level detail once the responder has zoomed into a
   // specific area, rather than replacing the global view.
   const { cells: localFwiCells } = useLocalFWI(viewportBbox || zoneInfo?.zoneBbox, mapZoom, activeModule === 1)
+
+  // Population-density grid for Module 2 -- "who's near the active fires
+  // shown right now". See useLocalPopulation.js / api.py's /local-population.
+  const localPopulationCells = useLocalPopulation(viewportBbox || zoneInfo?.zoneBbox, activeModule === 2)
 
   // Forest-only, risk-merged regions derived from the raw FWI grid cells
   // above -- see useVegetationFwiRegions.js. Prefer these over the flat
@@ -721,6 +728,21 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             }}
           />
         )}	
+
+        {activeModule === 2 && visibleLayers.population && localPopulationCells.length > 0 && (
+          <GeoJSON key={"local-pop-" + localPopulationCells.length + "-" + (zoneInfo?.name || "")}
+            data={{ type: "FeatureCollection", features: localPopulationCells }}
+            style={(feature) => {
+              const color = POP_COLORS[feature.properties.density_class] || "#888888"
+              return { color, fillColor: color, fillOpacity: 0.35, weight: 0.5 }
+            }}
+            onEachFeature={(feature, layer) => {
+              const { density, density_label } = feature.properties
+              layer.bindPopup(
+                `<strong>${density_label}</strong><br/>~${density.toLocaleString()} people/km\u00b2`
+              )
+            }} />
+        )}
 
         {activeModule === 2 && visibleLayers.infrastructure && mapZoom >= 10 &&
           zoneInfrastructure
