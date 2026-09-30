@@ -447,9 +447,23 @@ const [countryFeature, setCountryFeature] = useState(null)
 
     const maxFWI = fwiPoints.reduce((max, f) =>
     (f.properties.fwi || 0) > (max?.properties?.fwi || 0) ? f : max, null)
-  const escalatingZonesList = fwiPoints.filter(f => f.properties.trend === "escalating")
-  const extremeZonesList = fwiPoints.filter(f => f.properties.risk_class === "extreme")
-  const veryHighZonesList = fwiPoints.filter(f => f.properties.risk_class === "very_high")
+  const countryFwiPointsRaw = useMemo(() => {
+    const byPolygon = filterFeaturesByCountry(fwiPoints, countryFeature)
+    if (byPolygon !== null) return byPolygon
+    return filterFeaturesByBbox(fwiPoints, zoneInfo?.countryBbox)
+  }, [fwiPoints, countryFeature, zoneInfo])
+  const stateFwiPoints = useMemo(
+    () => filterFeaturesByBbox(fwiPoints, zoneInfo?.stateBbox),
+    [fwiPoints, zoneInfo]
+  )
+  const zoneFwiPoints = useMemo(
+    () => filterFeaturesByBbox(fwiPoints, zoneInfo?.zoneBbox),
+    [fwiPoints, zoneInfo]
+  )
+
+  const escalatingZonesList = zoneFwiPoints.filter(f => f.properties.trend === "escalating")
+  const extremeZonesList = zoneFwiPoints.filter(f => f.properties.risk_class === "extreme")
+  const veryHighZonesList = zoneFwiPoints.filter(f => f.properties.risk_class === "very_high")
   const escalatingZones = escalatingZonesList.length
   const extremeZones = extremeZonesList.length
   const veryHighZones = veryHighZonesList.length
@@ -609,6 +623,18 @@ const [countryFeature, setCountryFeature] = useState(null)
             </div>
           )}
 
+          <FwiExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.country || "—" })}
+            value={countryFwiPointsRaw.length.toLocaleString()}
+            points={countryFwiPointsRaw} onSelect={flyTo} t={t} />
+          <FwiExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.state || "—" })}
+            value={stateFwiPoints.length.toLocaleString()}
+            points={stateFwiPoints} onSelect={flyTo} t={t} />
+          <FwiExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.name || "—" })}
+            value={zoneFwiPoints.length.toLocaleString()} color={theme.orange}
+            points={zoneFwiPoints} onSelect={flyTo} t={t} />
           <FwiExpandableStatRow
             label={t("extremeRiskZones")} value={extremeZones}
             color={extremeZones > 0 ? theme.danger : "#38A800"}
