@@ -729,9 +729,8 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             }}
           />
         )}	
-
-        {activeModule === 2 && visibleLayers.population && localPopulationCells.length > 0 &&
-          viewportPerimeters.map((perimeter, i) => {
+       {activeModule === 2 && visibleLayers.population && localPopulationCells.length > 0 &&
+          [...viewportPerimeters, ...cellPerimeters].map((perimeter, i) => {
             const estimate = estimatePopulationInPolygon(perimeter, localPopulationCells)
             if (estimate <= 0) return null
             const ring = perimeter.geometry.type === "Polygon" ? perimeter.geometry.coordinates[0]
