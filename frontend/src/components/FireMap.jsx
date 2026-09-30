@@ -829,7 +829,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
       )}
 
       <LayerToggle layers={visibleLayers} onChange={toggleLayer}
-        activeModule={activeModule} intensities={visibleIntensities}
+        activeModule={activeModule} intensities={visibleIntensities} fwiRisk={visibleFwiRisk}
         infraFilter={infraFilter} onInfraFilter={onInfraFilter} mapZoom={mapZoom}
         infraLoading={zoneInfrastructureLoading} />
 
