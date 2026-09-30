@@ -1,3 +1,4 @@
+
 """
 api.py
 ======
@@ -79,6 +80,28 @@ FWI_CLASSES = [
     (20, 30, "very_high", "#FF0000", "Very High"),
     (30, 999,"extreme",   "#7A0000", "Extreme"),
 ]
+
+# Named weather alerts, same logic as scripts/fetch_weather.py -- see that
+# file's own comment for why fog/ice/thunderstorm need weather_code.
+FOG_CODES = {45, 48}
+ICE_CODES = {56, 57, 66, 67}
+THUNDERSTORM_CODES = {95, 96, 99}
+
+def compute_weather_alerts(temp_c, wind_kmh, rain_mm, weather_code):
+    alerts = []
+    if temp_c is not None and temp_c >= 35:
+        alerts.append("heat")
+    if temp_c is not None and temp_c <= 0:
+        alerts.append("cold")
+    if wind_kmh is not None and wind_kmh >= 40:
+        alerts.append("wind")
+    if weather_code in FOG_CODES:
+        alerts.append("fog")
+    if weather_code in ICE_CODES:
+        alerts.append("ice")
+    if weather_code in THUNDERSTORM_CODES:
+        alerts.append("thunderstorm")
+    return alerts
 
 def classify_fwi(fwi_value):
     for low, high, cls, color, label in FWI_CLASSES:
@@ -306,7 +329,7 @@ def local_fwi(req: LocalFwiRequest):
             "longitude": ",".join(str(lon) for lat, lon in chunk),
             "current": [
                 "temperature_2m", "relative_humidity_2m", "wind_speed_10m",
-                "wind_direction_10m", "precipitation",
+                "wind_direction_10m", "precipitation", "weather_code",
             ],
             "timezone": "auto",
             "wind_speed_unit": "kmh",
@@ -334,6 +357,7 @@ def local_fwi(req: LocalFwiRequest):
         rh_pct = c.get("relative_humidity_2m")
         wind_kmh = c.get("wind_speed_10m")
         rain_mm = c.get("precipitation") or 0.0
+        weather_code = c.get("weather_code")
         if temp_c is None or rh_pct is None or wind_kmh is None:
             continue
 
@@ -355,7 +379,8 @@ def local_fwi(req: LocalFwiRequest):
             },
             "properties": {
                 "fwi": fwi, "risk_class": risk_class, "risk_label": risk_label,
-                "temp_c": temp_c, "rh_pct": rh_pct, "wind_kmh": wind_kmh,
+                "temp_c": temp_c, "rh_pct": rh_pct, "wind_kmh": wind_kmh, "rain_mm": rain_mm,
+                "weather_code": weather_code, "alerts": compute_weather_alerts(temp_c, wind_kmh, rain_mm, weather_code),
                 "lat": lat, "lon": lon,
             },
         })

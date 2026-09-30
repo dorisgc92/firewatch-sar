@@ -515,7 +515,13 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               <Popup>
                 <strong>FWI: {fwi}</strong> - {risk_label}<br />
                 Temp: {temp_c}C | Humidity: {rh_pct}% | Wind: {wind_kmh} km/h<br />
+                {feat.properties.rain_mm != null && <>{t("precipitation")}: {feat.properties.rain_mm} mm<br /></>}
                 Trend: {trend}
+                {feat.properties.alerts?.length > 0 && (
+                  <div style={{ marginTop: "4px", color: "#CC0000", fontWeight: "bold" }}>
+                    {feat.properties.alerts.map((a) => t("alert." + a)).join(", ")}
+                  </div>
+                )}
               </Popup>
             </CircleMarker>
           )
@@ -542,8 +548,11 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             }}
             onEachFeature={(feature, layer) => {
               const { fwi, risk_label, temp_c, rh_pct, wind_kmh } = feature.properties
+              const rainLine = feature.properties.rain_mm != null ? `<br/>Precip: ${feature.properties.rain_mm} mm` : ""
+              const alertsLine = feature.properties.alerts?.length > 0
+                ? `<div style="margin-top:4px;color:#CC0000;font-weight:bold">${feature.properties.alerts.map((a) => t("alert." + a)).join(", ")}</div>` : ""
               layer.bindPopup(
-                `<strong>FWI: ${fwi}</strong> - ${risk_label}<br/>Temp: ${temp_c}\u00b0C | Humidity: ${rh_pct}% | Wind: ${wind_kmh} km/h`
+                `<strong>FWI: ${fwi}</strong> - ${risk_label}<br/>Temp: ${temp_c}\u00b0C | Humidity: ${rh_pct}% | Wind: ${wind_kmh} km/h${rainLine}${alertsLine}`
               )
             }} />
         )}

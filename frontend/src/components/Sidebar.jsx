@@ -620,6 +620,16 @@ const [countryFeature, setCountryFeature] = useState(null)
               <div style={{ color: theme.textMuted, fontSize: "11px", marginTop: "2px" }}>
                 at {maxFWI.properties.lat}, {maxFWI.properties.lon}
               </div>
+              {maxFWI.properties.rain_mm != null && (
+                <div style={{ color: theme.textSecondary, fontSize: "11px", marginTop: "2px" }}>
+                  {t("precipitation")}: {maxFWI.properties.rain_mm} mm
+                </div>
+              )}
+              {maxFWI.properties.alerts?.length > 0 && (
+                <div style={{ color: theme.danger, fontSize: "11px", fontWeight: "bold", marginTop: "4px" }}>
+                  {maxFWI.properties.alerts.map((a) => t("alert." + a)).join(" · ")}
+                </div>
+              )}
             </div>
           )}
 
