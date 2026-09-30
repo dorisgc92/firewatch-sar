@@ -330,7 +330,7 @@ function LayerToggle({ layers, onChange, activeModule, intensities, fwiRisk, inf
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading, landCoverByFireKey = {} }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading, landCoverByFireKey = {}, highlightedInfra = null }) {
   const { t } = useLanguage()
   const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, hideNonVegetation: true })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
@@ -791,6 +791,21 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             </Marker>
           )
         })}
+
+        {activeModule === 2 && highlightedInfra && (() => {
+          const [ilon, ilat] = highlightedInfra.geometry.coordinates
+          const pinIcon = L.divIcon({
+            html: `<div style="font-size:26px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5));transform:translateY(-14px)">\u{1F4CD}</div>`,
+            className: "", iconSize: [30, 30], iconAnchor: [15, 30],
+          })
+          return (
+            <Marker position={[ilat, ilon]} icon={pinIcon}>
+              <Popup>
+                <strong>{highlightedInfra.properties.name || highlightedInfra.properties.type}</strong>
+              </Popup>
+            </Marker>
+          )
+        })()}
 
       </MapContainer>
       </div>

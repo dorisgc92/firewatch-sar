@@ -293,12 +293,12 @@ const INFRA_ICON = {
   "Airport/Airfield": "✈️", "Water Reservoir": "💧",
 }
 
-function ThreatenedInfraCard({ threat, t, onSelectFire }) {
+function ThreatenedInfraCard({ threat, t, onSelectFire, onSelectInfra }) {
   const { infra, fire, distanceKm, windAligned, windKmh } = threat
   const dir = windDirLabel((threat.bearingDeg + 180) % 360) // direction FROM infra back toward the fire, for "wind coming from X" phrasing
 
   return (
-    <div onClick={() => onSelectFire(fire)} style={{
+    <div onClick={() => onSelectInfra ? onSelectInfra(infra, fire) : onSelectFire(fire)} style={{
       background: "#fff", border: `1px solid ${theme.border}`,
       borderLeft: `3px solid ${windAligned ? theme.danger : theme.orange}`,
       borderRadius: "6px", padding: "8px 10px", marginBottom: "8px", cursor: "pointer",
@@ -320,7 +320,7 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, landCoverByFireKey = {}, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, onSelectInfra, hideNonVegetation, landCoverByFireKey = {}, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
   const { t } = useLanguage()
   const rawDetections = layers.hotspots?.data?.features || []
   const allDetections = rawDetections
@@ -577,7 +577,7 @@ const [countryFeature, setCountryFeature] = useState(null)
               {t("threatenedInfraCount", { count: threatenedInfra.length })}
             </div>
             {threatenedInfra.slice(0, 10).map((threat, i) => (
-              <ThreatenedInfraCard key={i} threat={threat} t={t} onSelectFire={flyTo} />
+              <ThreatenedInfraCard key={i} threat={threat} t={t} onSelectFire={flyTo} onSelectInfra={onSelectInfra} />
             ))}
           </div>
         </>
