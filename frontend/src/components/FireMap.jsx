@@ -522,6 +522,15 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
                     {feat.properties.alerts.map((a) => t("alert." + a)).join(", ")}
                   </div>
                 )}
+                <button
+                  onClick={() => onFireClick?.(feat)}
+                  style={{
+                    marginTop: "8px", width: "100%", padding: "6px 10px", borderRadius: "6px",
+                    border: "none", background: theme.orange, color: "#fff", fontWeight: "bold",
+                    fontSize: "12px", cursor: "pointer",
+                  }}>
+                  {t("zoomToLocation") || "Ver zona"}
+                </button>
               </Popup>
             </CircleMarker>
           )
