@@ -545,9 +545,17 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             style={(feature) => {
               const color = FWI_COLORS[feature.properties.risk_class] || FWI_COLORS.unknown
               return { color, fillColor: color, fillOpacity: 0.5, weight: 1.5 }
+            }}
+            onEachFeature={(feature, layer) => {
+              const { fwi, risk_label, temp_c, rh_pct, wind_kmh } = feature.properties
+              const rainLine = feature.properties.rain_mm != null ? `<br/>Precip: ${feature.properties.rain_mm} mm` : ""
+              const alertsLine = feature.properties.alerts?.length > 0
+                ? `<div style="margin-top:4px;color:#CC0000;font-weight:bold">${feature.properties.alerts.map((a) => t("alert." + a)).join(", ")}</div>` : ""
+              layer.bindPopup(
+                `<strong>FWI: ${fwi}</strong> - ${risk_label}<br/>Temp: ${temp_c}\u00b0C | Humidity: ${rh_pct}% | Wind: ${wind_kmh} km/h${rainLine}${alertsLine}`
+              )
             }} />
         )}
-
         {activeModule === 1 && visibleLayers.fwi && vegetationFwiRegions.length === 0 && localFwiCells.length > 0 && (
           <GeoJSON key={"local-fwi-" + localFwiCells.length + "-" + (zoneInfo?.name || "")}
             data={{ type: "FeatureCollection", features: localFwiCells.filter(f => visibleFwiRisk[f.properties.risk_class] !== false) }}

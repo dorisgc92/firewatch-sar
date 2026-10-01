@@ -62,6 +62,7 @@ export async function buildVegetationFwiRegions(bbox, coarseFwiCells, classifyPo
   const coarsePolys = coarseFwiCells.map((f) => ({
     poly: turf.feature(f.geometry),
     risk: f.properties.risk_class,
+    props: f.properties,
   }))
 
   const byRisk = {}
@@ -70,12 +71,13 @@ export async function buildVegetationFwiRegions(bbox, coarseFwiCells, classifyPo
     const pt = turf.point([p.lon, p.lat])
     const match = coarsePolys.find((c) => turf.booleanPointInPolygon(pt, c.poly))
     if (!match) return
-    if (!byRisk[match.risk]) byRisk[match.risk] = []
-    byRisk[match.risk].push(fineCellPolygon(p.row, p.col, bbox, fineStep))
+    if (!byRisk[match.risk]) byRisk[match.risk] = { cells: [], weatherProps: [] }
+    byRisk[match.risk].cells.push(fineCellPolygon(p.row, p.col, bbox, fineStep))
+    byRisk[match.risk].weatherProps.push(match.props)
   })
 
   const regions = []
-  for (const [riskClass, cells] of Object.entries(byRisk)) {
+  for (const [riskClass, { cells, weatherProps }] of Object.entries(byRisk)) {
     let merged = cells[0]
     for (let i = 1; i < cells.length; i++) {
       try {
@@ -86,10 +88,22 @@ export async function buildVegetationFwiRegions(bbox, coarseFwiCells, classifyPo
       }
     }
     if (!merged) continue
+    // Representative weather for this region: the underlying coarse cell
+    // with the highest FWI among those that contributed to it -- a single
+    // real, internally-consistent reading rather than an averaged blend
+    // of temp/wind/rain from different cells.
+    const representative = weatherProps.reduce((best, p) =>
+      (p.fwi || 0) > (best.fwi || 0) ? p : best, weatherProps[0])
     regions.push({
       type: "Feature",
       geometry: merged.geometry,
-      properties: { risk_class: riskClass, cellCount: cells.length },
+      properties: {
+        risk_class: riskClass, cellCount: cells.length,
+        fwi: representative.fwi, risk_label: representative.risk_label,
+        temp_c: representative.temp_c, rh_pct: representative.rh_pct,
+        wind_kmh: representative.wind_kmh, rain_mm: representative.rain_mm,
+        alerts: representative.alerts,
+      },
     })
   }
   return regions
