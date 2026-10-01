@@ -2,15 +2,20 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import { MapContainer, TileLayer, CircleMarker, GeoJSON, Popup, useMap, Marker } from "react-leaflet"
 import L from "leaflet"
 import { filterFeaturesByBbox, linkedPerimeterForFire, perimeterHasActiveHotspot, pointInPolygonGeometry, nearestFeatures } from "../utils/spatial"
-import { computeEstimatedPerimeters } from "../utils/fireClusters"
 import { reverseGeocodePlace } from "../utils/geocode"
 import { fireKeyFromLatLon } from "../hooks/useIncidents"
+import useCellPerimeters from "../hooks/useCellPerimeters"
+import useLocalFWI from "../hooks/useLocalFWI"
+import useVegetationFwiRegions from "../hooks/useVegetationFwiRegions"
+import useLocalPopulation from "../hooks/useLocalPopulation"
+import { estimatePopulationInPolygon } from "../utils/populationEstimate"
 import useIsNarrow from "../hooks/useIsNarrow"
 import { INTENSITY_COLORS, INTENSITY_STROKE } from "../utils/fireColors"
 import { theme } from "../utils/theme"
 import { useLanguage } from "../context/LanguageContext"
 
 const FWI_COLORS = { low: "#38A800", moderate: "#FFFF00", high: "#FFAA00", very_high: "#FF0000", extreme: "#7A0000", unknown: "#888888" }
+const POP_COLORS = { uninhabited: "#CCCCCC", rural: "#38A800", low_density: "#A8CC00", moderate: "#FFAA00", high_density: "#FF4400", very_high: "#AA0000" }
 
 
 
@@ -183,7 +188,7 @@ function FirePopupContent({ lat, lon, frp, intensity, source, acq_datetime, link
   )
 }
 
-function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter, onInfraFilter, mapZoom, infraLoading }) {
+function LayerToggle({ layers, onChange, activeModule, intensities, fwiRisk, infraFilter, onInfraFilter, mapZoom, infraLoading }) {
   const { t } = useLanguage()
   const isNarrow = useIsNarrow(900)
   // Starts collapsed on narrow screens (this panel is an overlay ON TOP of
@@ -193,11 +198,11 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   const [collapsed, setCollapsed] = useState(isNarrow)
   const m2 = [
     { key: "infrastructure", label: t("layer.infrastructure"), color: "#4488FF" },
+    { key: "population", label: "Population Density", color: "#FF4400" },
   ]
   const m1 = [
     { key: "fwi",     label: t("layer.fwi"), color: "#FF4400" },
-    { key: "weather", label: t("layer.weather"),  color: "#44AAFF" },
-  ]
+    ]
   const active = activeModule === 1 ? m1 : m2
 
   if (collapsed) {
@@ -232,6 +237,29 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
           <span style={{ color: theme.textPrimary, fontSize: "13px" }}>{label}</span>
         </label>
       ))}
+
+      {activeModule === 1 && (
+        <>
+          <div style={{ color: theme.textMuted, fontSize: "11px", fontWeight: "bold",
+            marginTop: "12px", marginBottom: "6px", borderTop: `1px solid ${theme.border}`, paddingTop: "8px", letterSpacing: "0.04em" }}>
+            {t("intensityFilterTitle")}
+          </div>
+          {[
+            { key: "extreme",   label: "Extreme",   color: FWI_COLORS.extreme },
+            { key: "very_high", label: "Very High",color: FWI_COLORS.very_high },
+            { key: "high",      label: "High",       color: FWI_COLORS.high },
+            { key: "moderate",  label: "Moderate",   color: FWI_COLORS.moderate },
+            { key: "low",       label: "Low",        color: FWI_COLORS.low },
+          ].map(({ key, label, color }) => (
+            <label key={key} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", marginBottom: "5px" }}>
+              <input type="checkbox" checked={fwiRisk?.[key] !== false}
+                onChange={e => onChange("fwirisk_" + key, e.target.checked)}
+                style={{ accentColor: color, width: "14px", height: "14px" }} />
+              <span style={{ color: theme.textPrimary, fontSize: "13px" }}>{label}</span>
+            </label>
+          ))}
+        </>
+      )}
 
       {activeModule === 2 && (
         <>
@@ -302,15 +330,19 @@ function LayerToggle({ layers, onChange, activeModule, intensities, infraFilter,
   )
 }
 
-export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading, landCoverByFireKey = {} }) {
+export default function FireMap({ activeModule, layers, mapRef, infraFilter, onInfraFilter, mapZoom, setMapZoom, zoneInfo, selectedFire, onFireClick, zoneLoading, onHideNonVegetationChange, incidents, zoneInfrastructure = [], zoneInfrastructureLoading, landCoverByFireKey = {}, highlightedInfra = null }) {
   const { t } = useLanguage()
-  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, weather: false, hideNonVegetation: true })
+  const [visibleLayers, setVisibleLayers] = useState({ hotspots: true, infrastructure: false, fwi: true, hideNonVegetation: true })
   const [visibleIntensities, setVisibleIntensities] = useState({ extreme: true, high: true, moderate: true, low: true })
+  const [visibleFwiRisk, setVisibleFwiRisk] = useState({ extreme: true, very_high: true, high: true, moderate: true, low: true })
 
   const toggleLayer = (key, value) => {
     if (key.startsWith("intensity_")) {
       const k = key.replace("intensity_", "")
       setVisibleIntensities(prev => ({ ...prev, [k]: value }))
+    } else if (key.startsWith("fwirisk_")) {
+      const k = key.replace("fwirisk_", "")
+      setVisibleFwiRisk(prev => ({ ...prev, [k]: value }))
     } else {
       setVisibleLayers(prev => ({ ...prev, [key]: value }))
       if (key === "hideNonVegetation") onHideNonVegetationChange?.(value)
@@ -408,18 +440,40 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
   }, [viewportHotspots, visibleIntensities, visibleLayers.hideNonVegetation, landCoverByFireKey])
   const isMarkerCapped = viewportHotspots.length > MAX_RENDERED_MARKERS
 
-  // Estimated perimeters: groups nearby detections (already filtered to
-  // what's actually being shown -- same fires the markers themselves
-  // reflect) into a polygon, purely client-side. See fireClusters.js's
-  // own comment for why -- official agency perimeters (CONAFOR/NIFC/
-  // CWFIS, rendered separately below) are frequently not published yet
-  // for a fresh detection, which is most of the time in practice; this
-  // gives an always-available shape instead of nothing.
-  const estimatedPerimeters = useMemo(
-    () => computeEstimatedPerimeters(visibleViewportHotspots),
-    [visibleViewportHotspots]
-  )
+  // Cell-based perimeters (WorldCover grid, stepped edges) -- the real
+  // vegetation shape for the challenge's perimeter requirement, distinct
+  // from the smooth geometric hull we removed. Computed from actual
+  // land-cover data, not just connecting the outermost detection points.
+  const { perimeters: cellPerimeters } = useCellPerimeters(visibleViewportHotspots, true)
 
+  // Fine-grained (~11km) FWI cells for the currently-viewed zone, on
+  // demand -- supplements the coarse global point layer below with
+  // neighborhood-level detail once the responder has zoomed into a
+  // specific area, rather than replacing the global view.
+  const { cells: localFwiCells } = useLocalFWI(viewportBbox || zoneInfo?.zoneBbox, mapZoom, activeModule === 1)
+
+  // Population-density grid for Module 2 -- "who's near the active fires
+  // shown right now". See useLocalPopulation.js / api.py's /local-population.
+  const localPopulationCells = useLocalPopulation(viewportBbox || zoneInfo?.zoneBbox, activeModule === 2)
+
+  // Forest-only, risk-merged regions derived from the raw FWI grid cells
+  // above -- see useVegetationFwiRegions.js. Prefer these over the flat
+  // square grid when available (fail-open to the grid if classification
+  // is slow/unavailable, same philosophy as everywhere else this pattern
+  // appears).
+  const vegetationFwiRegions = useVegetationFwiRegions(viewportBbox || zoneInfo?.zoneBbox, localFwiCells, activeModule === 1)
+
+   // Module 3: curated Sentinel-1 SAR-confirmed burned areas. Static,   
+  // pre-computed GeoJSON per fire (not automated -- SAR can't run in
+  // near-real-time due to Sentinel-1's ~6-12 day revisit). Loaded once
+  // on mount; grows as more fires get curated over time.
+  const [sarBurnedAreas, setSarBurnedAreas] = useState(null)
+  useEffect(() => {
+    fetch("/data/sar_burned_areas/juarez_2026-08-03.geojson")
+      .then((r) => r.json())
+      .then(setSarBurnedAreas)
+      .catch(() => setSarBurnedAreas(null)) // fail open -- layer just doesn't show
+  }, [])
   const center = zoneInfo?.center || [23, -102]
 
   return (
@@ -461,11 +515,64 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               <Popup>
                 <strong>FWI: {fwi}</strong> - {risk_label}<br />
                 Temp: {temp_c}C | Humidity: {rh_pct}% | Wind: {wind_kmh} km/h<br />
+                {feat.properties.rain_mm != null && <>{t("precipitation")}: {feat.properties.rain_mm} mm<br /></>}
                 Trend: {trend}
+                {feat.properties.alerts?.length > 0 && (
+                  <div style={{ marginTop: "4px", color: "#CC0000", fontWeight: "bold" }}>
+                    {feat.properties.alerts.map((a) => t("alert." + a)).join(", ")}
+                  </div>
+                )}
+                <button
+                  onClick={() => onFireClick?.(feat)}
+                  style={{
+                    marginTop: "8px", width: "100%", padding: "6px 10px", borderRadius: "6px",
+                    border: "none", background: theme.orange, color: "#fff", fontWeight: "bold",
+                    fontSize: "12px", cursor: "pointer",
+                  }}>
+                  {t("zoomToLocation") || "Ver zona"}
+                </button>
               </Popup>
             </CircleMarker>
           )
         })}
+
+        {/* Local FWI cells: fine (~11km) grid for the zoomed-in zone,
+            supplementing the coarse global points above with real
+            neighborhood-level detail once zoomed in enough to matter. */}
+        {activeModule === 1 && visibleLayers.fwi && vegetationFwiRegions.length > 0 && (
+          <GeoJSON key={"veg-fwi-" + vegetationFwiRegions.length + "-" + (zoneInfo?.name || "")}
+            data={{ type: "FeatureCollection", features: vegetationFwiRegions.filter(f => visibleFwiRisk[f.properties.risk_class] !== false) }}
+            style={(feature) => {
+              const color = FWI_COLORS[feature.properties.risk_class] || FWI_COLORS.unknown
+              return { color, fillColor: color, fillOpacity: 0.5, weight: 1.5 }
+            }}
+            onEachFeature={(feature, layer) => {
+              const { fwi, risk_label, temp_c, rh_pct, wind_kmh } = feature.properties
+              const rainLine = feature.properties.rain_mm != null ? `<br/>Precip: ${feature.properties.rain_mm} mm` : ""
+              const alertsLine = feature.properties.alerts?.length > 0
+                ? `<div style="margin-top:4px;color:#CC0000;font-weight:bold">${feature.properties.alerts.map((a) => t("alert." + a)).join(", ")}</div>` : ""
+              layer.bindPopup(
+                `<strong>FWI: ${fwi}</strong> - ${risk_label}<br/>Temp: ${temp_c}\u00b0C | Humidity: ${rh_pct}% | Wind: ${wind_kmh} km/h${rainLine}${alertsLine}`
+              )
+            }} />
+        )}
+        {activeModule === 1 && visibleLayers.fwi && vegetationFwiRegions.length === 0 && localFwiCells.length > 0 && (
+          <GeoJSON key={"local-fwi-" + localFwiCells.length + "-" + (zoneInfo?.name || "")}
+            data={{ type: "FeatureCollection", features: localFwiCells.filter(f => visibleFwiRisk[f.properties.risk_class] !== false) }}
+            style={(feature) => {
+              const color = FWI_COLORS[feature.properties.risk_class] || FWI_COLORS.unknown
+              return { color, fillColor: color, fillOpacity: 0.45, weight: 0.5 }
+            }}
+            onEachFeature={(feature, layer) => {
+              const { fwi, risk_label, temp_c, rh_pct, wind_kmh } = feature.properties
+              const rainLine = feature.properties.rain_mm != null ? `<br/>Precip: ${feature.properties.rain_mm} mm` : ""
+              const alertsLine = feature.properties.alerts?.length > 0
+                ? `<div style="margin-top:4px;color:#CC0000;font-weight:bold">${feature.properties.alerts.map((a) => t("alert." + a)).join(", ")}</div>` : ""
+              layer.bindPopup(
+                `<strong>FWI: ${fwi}</strong> - ${risk_label}<br/>Temp: ${temp_c}\u00b0C | Humidity: ${rh_pct}% | Wind: ${wind_kmh} km/h${rainLine}${alertsLine}`
+              )
+            }} />
+        )}
 
         {activeModule === 2 && visibleLayers.hotspots &&
           visibleViewportHotspots.map((feat, i) => {
@@ -565,6 +672,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
         {/* Perimeters always render (no toggle) — official fire boundaries
             are core situational awareness for an EOC, not an optional
             layer someone might reasonably want to hide. */}
+
         {activeModule === 2 && viewportPerimeters.length > 0 && (
           <GeoJSON key={layers.perimeters.generatedAt + "-" + viewportPerimeters.length}
             data={{ type: "FeatureCollection", features: viewportPerimeters }}
@@ -605,25 +713,19 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
               })
             }} />
         )}
+      
 
-        {/* Estimated perimeters: our own client-side polygon from
-            clustering nearby detections — always available, unlike the
-            official layer above which depends on an agency having
-            published something. Distinct violet/dashed style (never the
-            same color as an official perimeter) so nobody mistakes an
-            estimate for a surveyed boundary. */}
-        {activeModule === 2 && estimatedPerimeters.length > 0 && (
-          <GeoJSON key={"estimated-" + estimatedPerimeters.length + "-" + visibleViewportHotspots.length}
-            data={{ type: "FeatureCollection", features: estimatedPerimeters }}
-            style={{ color: "#8855DD", fillColor: "#9966EE", fillOpacity: 0.12, weight: 1.5, dashArray: "4 3" }}
+	      
+        {/* Cell-based perimeter: union of 500m WorldCover vegetation
+            cells around each detection -- stepped edges, follows real
+            land cover instead of an abstract geometric hull. Green so
+            it's visually distinct from the official orange/red layer
+            above and the SAR red layer below. */}
+                {activeModule === 2 && cellPerimeters.length > 0 && (
+          <GeoJSON key={"cell-" + cellPerimeters.length + "-" + visibleViewportHotspots.length}
+            data={{ type: "FeatureCollection", features: cellPerimeters }}
+            style={{ color: "#1CA09D", fillColor: "#2ECC8E", fillOpacity: 0.18, weight: 1.5 }}
             onEachFeature={(feature, layer) => {
-              layer.bindPopup(
-                `<div style="font-size:12px;max-width:220px">`
-                + `<strong>${t("estimatedPerimeterTitle")}</strong><br/>`
-                + `${t("estimatedPerimeterNote")}<br/>`
-                + `<span style="color:#6b7280">${t("estimatedPerimeterCount", { count: feature.properties.pointCount })}</span>`
-                + `</div>`
-              )
               layer.on("click", () => {
                 const candidates = visibleViewportHotspots.filter((h) => {
                   const [hlon, hlat] = h.geometry.coordinates
@@ -637,6 +739,44 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
             }} />
         )}
 
+	{/* Module 3: curated Sentinel-1 SAR-confirmed burned area. Solid
+            red fill -- deliberately distinct from the violet dashed
+            estimated perimeter above, so nobody mistakes a measured SAR
+            result for a live geometric estimate. */}
+        {activeModule === 3 && sarBurnedAreas && (
+          <GeoJSON
+            key="sar-burned-juarez"
+            data={sarBurnedAreas}
+            style={{ color: "#CC0000", fillColor: "#DD3333", fillOpacity: 0.35, weight: 2 }}
+            onEachFeature={(feature, layer) => {
+              layer.bindPopup(
+                "<div style=\"font-size:12px;max-width:220px\"><strong>Sentinel-1 SAR-confirmed burned area</strong><br/>Fire: Ju\u00e1rez, Tabasco (Aug 3\u20134, 2026)<br/>Pre/post-event change detection</div>"
+              )
+            }}
+          />
+        )}	
+       {activeModule === 2 && visibleLayers.population && localPopulationCells.length > 0 &&
+          [...viewportPerimeters, ...cellPerimeters].map((perimeter, i) => {
+            const estimate = estimatePopulationInPolygon(perimeter, localPopulationCells)
+            if (estimate <= 0) return null
+            const ring = perimeter.geometry.type === "Polygon" ? perimeter.geometry.coordinates[0]
+              : perimeter.geometry.type === "MultiPolygon" ? perimeter.geometry.coordinates[0][0] : null
+            if (!ring?.length) return null
+            const cLat = ring.reduce((s, [, lt]) => s + lt, 0) / ring.length
+            const cLon = ring.reduce((s, [ln]) => s + ln, 0) / ring.length
+            const divIcon = L.divIcon({
+              html: `<div style="font-size:18px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">\u{1F465}</div>`,
+              className: "", iconSize: [22, 22], iconAnchor: [11, 11],
+            })
+            return (
+              <Marker key={"pop-" + i} position={[cLat, cLon]} icon={divIcon}>
+                <Popup>
+                  <strong>~{estimate.toLocaleString()} people</strong><br/>
+                  estimated within this fire perimeter
+                </Popup>
+              </Marker>
+            )
+          })}
         {activeModule === 2 && visibleLayers.infrastructure && mapZoom >= 10 &&
           zoneInfrastructure
           .filter(f => {
@@ -678,6 +818,21 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
           )
         })}
 
+        {activeModule === 2 && highlightedInfra && (() => {
+          const [ilon, ilat] = highlightedInfra.geometry.coordinates
+          const pinIcon = L.divIcon({
+            html: `<div style="font-size:26px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5));transform:translateY(-14px)">\u{1F4CD}</div>`,
+            className: "", iconSize: [30, 30], iconAnchor: [15, 30],
+          })
+          return (
+            <Marker position={[ilat, ilon]} icon={pinIcon}>
+              <Popup>
+                <strong>{highlightedInfra.properties.name || highlightedInfra.properties.type}</strong>
+              </Popup>
+            </Marker>
+          )
+        })()}
+
       </MapContainer>
       </div>
 
@@ -700,7 +855,7 @@ export default function FireMap({ activeModule, layers, mapRef, infraFilter, onI
       )}
 
       <LayerToggle layers={visibleLayers} onChange={toggleLayer}
-        activeModule={activeModule} intensities={visibleIntensities}
+        activeModule={activeModule} intensities={visibleIntensities} fwiRisk={visibleFwiRisk}
         infraFilter={infraFilter} onInfraFilter={onInfraFilter} mapZoom={mapZoom}
         infraLoading={zoneInfrastructureLoading} />
 

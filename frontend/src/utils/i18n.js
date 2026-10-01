@@ -20,6 +20,7 @@ export function detectLanguage() {
 const en = {
   "module1": "Module 1: Pre-Fire Risk",
   "module2": "Module 2: Active Fire",
+  "module3": "Module 3: Post-Event Damage Assessment",
   "searchPlaceholder": "Search any region, city or country...",
   "changeButton": "Change",
   "togglePanel": "Panel",
@@ -44,8 +45,10 @@ const en = {
 
   "preFireView": "Pre-Fire Risk View",
   "activeFireView": "Active Fire View",
+  "postEventView": "Post-Event View",
   "module1Sub": "Module 1 - FWI Forecast",
   "module2Sub": "Module 2 - Command Center",
+  "module3Sub": "Module 3 - SAR Burned Area",
 
   "activeFiresTitle": "ACTIVE FIRES",
   "totalWorldwide": "Total detections (worldwide)",
@@ -86,6 +89,13 @@ const en = {
   "computingFWI": "Computing FWI...",
   "preposition": "Consider pre-positioning resources.",
   "monitorClosely": "Monitor conditions closely.",
+  "precipitation": "Precipitation",
+  "alert.heat": "Heat Warning",
+  "alert.cold": "Cold Warning",
+  "alert.wind": "Wind Warning",
+  "alert.fog": "Fog Warning",
+  "alert.ice": "Ice Warning",
+  "alert.thunderstorm": "Thunderstorm Warning",
   "manageable": "Current fire weather conditions are within manageable range.",
 
   "layersTitle": "LAYERS",
@@ -201,6 +211,7 @@ const en = {
 const es = {
   "module1": "Módulo 1: Riesgo Pre-Incendio",
   "module2": "Módulo 2: Incendio Activo",
+  "module3": "Módulo 3: Evaluación Post-Incendio",
   "searchPlaceholder": "Buscar región, ciudad o país...",
   "changeButton": "Cambiar",
   "togglePanel": "Panel",
@@ -225,8 +236,10 @@ const es = {
 
   "preFireView": "Vista de Riesgo Pre-Incendio",
   "activeFireView": "Vista de Incendio Activo",
+  "postEventView": "Vista de Evaluación Post-Incendio",
   "module1Sub": "Módulo 1 - Pronóstico FWI",
   "module2Sub": "Módulo 2 - Centro de Comando",
+  "module3Sub": "Módulo 3 - Área Quemada SAR",
 
   "activeFiresTitle": "INCENDIOS ACTIVOS",
   "totalWorldwide": "Total de detecciones (mundial)",
@@ -267,6 +280,13 @@ const es = {
   "computingFWI": "Calculando FWI...",
   "preposition": "Considerar posicionamiento preventivo de recursos.",
   "monitorClosely": "Monitorear condiciones de cerca.",
+  "precipitation": "Precipitación",
+  "alert.heat": "Alerta de Calor",
+  "alert.cold": "Alerta de Frío",
+  "alert.wind": "Alerta de Viento",
+  "alert.fog": "Alerta de Niebla",
+  "alert.ice": "Alerta de Hielo",
+  "alert.thunderstorm": "Alerta de Tormenta Eléctrica",
   "manageable": "Las condiciones actuales de clima-fuego están en rango manejable.",
 
   "layersTitle": "CAPAS",
@@ -382,6 +402,7 @@ const es = {
 const de = {
   "module1": "Modul 1: Vorbrand-Risiko",
   "module2": "Modul 2: Aktiver Brand",
+  "module3": "Modul 3: Schadensbewertung nach dem Ereignis",
   "searchPlaceholder": "Region, Stadt oder Land suchen...",
   "changeButton": "Ändern",
   "togglePanel": "Panel",
@@ -406,8 +427,10 @@ const de = {
 
   "preFireView": "Vorbrand-Risikoansicht",
   "activeFireView": "Ansicht Aktiver Brand",
+  "postEventView": "Ansicht Nachereignis-Bewertung",
   "module1Sub": "Modul 1 - FWI-Prognose",
   "module2Sub": "Modul 2 - Einsatzzentrale",
+  "module3Sub": "Modul 3 - SAR-Brandfläche",
 
   "activeFiresTitle": "AKTIVE BRÄNDE",
   "totalWorldwide": "Gesamt (weltweit)",
@@ -448,6 +471,13 @@ const de = {
   "computingFWI": "FWI wird berechnet...",
   "preposition": "Vorpositionierung von Ressourcen erwägen.",
   "monitorClosely": "Bedingungen genau beobachten.",
+  "precipitation": "Niederschlag",
+  "alert.heat": "Hitzewarnung",
+  "alert.cold": "Kältewarnung",
+  "alert.wind": "Windwarnung",
+  "alert.fog": "Nebelwarnung",
+  "alert.ice": "Eiswarnung",
+  "alert.thunderstorm": "Gewitterwarnung",
   "manageable": "Aktuelle Feuerwetter-Bedingungen sind im beherrschbaren Bereich.",
 
   "layersTitle": "EBENEN",
@@ -563,6 +593,7 @@ const de = {
 const fr = {
   "module1": "Module 1 : Risque Pré-incendie",
   "module2": "Module 2 : Incendie Actif",
+  "module3": "Module 3 : Évaluation post-événement",
   "searchPlaceholder": "Rechercher une région, ville ou pays...",
   "changeButton": "Changer",
   "togglePanel": "Panneau",
@@ -587,8 +618,10 @@ const fr = {
 
   "preFireView": "Vue Risque Pré-incendie",
   "activeFireView": "Vue Incendie Actif",
+  "postEventView": "Vue Post-événement",
   "module1Sub": "Module 1 - Prévision FWI",
   "module2Sub": "Module 2 - Centre de Commandement",
+  "module3Sub": "Module 3 - Zone brûlée SAR",
 
   "activeFiresTitle": "INCENDIES ACTIFS",
   "totalWorldwide": "Total des détections (mondial)",
@@ -629,6 +662,13 @@ const fr = {
   "computingFWI": "Calcul du FWI...",
   "preposition": "Envisager un pré-positionnement des ressources.",
   "monitorClosely": "Surveiller les conditions de près.",
+  "precipitation": "Précipitations",
+  "alert.heat": "Alerte Canicule",
+  "alert.cold": "Alerte Froid",
+  "alert.wind": "Alerte Vent",
+  "alert.fog": "Alerte Brouillard",
+  "alert.ice": "Alerte Verglas",
+  "alert.thunderstorm": "Alerte Orage",
   "manageable": "Les conditions météo-feu actuelles sont dans une plage gérable.",
 
   "layersTitle": "COUCHES",
@@ -744,6 +784,7 @@ const fr = {
 const pt = {
   "module1": "Módulo 1: Risco Pré-incêndio",
   "module2": "Módulo 2: Incêndio Ativo",
+  "module3": "Módulo 3: Avaliação Pós-Incêndio",
   "searchPlaceholder": "Buscar região, cidade ou país...",
   "changeButton": "Alterar",
   "togglePanel": "Painel",
@@ -768,8 +809,10 @@ const pt = {
 
   "preFireView": "Visão de Risco Pré-incêndio",
   "activeFireView": "Visão de Incêndio Ativo",
+  "postEventView": "Visão de Avaliação Pós-Incêndio",
   "module1Sub": "Módulo 1 - Previsão FWI",
   "module2Sub": "Módulo 2 - Centro de Comando",
+  "module3Sub": "Módulo 3 - Área Queimada SAR",
 
   "activeFiresTitle": "INCÊNDIOS ATIVOS",
   "totalWorldwide": "Total de detecções (mundial)",
@@ -810,6 +853,13 @@ const pt = {
   "computingFWI": "Calculando FWI...",
   "preposition": "Considerar pré-posicionamento de recursos.",
   "monitorClosely": "Monitorar condições de perto.",
+  "precipitation": "Precipitação",
+  "alert.heat": "Alerta de Calor",
+  "alert.cold": "Alerta de Frio",
+  "alert.wind": "Alerta de Vento",
+  "alert.fog": "Alerta de Neblina",
+  "alert.ice": "Alerta de Gelo",
+  "alert.thunderstorm": "Alerta de Tempestade",
   "manageable": "As condições atuais de clima-fogo estão em faixa administrável.",
 
   "layersTitle": "CAMADAS",
@@ -910,7 +960,7 @@ const pt = {
   "windPushingToward": "Vento de {dir} a {wind} km/h empurra o fogo para este local.",
   "closeToFire": "Dentro do alcance imediato de um foco ativo.",
   "markersCapped": "Mostrando os {shown} focos mais graves de {total} — aproxime o zoom para ver todos.",
-  "coordinates": "Coordenadas",
+  "coordenadas": "Coordenadas",
   "showingTop": "Mostrando os {n} primeiros de {total}",
   "intensity": "Intensidade",
   "sensor": "Sensor",
@@ -925,6 +975,7 @@ const pt = {
 const it = {
   "module1": "Modulo 1: Rischio Pre-incendio",
   "module2": "Modulo 2: Incendio Attivo",
+  "module3": "Modulo 3: Valutazione Post-Evento",
   "searchPlaceholder": "Cerca regione, città o paese...",
   "changeButton": "Cambia",
   "togglePanel": "Pannello",
@@ -949,8 +1000,10 @@ const it = {
 
   "preFireView": "Vista Rischio Pre-incendio",
   "activeFireView": "Vista Incendio Attivo",
+  "postEventView": "Vista Valutazione Post-Evento",
   "module1Sub": "Modulo 1 - Previsione FWI",
   "module2Sub": "Modulo 2 - Centro di Comando",
+  "module3Sub": "Modulo 3 - Area Bruciata SAR",
 
   "activeFiresTitle": "INCENDI ATTIVI",
   "totalWorldwide": "Totale rilevazioni (mondiale)",
@@ -991,6 +1044,13 @@ const it = {
   "computingFWI": "Calcolo FWI...",
   "preposition": "Considerare il posizionamento preventivo delle risorse.",
   "monitorClosely": "Monitorare attentamente le condizioni.",
+  "precipitation": "Precipitazioni",
+  "alert.heat": "Allerta Caldo",
+  "alert.cold": "Allerta Freddo",
+  "alert.wind": "Allerta Vento",
+  "alert.fog": "Allerta Nebbia",
+  "alert.ice": "Allerta Ghiaccio",
+  "alert.thunderstorm": "Allerta Temporale",
   "manageable": "Le condizioni meteo-incendio attuali sono in un intervallo gestibile.",
 
   "layersTitle": "LIVELLI",
@@ -1091,7 +1151,7 @@ const it = {
   "windPushingToward": "Vento da {dir} a {wind} km/h spinge il fuoco verso questo sito.",
   "closeToFire": "Nel raggio immediato di un incendio attivo.",
   "markersCapped": "Mostrando i {shown} incendi più gravi su {total} — ingrandisci per vederli tutti.",
-  "coordinates": "Coordinate",
+  "coordinate": "Coordinate",
   "showingTop": "Mostrando i primi {n} di {total}",
   "intensity": "Intensità",
   "sensor": "Sensore",

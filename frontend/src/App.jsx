@@ -63,6 +63,21 @@ function AppInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mapZoom, setMapZoom] = useState(9)
   const [selectedFire, setSelectedFire] = useState(null)
+  const [highlightedInfra, setHighlightedInfra] = useState(null)
+
+  // Lightweight action for "show me this threatened facility relative to
+  // its fire" -- deliberately NOT the same as handleSelectFire (no full
+  // zone re-scope, no reverse-geocoding), since that's async and its
+  // eventual setView() would race with and override a fitBounds() called
+  // here. Just pans/zooms to fit both points and marks which facility to
+  // highlight on the map.
+  const handleSelectInfra = (infra, fire) => {
+    setHighlightedInfra(infra)
+    if (!mapRef.current) return
+    const [ilon, ilat] = infra.geometry.coordinates
+    const [flon, flat] = fire.geometry.coordinates
+    mapRef.current.fitBounds([[ilat, ilon], [flat, flon]], { padding: [60, 60], maxZoom: 15 })
+  }
 
   // Lives here, not inside ResponderRequestOverlay, because IncidentStatusBar
   // needs it too — to relabel its own "Asignado" pill into a blinking
@@ -244,6 +259,14 @@ function AppInner() {
             borderBottom: activeModule === 2 ? `2px solid ${theme.orange}` : "2px solid transparent" }}>
             {t("module2")}
           </button>
+          <button onClick={() => setActiveModule(3)} style={{
+            padding: "5px 10px", borderRadius: "6px", border: "none", cursor: "pointer",
+            fontWeight: "bold", fontSize: "12px",
+            background: activeModule === 3 ? "#FFE0E0" : "transparent",
+            color: activeModule === 3 ? "#CC0000" : theme.textSecondary,
+            borderBottom: activeModule === 3 ? "2px solid #CC0000" : "2px solid transparent" }}>
+            {t("module3")}
+          </button>
         </div>
 
         <div style={{ flex: 1, minWidth: "200px", maxWidth: "380px", position: "relative" }}>
@@ -319,14 +342,14 @@ function AppInner() {
         myFacility={myFacility} onMyFacilityChange={setMyFacility} />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-          <FireMap activeModule={activeModule} layers={layers} mapRef={mapRef}
+        <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>          <FireMap activeModule={activeModule} layers={layers} mapRef={mapRef}
             infraFilter={infraFilter} onInfraFilter={(key, val) => setInfraFilter(prev => ({...prev, [key]: val}))}
             mapZoom={mapZoom} setMapZoom={setMapZoom} zoneInfo={zoneInfo} selectedFire={selectedFire}
             onFireClick={handleSelectFire} zoneLoading={zoneLoading}
             onHideNonVegetationChange={setHideNonVegetation}
             incidents={incidents} landCoverByFireKey={landCoverByFireKey}
-            zoneInfrastructure={zoneInfrastructure.features} zoneInfrastructureLoading={zoneInfrastructure.loading} />
+            zoneInfrastructure={zoneInfrastructure.features} zoneInfrastructureLoading={zoneInfrastructure.loading}
+            highlightedInfra={highlightedInfra} />
         </div>
         {(!isNarrow || sidebarOpen) && (
           <>
@@ -339,6 +362,7 @@ function AppInner() {
               : undefined}>
               <Sidebar activeModule={activeModule} layers={layers} mapZoom={mapZoom} mapRef={mapRef}
                 zoneInfo={zoneInfo} responderType={responderType} onSelectFire={handleSelectFire}
+                onSelectInfra={handleSelectInfra}
                 hideNonVegetation={hideNonVegetation} landCoverByFireKey={landCoverByFireKey}
                 incidents={incidents} requestResponder={requestResponder}
                 selectedFire={selectedFire} onClearSelection={() => setSelectedFire(null)}

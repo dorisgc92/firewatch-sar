@@ -57,6 +57,32 @@ FWI_CLASSES = [
     (30, 999,"extreme",   "#7A0000", "Extreme"),
 ]
 
+# ── Named weather alerts ──────────────────────────────────────────────────────
+# Required by the challenge rubric: heat/cold/fog/wind/ice/thunderstorm
+# warnings, distinct from the FWI fire-danger classification above. Fog,
+# ice, and thunderstorm need Open-Meteo's WMO weather_code (temperature/
+# wind/rain thresholds alone can't reliably distinguish them); heat, cold,
+# and wind are plain thresholds.
+FOG_CODES = {45, 48}
+ICE_CODES = {56, 57, 66, 67}
+THUNDERSTORM_CODES = {95, 96, 99}
+
+def compute_weather_alerts(temp_c, wind_kmh, rain_mm, weather_code):
+    alerts = []
+    if temp_c is not None and temp_c >= 35:
+        alerts.append("heat")
+    if temp_c is not None and temp_c <= 0:
+        alerts.append("cold")
+    if wind_kmh is not None and wind_kmh >= 40:
+        alerts.append("wind")
+    if weather_code in FOG_CODES:
+        alerts.append("fog")
+    if weather_code in ICE_CODES:
+        alerts.append("ice")
+    if weather_code in THUNDERSTORM_CODES:
+        alerts.append("thunderstorm")
+    return alerts
+
 def classify_fwi(fwi_value):
     """Return risk class, color, and label for a given FWI value."""
     for low, high, cls, color, label in FWI_CLASSES:
@@ -328,6 +354,8 @@ def main():
         wind = current.get("wind_speed_10m", 10)
         wind_dir = current.get("wind_direction_10m", 0)
         rain = current.get("precipitation", 0)
+        weather_code = current.get("weather_code")
+        alerts = compute_weather_alerts(temp, wind, rain, weather_code)
 
         # Current FWI
         fwi_now = fwi_from_weather(temp, rh, wind, rain)
@@ -371,6 +399,8 @@ def main():
             "wind_kmh": wind,
             "wind_dir_deg": wind_dir,
             "rain_mm": rain,
+            "weather_code": weather_code,
+            "alerts": alerts,
             "fwi": fwi_now,
             "risk_class": risk_class,
             "risk_label": risk_label,

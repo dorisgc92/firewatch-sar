@@ -1,3 +1,4 @@
+
 """
 api.py
 ======
@@ -32,7 +33,7 @@ workflow calling these are the only intended callers anyway.
 Run with:
     uvicorn api:app --host 0.0.0.0 --port 8000
 """
-
+import json
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -40,6 +41,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import requests
 
 import store
 import geometry
@@ -60,6 +62,330 @@ app = FastAPI(title="FireWatch SAR - Infrastructure API")
 # GLOBAL concurrent WorldCover fetch count, shared across every request,
 # fixes that at the root instead of just tuning the per-request number
 # again.
+import math
+
+# ── Local FWI (on-demand, fine-grained) ──────────────────────────────────────
+# Same simplified Canadian FWI formula as scripts/fetch_weather.py's global
+# 10-degree grid (duplicated here, not imported, to avoid cross-directory
+# import issues between scripts/ and remote_server/ on the deployed server).
+# Note: BUI uses fixed defaults (dmc=20.0, dc=200.0) rather than true
+# multi-day-accumulated moisture codes -- same simplification as the global
+# grid, so there's no "cold start" problem for a zone queried for the first
+# time; this endpoint is exactly as accurate (and exactly as simplified) as
+# the existing global FWI layer, just at a much finer spatial resolution.
+FWI_CLASSES = [
+    (0, 5,   "low",       "#38A800", "Low"),
+    (5, 12,  "moderate",  "#FFFF00", "Moderate"),
+    (12, 20, "high",      "#FFAA00", "High"),
+    (20, 30, "very_high", "#FF0000", "Very High"),
+    (30, 999,"extreme",   "#7A0000", "Extreme"),
+]
+
+# Named weather alerts, same logic as scripts/fetch_weather.py -- see that
+# file's own comment for why fog/ice/thunderstorm need weather_code.
+FOG_CODES = {45, 48}
+ICE_CODES = {56, 57, 66, 67}
+THUNDERSTORM_CODES = {95, 96, 99}
+
+def compute_weather_alerts(temp_c, wind_kmh, rain_mm, weather_code):
+    alerts = []
+    if temp_c is not None and temp_c >= 35:
+        alerts.append("heat")
+    if temp_c is not None and temp_c <= 0:
+        alerts.append("cold")
+    if wind_kmh is not None and wind_kmh >= 40:
+        alerts.append("wind")
+    if weather_code in FOG_CODES:
+        alerts.append("fog")
+    if weather_code in ICE_CODES:
+        alerts.append("ice")
+    if weather_code in THUNDERSTORM_CODES:
+        alerts.append("thunderstorm")
+    return alerts
+
+def classify_fwi(fwi_value):
+    for low, high, cls, color, label in FWI_CLASSES:
+        if low <= fwi_value < high:
+            return cls, color, label
+    return "extreme", "#7A0000", "Extreme"
+
+def compute_ffmc(temp_c, rh_pct, wind_kmh, rain_mm, prev_ffmc=85.0):
+    mo = 147.2 * (101.0 - prev_ffmc) / (59.5 + prev_ffmc)
+    if rain_mm > 0.5:
+        rf = rain_mm - 0.5
+        if mo <= 150:
+            mo = mo + 42.5 * rf * math.exp(-100.0 / (251.0 - mo)) * (1.0 - math.exp(-6.93 / rf))
+        else:
+            mo = mo + 42.5 * rf * math.exp(-100.0 / (251.0 - mo)) * (1.0 - math.exp(-6.93 / rf))
+            if mo > 250:
+                mo = 250.0
+    ed = 0.942 * (rh_pct ** 0.679) + (11.0 * math.exp((rh_pct - 100.0) / 10.0)) + \
+         0.18 * (21.1 - temp_c) * (1.0 - math.exp(-0.115 * rh_pct))
+    ew = 0.618 * (rh_pct ** 0.753) + (10.0 * math.exp((rh_pct - 100.0) / 10.0)) + \
+         0.18 * (21.1 - temp_c) * (1.0 - math.exp(-0.115 * rh_pct))
+    if mo > ed:
+        ko = 0.424 * (1.0 - ((100.0 - rh_pct) / 100.0) ** 1.7) + \
+             0.0694 * math.sqrt(wind_kmh) * (1.0 - ((100.0 - rh_pct) / 100.0) ** 8)
+        kd = ko * 0.581 * math.exp(0.0365 * temp_c)
+        m = ed + (mo - ed) * math.exp(-2.303 * kd)
+    elif mo < ew:
+        kl = 0.424 * (1.0 - (rh_pct / 100.0) ** 1.7) + \
+             0.0694 * math.sqrt(wind_kmh) * (1.0 - (rh_pct / 100.0) ** 8)
+        kw = kl * 0.581 * math.exp(0.0365 * temp_c)
+        m = ew - (ew - mo) * math.exp(-2.303 * kw)
+    else:
+        m = mo
+    m = max(0.0, min(250.0, m))
+    ffmc = 59.5 * (250.0 - m) / (147.2 + m)
+    return max(0.0, min(101.0, ffmc))
+
+def compute_isi(wind_kmh, ffmc):
+    fm = 147.2 * (101.0 - ffmc) / (59.5 + ffmc)
+    fw = math.exp(0.05039 * wind_kmh)
+    ff = 91.9 * math.exp(-0.1386 * fm) * (1.0 + fm ** 5.31 / 49300000.0)
+    return 0.208 * fw * ff
+
+def compute_bui(dmc=20.0, dc=200.0):
+    if dmc <= 0.4 * dc:
+        bui = 0.8 * dmc * dc / (dmc + 0.4 * dc)
+    else:
+        bui = dmc - (1.0 - 0.8 * dc / (dmc + 0.4 * dc)) * \
+              (0.92 + (0.0114 * dmc) ** 1.7)
+    return bui
+
+def compute_fwi(isi, bui):
+    if bui <= 80:
+        fd = 0.626 * (bui ** 0.809) + 2.0
+    else:
+        fd = 1000.0 / (25.0 + 108.64 * math.exp(-0.023 * bui))
+    b = 0.1 * isi * fd
+    if b > 1.0:
+        fwi = math.exp(2.72 * (0.434 * math.log(b)) ** 0.647)
+    else:
+        fwi = b
+    return round(max(0.0, fwi), 1)
+
+LOCAL_FWI_MAX_POINTS = 200  # safety cap on total cells per request
+LOCAL_FWI_TARGET_CELLS_PER_SIDE = 8  # aim for a ~8x8 grid -- fewer points per request, gentler on Open-Meteo's free-tier rate limit
+LOCAL_FWI_MIN_STEP_DEG = 0.02  # ~2km floor -- Open-Meteo's own model resolution is
+                                # roughly 1-11km, so going finer doesn't add real
+                                # meteorological detail, just interpolates the same data
+LOCAL_FWI_MAX_STEP_DEG = 0.5   # ~55km ceiling -- zoomed out to country level, keep
+                                # cells coarse rather than trying to cover a huge area finely
+# ── Local population density (Module 2) ──────────────────────────────────────
+# WorldPop's 100m global population-density raster, served by Esri as a
+# public, cloud-optimized ArcGIS ImageServer -- point/grid queries via its
+# REST "getSamples" operation, no need to download or self-host the
+# raster (same spirit as WorldCover's S3+rasterio approach, but here the
+# provider already exposes a point-query API directly).
+WORLDPOP_SERVICE_URL = "https://worldpop.arcgis.com/arcgis/rest/services/WorldPop_Population_Density_100m/ImageServer/getSamples"
+
+POP_DENSITY_CLASSES = [
+    (0, 1,      "uninhabited",  "#CCCCCC", "Uninhabited"),
+    (1, 10,     "rural",        "#38A800", "Rural"),
+    (10, 100,   "low_density",  "#A8CC00", "Low Density"),
+    (100, 1000, "moderate",     "#FFAA00", "Moderate Density"),
+    (1000, 5000,"high_density", "#FF4400", "High Density"),
+    (5000, 10**9,"very_high",   "#AA0000", "Very High Density"),
+]
+
+def classify_pop_density(value):
+    for low, high, cls, color, label in POP_DENSITY_CLASSES:
+        if low <= value < high:
+            return cls, color, label
+    return "very_high", "#AA0000", "Very High Density"
+
+LOCAL_POP_TARGET_CELLS_PER_SIDE = 10
+LOCAL_POP_MIN_STEP_DEG = 0.01   # ~1.1km floor
+LOCAL_POP_MAX_STEP_DEG = 0.3    # ~33km ceiling
+LOCAL_POP_MAX_POINTS = 150      # keep the single getSamples call small/fast
+
+class LocalPopulationRequest(BaseModel):
+    west: float
+    south: float
+    east: float
+    north: float
+
+@app.post("/local-population")
+def local_population(req: LocalPopulationRequest):
+    """
+    Population-density grid for the currently-viewed Module 2 zone --
+    "who's near the active fires shown right now", not a global layer.
+    Queries WorldPop's public ArcGIS ImageServer in a single batched
+    getSamples call (all points at once), rather than one request per
+    point -- keeps this well within the free tunnel's request budget.
+    """
+    span = max(req.east - req.west, req.north - req.south, 0.001)
+    step = max(LOCAL_POP_MIN_STEP_DEG, min(LOCAL_POP_MAX_STEP_DEG, span / LOCAL_POP_TARGET_CELLS_PER_SIDE))
+
+    points = []
+    lat = req.south
+    while lat < req.north and len(points) < LOCAL_POP_MAX_POINTS:
+        lon = req.west
+        while lon < req.east and len(points) < LOCAL_POP_MAX_POINTS:
+            points.append((round(lat, 4), round(lon, 4)))
+            lon += step
+        lat += step
+
+    if not points:
+        return {"type": "FeatureCollection", "features": []}
+
+    geometry = {
+        "points": [[lon, lat] for (lat, lon) in points],
+        "spatialReference": {"wkid": 4326},
+    }
+    params = {
+        "geometry": json.dumps(geometry),
+        "geometryType": "esriGeometryMultipoint",
+        "returnFirstValueOnly": "true",
+        "f": "json",
+    }
+
+    try:
+        r = requests.get(WORLDPOP_SERVICE_URL, params=params, timeout=30)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        print(f"  local-population: WorldPop request failed: {type(e).__name__}: {e}")
+        return {"type": "FeatureCollection", "features": []}
+
+    samples = data.get("samples")
+    if samples is None:
+        print(f"  local-population: unexpected WorldPop response shape: {data}")
+        return {"type": "FeatureCollection", "features": []}
+
+    half = step / 2
+    features = []
+    for (lat, lon), sample in zip(points, samples):
+        try:
+            value = float(sample.get("value"))
+        except (TypeError, ValueError):
+            continue
+        if value < 0:
+            continue
+        cls, color, label = classify_pop_density(value)
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[
+                    [lon - half, lat - half], [lon + half, lat - half],
+                    [lon + half, lat + half], [lon - half, lat + half],
+                    [lon - half, lat - half],
+                ]],
+            },
+            "properties": {
+                "density": round(value, 1), "density_class": cls,
+                "density_label": label, "lat": lat, "lon": lon,
+            },
+        })
+
+    return {"type": "FeatureCollection", "features": features}
+def step_for_bbox(west, south, east, north):
+    """Always covers the FULL visible viewport, at whatever zoom -- sizes
+    the cell to the viewport's own span (aiming for ~12 cells per side)
+    instead of a fixed zoom lookup, which could stop partway through a
+    large viewport and leave gaps (as a fixed-resolution grid did before)."""
+    span = max(east - west, north - south, 0.001)
+    step = span / LOCAL_FWI_TARGET_CELLS_PER_SIDE
+    return max(LOCAL_FWI_MIN_STEP_DEG, min(LOCAL_FWI_MAX_STEP_DEG, step))
+
+class LocalFwiRequest(BaseModel):
+    west: float
+    south: float
+    east: float
+    north: float
+    zoom: float | None = None
+
+@app.post("/local-fwi")
+def local_fwi(req: LocalFwiRequest):
+    """
+    Fine-grained (~11km) FWI grid for a single zoomed-in zone, computed
+    on-demand -- contrast with scripts/fetch_weather.py's coarse (10-degree,
+    ~1000km) global grid, which is meant for a world-at-a-glance view, not
+    neighborhood-level detail. Returns filled grid-cell polygons (not
+    points), ready to render directly.
+    """
+    step_deg = step_for_bbox(req.west, req.south, req.east, req.north)
+    points = []
+    lat = req.south
+    while lat < req.north and len(points) < LOCAL_FWI_MAX_POINTS:
+        lon = req.west
+        while lon < req.east and len(points) < LOCAL_FWI_MAX_POINTS:
+            points.append((round(lat, 3), round(lon, 3)))
+            lon += step_deg
+        lat += step_deg
+
+    if not points:
+        return {"type": "FeatureCollection", "features": []}
+
+    url = "https://api.open-meteo.com/v1/forecast"
+    weather_by_point = {}
+    batch_size = 50
+    for i in range(0, len(points), batch_size):
+        chunk = points[i:i + batch_size]
+        params = {
+            "latitude": ",".join(str(lat) for lat, lon in chunk),
+            "longitude": ",".join(str(lon) for lat, lon in chunk),
+            "current": [
+                "temperature_2m", "relative_humidity_2m", "wind_speed_10m",
+                "wind_direction_10m", "precipitation", "weather_code",
+            ],
+            "timezone": "auto",
+            "wind_speed_unit": "kmh",
+        }
+        try:
+            r = requests.get(url, params=params, timeout=60)
+            r.raise_for_status()
+            data = r.json()
+            if isinstance(data, dict):
+                data = [data]
+            for (lat, lon), point_data in zip(chunk, data):
+                weather_by_point[(lat, lon)] = point_data
+        except Exception as e:
+            print(f"  local-fwi: Open-Meteo batch failed: {type(e).__name__}: {e}")
+            for (lat, lon) in chunk:
+                weather_by_point[(lat, lon)] = None
+    features = []
+    half = step_deg / 2
+    for (lat, lon) in points:
+        data = weather_by_point.get((lat, lon))
+        if not data or "current" not in data:
+            continue
+        c = data["current"]
+        temp_c = c.get("temperature_2m")
+        rh_pct = c.get("relative_humidity_2m")
+        wind_kmh = c.get("wind_speed_10m")
+        rain_mm = c.get("precipitation") or 0.0
+        weather_code = c.get("weather_code")
+        if temp_c is None or rh_pct is None or wind_kmh is None:
+            continue
+
+        ffmc = compute_ffmc(temp_c, rh_pct, wind_kmh, rain_mm)
+        isi = compute_isi(wind_kmh, ffmc)
+        bui = compute_bui()
+        fwi = compute_fwi(isi, bui)
+        risk_class, color, risk_label = classify_fwi(fwi)
+
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[
+                    [lon - half, lat - half], [lon + half, lat - half],
+                    [lon + half, lat + half], [lon - half, lat + half],
+                    [lon - half, lat - half],
+                ]],
+            },
+            "properties": {
+                "fwi": fwi, "risk_class": risk_class, "risk_label": risk_label,
+                "temp_c": temp_c, "rh_pct": rh_pct, "wind_kmh": wind_kmh, "rain_mm": rain_mm,
+                "weather_code": weather_code, "alerts": compute_weather_alerts(temp_c, wind_kmh, rain_mm, weather_code),
+                "lat": lat, "lon": lon,
+            },
+        })
+
+    return {"type": "FeatureCollection", "features": features}
 LANDCOVER_POOL = ThreadPoolExecutor(max_workers=20)
 
 # Server-to-server calls (Vercel's serverless function -> this API) aren't

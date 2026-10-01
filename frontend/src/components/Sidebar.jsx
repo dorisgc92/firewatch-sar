@@ -67,6 +67,7 @@ function FireListItem({ feature, showName, onSelect }) {
 
 // A StatRow with a caret that expands into the list of fires behind that
 // number. Clicking a fire in the list flies the map to it.
+
 function ExpandableStatRow({ label, value, color, features, showNames, onSelect, t }) {
   const [open, setOpen] = useState(false)
   const CAP = 30
@@ -95,6 +96,115 @@ function ExpandableStatRow({ label, value, color, features, showNames, onSelect,
         <div style={{ marginTop: "4px", marginBottom: "4px", maxHeight: "170px", overflowY: "auto",
           background: "#faf9f6", border: `1px solid ${theme.border}`, borderRadius: "6px" }}>
           {shown.map((f, i) => <FireListItem key={i} feature={f} showName={showNames} onSelect={onSelect} />)}
+          {sorted.length > CAP && (
+            <div style={{ padding: "5px 8px", fontSize: "10px", color: theme.textMuted }}>
+              {t("showingTop", { n: CAP, total: sorted.length })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+function SarSiteListItem({ feature, onSelect }) {
+  const { name, date, hectares } = feature.properties
+  return (
+    <div onClick={() => onSelect(feature)}
+      style={{ padding: "6px 8px", fontSize: "11px", cursor: "pointer", borderBottom: `1px solid ${theme.border}` }}
+      onMouseEnter={e => e.currentTarget.style.background = theme.orangeSoft}
+      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+      <div style={{ color: theme.textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {name}
+      </div>
+      <div style={{ color: theme.textMuted, fontSize: "10px" }}>
+        {date} · {hectares?.toLocaleString()} ha
+      </div>
+    </div>
+  )
+}
+
+function SarExpandableStatRow({ label, value, color, sites, onSelect, t }) {
+  const [open, setOpen] = useState(false)
+  const CAP = 30
+  const sorted = useMemo(
+    () => [...sites].sort((a, b) => (b.properties.hectares || 0) - (a.properties.hectares || 0)),
+    [sites]
+  )
+  const shown = sorted.slice(0, CAP)
+  const hasItems = sites.length > 0
+
+  return (
+    <div style={{ marginBottom: "5px" }}>
+      <div
+        onClick={() => hasItems && setOpen(o => !o)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: hasItems ? "pointer" : "default" }}>
+        <span style={{ color: theme.textSecondary, fontSize: "12px", display: "flex", alignItems: "center", gap: "5px" }}>
+          {hasItems && (
+            <span style={{ fontSize: "9px", color: theme.textMuted, display: "inline-block",
+              transform: open ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▸</span>
+          )}
+          {label}
+        </span>
+        <span style={{ color: color || theme.textPrimary, fontSize: "12px", fontWeight: "bold" }}>{value}</span>
+      </div>
+      {open && hasItems && (
+        <div style={{ marginTop: "4px", marginBottom: "4px", maxHeight: "170px", overflowY: "auto",
+          background: "#faf9f6", border: `1px solid ${theme.border}`, borderRadius: "6px" }}>
+          {shown.map((f, i) => <SarSiteListItem key={i} feature={f} onSelect={onSelect} />)}
+          {sorted.length > CAP && (
+            <div style={{ padding: "5px 8px", fontSize: "10px", color: theme.textMuted }}>
+              {t("showingTop", { n: CAP, total: sorted.length })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FwiZoneListItem({ feature, onSelect }) {
+  const [lon, lat] = feature.geometry.coordinates
+  const { fwi, risk_label } = feature.properties
+  return (
+    <div onClick={() => onSelect(feature)}
+      style={{ padding: "6px 8px", fontSize: "11px", cursor: "pointer", borderBottom: `1px solid ${theme.border}`,
+        display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      onMouseEnter={e => e.currentTarget.style.background = theme.orangeSoft}
+      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+      <span style={{ color: theme.textPrimary }}>{lat.toFixed(3)}, {lon.toFixed(3)}</span>
+      <span style={{ color: theme.textMuted }}>FWI {fwi} · {risk_label}</span>
+    </div>
+  )
+}
+
+function FwiExpandableStatRow({ label, value, color, points, onSelect, t }) {
+  const [open, setOpen] = useState(false)
+  const CAP = 30
+  const sorted = useMemo(
+    () => [...points].sort((a, b) => (b.properties.fwi || 0) - (a.properties.fwi || 0)),
+    [points]
+  )
+  const shown = sorted.slice(0, CAP)
+  const hasItems = points.length > 0
+
+  return (
+    <div style={{ marginBottom: "5px" }}>
+      <div
+        onClick={() => hasItems && setOpen(o => !o)}
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: hasItems ? "pointer" : "default" }}>
+        <span style={{ color: theme.textSecondary, fontSize: "12px", display: "flex", alignItems: "center", gap: "5px" }}>
+          {hasItems && (
+            <span style={{ fontSize: "9px", color: theme.textMuted, display: "inline-block",
+              transform: open ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▸</span>
+          )}
+          {label}
+        </span>
+        <span style={{ color: color || theme.textPrimary, fontSize: "12px", fontWeight: "bold" }}>{value}</span>
+      </div>
+      {open && hasItems && (
+        <div style={{ marginTop: "4px", marginBottom: "4px", maxHeight: "170px", overflowY: "auto",
+          background: "#faf9f6", border: `1px solid ${theme.border}`, borderRadius: "6px" }}>
+          {shown.map((f, i) => <FwiZoneListItem key={i} feature={f} onSelect={onSelect} />)}
           {sorted.length > CAP && (
             <div style={{ padding: "5px 8px", fontSize: "10px", color: theme.textMuted }}>
               {t("showingTop", { n: CAP, total: sorted.length })}
@@ -183,12 +293,12 @@ const INFRA_ICON = {
   "Airport/Airfield": "✈️", "Water Reservoir": "💧",
 }
 
-function ThreatenedInfraCard({ threat, t, onSelectFire }) {
+function ThreatenedInfraCard({ threat, t, onSelectFire, onSelectInfra }) {
   const { infra, fire, distanceKm, windAligned, windKmh } = threat
   const dir = windDirLabel((threat.bearingDeg + 180) % 360) // direction FROM infra back toward the fire, for "wind coming from X" phrasing
 
   return (
-    <div onClick={() => onSelectFire(fire)} style={{
+    <div onClick={() => onSelectInfra ? onSelectInfra(infra, fire) : onSelectFire(fire)} style={{
       background: "#fff", border: `1px solid ${theme.border}`,
       borderLeft: `3px solid ${windAligned ? theme.danger : theme.orange}`,
       borderRadius: "6px", padding: "8px 10px", marginBottom: "8px", cursor: "pointer",
@@ -210,7 +320,7 @@ function ThreatenedInfraCard({ threat, t, onSelectFire }) {
   )
 }
 
-export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, hideNonVegetation, landCoverByFireKey = {}, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
+export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInfo, responderType, onSelectFire, onSelectInfra, hideNonVegetation, landCoverByFireKey = {}, incidents, requestResponder, selectedFire, onClearSelection, zoneInfrastructure = [], onClose }) {
   const { t } = useLanguage()
   const rawDetections = layers.hotspots?.data?.features || []
   const allDetections = rawDetections
@@ -220,7 +330,15 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     () => filterFeaturesByBbox(allDetections, zoneInfo?.zoneBbox),
     [allDetections, zoneInfo]
   )
-  const [countryFeature, setCountryFeature] = useState(null)
+ const [sarSites, setSarSites] = useState([])
+  useEffect(() => {
+    fetch("/data/sar_burned_areas/index.json")
+      .then((r) => r.json())
+      .then(setSarSites)
+      .catch(() => setSarSites([]))
+  }, [])
+
+const [countryFeature, setCountryFeature] = useState(null)
   useEffect(() => {
     if (!zoneInfo?.country) { setCountryFeature(null); return }
     let cancelled = false
@@ -232,7 +350,7 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     return () => { cancelled = true }
   }, [zoneInfo?.country])
 
-  const countryHotspotsRaw = useMemo(() => {
+ const countryHotspotsRaw = useMemo(() => {
     // Prefer the real country polygon (accurate at borders) — a padded box
     // around the searched point will happily include the neighboring
     // country if the search point is near a border (e.g. Boston -> Quebec).
@@ -265,6 +383,19 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
   }
 
   const zoneHotspots = useMemo(() => applyVegetationFilter(zoneHotspotsRaw), [zoneHotspotsRaw, hideNonVegetation, landCoverByFireKey])
+  const sarCountrySites = useMemo(() => {
+    const byPolygon = filterFeaturesByCountry(sarSites, countryFeature)
+    if (byPolygon !== null) return byPolygon
+    return filterFeaturesByBbox(sarSites, zoneInfo?.countryBbox)
+  }, [sarSites, countryFeature, zoneInfo])
+  const sarStateSites = useMemo(
+    () => filterFeaturesByBbox(sarSites, zoneInfo?.stateBbox),
+    [sarSites, zoneInfo]
+  )
+  const sarZoneSites = useMemo(
+    () => filterFeaturesByBbox(sarSites, zoneInfo?.bbox),
+    [sarSites, zoneInfo]
+  )
   const countryHotspots = useMemo(() => applyVegetationFilter(countryHotspotsRaw), [countryHotspotsRaw, hideNonVegetation, landCoverByFireKey])
   const stateHotspots = useMemo(() => applyVegetationFilter(stateHotspotsRaw), [stateHotspotsRaw, hideNonVegetation, landCoverByFireKey])
   // zoneInfrastructure now arrives as a prop from App.jsx's
@@ -314,12 +445,28 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
     zoneHotspots: selectedFire ? [selectedFire] : zoneHotspots, infraInZone: zoneInfrastructure, fwiPoints,
   }), [zoneHotspots, zoneInfrastructure, fwiPoints, selectedFire])
 
-  const maxFWI = fwiPoints.reduce((max, f) =>
+    const maxFWI = fwiPoints.reduce((max, f) =>
     (f.properties.fwi || 0) > (max?.properties?.fwi || 0) ? f : max, null)
-  const escalatingZones = fwiPoints.filter(f => f.properties.trend === "escalating").length
-  const extremeZones = fwiPoints.filter(f => f.properties.risk_class === "extreme").length
-  const veryHighZones = fwiPoints.filter(f => f.properties.risk_class === "very_high").length
+  const countryFwiPointsRaw = useMemo(() => {
+    const byPolygon = filterFeaturesByCountry(fwiPoints, countryFeature)
+    if (byPolygon !== null) return byPolygon
+    return filterFeaturesByBbox(fwiPoints, zoneInfo?.countryBbox)
+  }, [fwiPoints, countryFeature, zoneInfo])
+  const stateFwiPoints = useMemo(
+    () => filterFeaturesByBbox(fwiPoints, zoneInfo?.stateBbox),
+    [fwiPoints, zoneInfo]
+  )
+  const zoneFwiPoints = useMemo(
+    () => filterFeaturesByBbox(fwiPoints, zoneInfo?.zoneBbox),
+    [fwiPoints, zoneInfo]
+  )
 
+  const escalatingZonesList = zoneFwiPoints.filter(f => f.properties.trend === "escalating")
+  const extremeZonesList = zoneFwiPoints.filter(f => f.properties.risk_class === "extreme")
+  const veryHighZonesList = zoneFwiPoints.filter(f => f.properties.risk_class === "very_high")
+  const escalatingZones = escalatingZonesList.length
+  const extremeZones = extremeZonesList.length
+  const veryHighZones = veryHighZonesList.length
   return (
     <div style={{
       width: "270px", maxWidth: "90vw", height: "100%", flexShrink: 0, background: theme.panelBg,
@@ -340,10 +487,10 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
         borderRadius: "6px", padding: "8px", marginBottom: "4px", textAlign: "center",
       }}>
         <div style={{ fontSize: "13px", fontWeight: "bold", color: theme.textPrimary }}>
-          {activeModule === 1 ? t("preFireView") : t("activeFireView")}
+        	{activeModule === 1 ? t("preFireView") : activeModule === 3 ? t("postEventView") : t("activeFireView")}
         </div>
         <div style={{ fontSize: "11px", color: theme.textSecondary, marginTop: "2px" }}>
-          {activeModule === 1 ? t("module1Sub") : t("module2Sub")}
+        	{activeModule === 1 ? t("module1Sub") : activeModule === 3 ? t("module3Sub") : t("module2Sub")}
         </div>
       </div>
 
@@ -400,13 +547,31 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
                   <PriorityFireCard key={i} fire={fire} index={i} t={t} incidents={incidents}
                     onSelectFire={flyTo} />
                 ))}
-              </>
+                            </>
             )}
           </div>
         </>
       )}
 
-      {activeModule === 2 && selectedFire && (
+     {activeModule === 3 && (
+        <>
+          <SectionTitle>{t("burnedArea")}</SectionTitle>
+          <SarExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.country || "—" })}
+            value={sarCountrySites.length.toLocaleString()}
+            sites={sarCountrySites} onSelect={flyTo} t={t} />
+          <SarExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.state || "—" })}
+            value={sarStateSites.length.toLocaleString()}
+            sites={sarStateSites} onSelect={flyTo} t={t} />
+          <SarExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.name || "—" })}
+            value={sarZoneSites.length.toLocaleString()} color={theme.orange}
+            sites={sarZoneSites} onSelect={flyTo} t={t} />
+        </>
+      )}
+
+     {activeModule === 2 && selectedFire && (
         <>
           <SectionTitle>{t("situationSummaryTitle")}</SectionTitle>
           <FireCommandPanel selectedFire={selectedFire} incidents={incidents}
@@ -426,7 +591,7 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
               {t("threatenedInfraCount", { count: threatenedInfra.length })}
             </div>
             {threatenedInfra.slice(0, 10).map((threat, i) => (
-              <ThreatenedInfraCard key={i} threat={threat} t={t} onSelectFire={flyTo} />
+              <ThreatenedInfraCard key={i} threat={threat} t={t} onSelectFire={flyTo} onSelectInfra={onSelectInfra} />
             ))}
           </div>
         </>
@@ -455,25 +620,43 @@ export default function Sidebar({ activeModule, layers, mapZoom, mapRef, zoneInf
               <div style={{ color: theme.textMuted, fontSize: "11px", marginTop: "2px" }}>
                 at {maxFWI.properties.lat}, {maxFWI.properties.lon}
               </div>
+              {maxFWI.properties.rain_mm != null && (
+                <div style={{ color: theme.textSecondary, fontSize: "11px", marginTop: "2px" }}>
+                  {t("precipitation")}: {maxFWI.properties.rain_mm} mm
+                </div>
+              )}
+              {maxFWI.properties.alerts?.length > 0 && (
+                <div style={{ color: theme.danger, fontSize: "11px", fontWeight: "bold", marginTop: "4px" }}>
+                  {maxFWI.properties.alerts.map((a) => t("alert." + a)).join(" · ")}
+                </div>
+              )}
             </div>
           )}
 
-          <StatRow
-            label={t("extremeRiskZones")}
-            value={extremeZones}
+          <FwiExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.country || "—" })}
+            value={countryFwiPointsRaw.length.toLocaleString()}
+            points={countryFwiPointsRaw} onSelect={flyTo} t={t} />
+          <FwiExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.state || "—" })}
+            value={stateFwiPoints.length.toLocaleString()}
+            points={stateFwiPoints} onSelect={flyTo} t={t} />
+          <FwiExpandableStatRow
+            label={t("inLabel", { name: zoneInfo?.name || "—" })}
+            value={zoneFwiPoints.length.toLocaleString()} color={theme.orange}
+            points={zoneFwiPoints} onSelect={flyTo} t={t} />
+          <FwiExpandableStatRow
+            label={t("extremeRiskZones")} value={extremeZones}
             color={extremeZones > 0 ? theme.danger : "#38A800"}
-          />
-          <StatRow
-            label={t("veryHighRiskZones")}
-            value={veryHighZones}
+            points={extremeZonesList} onSelect={flyTo} t={t} />
+          <FwiExpandableStatRow
+            label={t("veryHighRiskZones")} value={veryHighZones}
             color={veryHighZones > 0 ? "#FF4400" : "#38A800"}
-          />
-          <StatRow
-            label={t("escalatingZones")}
-            value={escalatingZones}
+            points={veryHighZonesList} onSelect={flyTo} t={t} />
+          <FwiExpandableStatRow
+            label={t("escalatingZones")} value={escalatingZones}
             color={escalatingZones > 0 ? theme.orange : "#38A800"}
-          />
-
+            points={escalatingZonesList} onSelect={flyTo} t={t} />
           <SectionTitle>{t("forecastAlertTitle")}</SectionTitle>
           <div style={{
             background: extremeZones > 0 ? theme.dangerSoft : theme.greenSoft,

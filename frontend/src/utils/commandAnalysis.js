@@ -22,7 +22,7 @@ const CRITICAL_THREAT_TYPES = [
 
 // How far from a fire we still consider infrastructure "at risk" — beyond
 // this, even a direct downwind alignment isn't an imminent threat.
-const THREAT_RADIUS_KM = 15
+const THREAT_RADIUS_KM = 7
 // How tightly the infrastructure has to line up with the wind direction to
 // count as "in the fire's path" rather than just "nearby but off to the side".
 const DOWNWIND_TOLERANCE_DEG = 50
